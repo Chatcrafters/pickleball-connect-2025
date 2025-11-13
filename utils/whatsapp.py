@@ -1,9 +1,9 @@
 import os
 from twilio.rest import Client
 
-# Twilio configuration
-TWILIO_ACCOUNT_SID = 'ACa142cbc9a326e0a1af5956eda50c265a'
-TWILIO_AUTH_TOKEN = '1314d20bde7c642ded0f133953a8b2f6'
+# Twilio configuration - use environment variables
+TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_WHATSAPP_NUMBER = 'whatsapp:+14155238886'
 
 def send_whatsapp_message(to_number, message, test_mode=True):
@@ -20,7 +20,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
     """
     if test_mode or not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
         print(f"\n{'='*60}")
-        print(f"[TEST MODE] WhatsApp to {to_number}:")
+        print(f"📱 [TEST MODE] WhatsApp to {to_number}:")
         print(f"{'='*60}")
         print(message)
         print(f"{'='*60}\n")
@@ -39,7 +39,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
             to=to_number
         )
         
-        print(f"Message sent to {to_number}! SID: {message_obj.sid}")
+        print(f"✅ Message sent to {to_number}! SID: {message_obj.sid}")
         
         return {
             'status': 'sent',
@@ -47,7 +47,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
             'to': to_number
         }
     except Exception as e:
-        print(f"Error sending WhatsApp message: {str(e)}")
+        print(f"❌ Error sending WhatsApp message: {str(e)}")
         return {
             'status': 'failed',
             'error': str(e)
@@ -69,145 +69,125 @@ def get_message_template(message_type, language='EN', **kwargs):
     end_date_line = ""
     if kwargs.get('end_date'):
         date_labels = {
-            'EN': 'End: ',
-            'DE': 'Ende: ',
-            'ES': 'Fin: ',
-            'FR': 'Fin: '
+            'EN': '📅 End: ',
+            'DE': '📅 Ende: ',
+            'ES': '📅 Fin: ',
+            'FR': '📅 Fin: '
         }
         end_date_line = date_labels.get(language, date_labels['EN']) + kwargs.get('end_date') + '\n'
     
     templates = {
         'invitation': {
-            'EN': """*** {event_name} ***
+            'EN': """🎾 {event_name}
 
-Date: {start_date}
-{end_date_line}Location: {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-----------------------------------
+━━━━━━━━━━━━━━━━━━━━━━
 Please reply with:
+✅ YES - I'm interested
+ℹ️ INFO - Send me more details
+❌ NO - Not interested
 
-YES - I'm interested
-INFO - Send me more details
-NO - Not interested
-
-Looking forward to hearing from you!
-
-WPC Series Europe""",
+Looking forward to hearing from you!""",
             
-            'DE': """*** {event_name} ***
+            'DE': """🎾 {event_name}
 
-Datum: {start_date}
-{end_date_line}Ort: {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-----------------------------------
+━━━━━━━━━━━━━━━━━━━━━━
 Bitte antworte mit:
+✅ JA - Ich bin interessiert
+ℹ️ INFO - Schick mir mehr Details
+❌ NEIN - Nicht interessiert
 
-JA - Ich bin interessiert
-INFO - Schick mir mehr Details
-NEIN - Nicht interessiert
-
-Wir freuen uns auf deine Antwort!
-
-WPC Series Europe""",
+Wir freuen uns auf deine Antwort!""",
             
-            'ES': """*** {event_name} ***
+            'ES': """🎾 {event_name}
 
-Fecha: {start_date}
-{end_date_line}Lugar: {location}
+📅 Inicio: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-----------------------------------
+━━━━━━━━━━━━━━━━━━━━━━
 Por favor responde con:
+✅ SÍ - Estoy interesado
+ℹ️ INFO - Envíame más detalles
+❌ NO - No estoy interesado
 
-SI - Estoy interesado
-INFO - Enviame mas detalles
-NO - No estoy interesado
-
-Esperamos tu respuesta!
-
-WPC Series Europe""",
+¡Esperamos tu respuesta!""",
             
-            'FR': """*** {event_name} ***
+            'FR': """🎾 {event_name}
 
-Date: {start_date}
-{end_date_line}Lieu: {location}
+📅 Début: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-----------------------------------
-Veuillez repondre avec:
+━━━━━━━━━━━━━━━━━━━━━━
+Veuillez répondre avec:
+✅ OUI - Je suis intéressé
+ℹ️ INFO - Envoyez-moi plus de détails
+❌ NON - Pas intéressé
 
-OUI - Je suis interesse
-INFO - Envoyez-moi plus de details
-NON - Pas interesse
-
-Au plaisir de vous lire!
-
-WPC Series Europe"""
+Au plaisir de vous lire!"""
         },
         'reminder': {
-            'EN': """*** REMINDER: {event_name} ***
+            'EN': """⏰ Reminder: {event_name}
 
-Date: {start_date}
-{end_date_line}Location: {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
 Don't forget to confirm your participation!
 
 Reply with:
-YES - Confirmed
-NO - Cancel
-
-WPC Series Europe""",
+✅ YES - Confirmed
+❌ NO - Cancel""",
             
-            'DE': """*** ERINNERUNG: {event_name} ***
+            'DE': """⏰ Erinnerung: {event_name}
 
-Datum: {start_date}
-{end_date_line}Ort: {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
-Vergiss nicht, deine Teilnahme zu bestatigen!
+Vergiss nicht, deine Teilnahme zu bestätigen!
 
 Antworte mit:
-JA - Bestatigt
-NEIN - Absagen
-
-WPC Series Europe""",
+✅ JA - Bestätigt
+❌ NEIN - Absagen""",
             
-            'ES': """*** RECORDATORIO: {event_name} ***
+            'ES': """⏰ Recordatorio: {event_name}
 
-Fecha: {start_date}
-{end_date_line}Lugar: {location}
+📅 Inicio: {start_date}
+{end_date_line}📍 {location}
 
-No olvides confirmar tu participacion!
+¡No olvides confirmar tu participación!
 
 Responde con:
-SI - Confirmado
-NO - Cancelar
-
-WPC Series Europe""",
+✅ SÍ - Confirmado
+❌ NO - Cancelar""",
             
-            'FR': """*** RAPPEL: {event_name} ***
+            'FR': """⏰ Rappel: {event_name}
 
-Date: {start_date}
-{end_date_line}Lieu: {location}
+📅 Début: {start_date}
+{end_date_line}📍 {location}
 
 N'oubliez pas de confirmer votre participation!
 
-Repondez avec:
-OUI - Confirme
-NON - Annuler
-
-WPC Series Europe"""
+Répondez avec:
+✅ OUI - Confirmé
+❌ NON - Annuler"""
         },
         'update': {
-            'EN': "*** UPDATE: {event_name} ***\n\n{message}\n\nWPC Series Europe",
-            'DE': "*** UPDATE: {event_name} ***\n\n{message}\n\nWPC Series Europe",
-            'ES': "*** ACTUALIZACION: {event_name} ***\n\n{message}\n\nWPC Series Europe",
-            'FR': "*** MISE A JOUR: {event_name} ***\n\n{message}\n\nWPC Series Europe"
+            'EN': "📢 Update for {event_name}:\n\n{message}",
+            'DE': "📢 Update zu {event_name}:\n\n{message}",
+            'ES': "📢 Actualización de {event_name}:\n\n{message}",
+            'FR': "📢 Mise à jour pour {event_name}:\n\n{message}"
         }
     }
     
