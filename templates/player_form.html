@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{% if player %}Spieler bearbeiten{% else %}Neuer Spieler{% endif %} - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4">
+                <i class="bi bi-person-plus"></i> 
+                {% if player %}Spieler bearbeiten{% else %}Neuer Spieler{% endif %}
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Vorname *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ player.first_name if player else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Nachname *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ player.last_name if player else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">WhatsApp-Nummer *</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ player.phone if player else '' }}" 
+                                       placeholder="+49123456789" required>
+                                <small class="form-text text-muted">Mit Ländervorwahl (z.B. +49 für Deutschland)</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">E-Mail</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ player.email if player else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="skill_level" class="form-label">Skill Level</label>
+                                <select class="form-select" id="skill_level" name="skill_level">
+                                    <option value="">Wählen...</option>
+                                    <option value="2.0" {% if player and player.skill_level == '2.0' %}selected{% endif %}>2.0 - Beginner</option>
+                                    <option value="2.5" {% if player and player.skill_level == '2.5' %}selected{% endif %}>2.5</option>
+                                    <option value="3.0" {% if player and player.skill_level == '3.0' %}selected{% endif %}>3.0 - Intermediate</option>
+                                    <option value="3.5" {% if player and player.skill_level == '3.5' %}selected{% endif %}>3.5</option>
+                                    <option value="4.0" {% if player and player.skill_level == '4.0' %}selected{% endif %}>4.0 - Advanced</option>
+                                    <option value="4.5" {% if player and player.skill_level == '4.5' %}selected{% endif %}>4.5</option>
+                                    <option value="5.0" {% if player and player.skill_level == '5.0' %}selected{% endif %}>5.0+ - Professional</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="city" class="form-label">Stadt</label>
+                                <input type="text" class="form-control" id="city" name="city" 
+                                       value="{{ player.city if player else '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="country" class="form-label">Land</label>
+                                <input type="text" class="form-control" id="country" name="country" 
+                                       value="{{ player.country if player else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="preferred_language" class="form-label">Bevorzugte Sprache *</label>
+                            <select class="form-select" id="preferred_language" name="preferred_language" required>
+                                <option value="EN" {% if not player or player.preferred_language == 'EN' %}selected{% endif %}>English</option>
+                                <option value="DE" {% if player and player.preferred_language == 'DE' %}selected{% endif %}>Deutsch</option>
+                                <option value="ES" {% if player and player.preferred_language == 'ES' %}selected{% endif %}>Español</option>
+                                <option value="FR" {% if player and player.preferred_language == 'FR' %}selected{% endif %}>Français</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('players.player_list') }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Abbrechen
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-circle"></i> Speichern
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

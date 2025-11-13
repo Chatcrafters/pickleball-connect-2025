@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Datenschutzerklärung - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4">Datenschutzerklärung</h1>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>1. Datenschutz auf einen Blick</h4>
+                    <h5>Allgemeine Hinweise</h5>
+                    <p>Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren personenbezogenen Daten passiert, wenn Sie diese Website nutzen oder sich für unsere WhatsApp-Benachrichtigungen anmelden.</p>
+                    
+                    <h5>Datenerfassung auf dieser Website</h5>
+                    <p><strong>Wer ist verantwortlich für die Datenerfassung auf dieser Website?</strong></p>
+                    <p>Die Datenverarbeitung auf dieser Website erfolgt durch den Websitebetreiber: WPC Series Europe.</p>
+                    
+                    <h5>Wie erfassen wir Ihre Daten?</h5>
+                    <p>Ihre Daten werden zum einen dadurch erhoben, dass Sie uns diese mitteilen. Hierbei kann es sich z.B. um Daten handeln, die Sie in ein Kontaktformular eingeben.</p>
+                    
+                    <h4>2. WhatsApp-Kommunikation</h4>
+                    <h5>Anmeldung für WhatsApp-Benachrichtigungen</h5>
+                    <p>Wenn Sie sich für unsere WhatsApp-Benachrichtigungen anmelden, erheben wir folgende Daten:</p>
+                    <ul>
+                        <li>Vorname und Nachname</li>
+                        <li>WhatsApp-Telefonnummer</li>
+                        <li>E-Mail-Adresse (optional)</li>
+                        <li>Skill Level (optional)</li>
+                        <li>Stadt und Land (optional)</li>
+                        <li>Bevorzugte Sprache</li>
+                    </ul>
+                    
+                    <h5>Zweck der Datenverarbeitung</h5>
+                    <p>Wir verwenden Ihre Daten ausschließlich für folgende Zwecke:</p>
+                    <ul>
+                        <li>Versand von Event-Einladungen</li>
+                        <li>Turnierinformationen und Updates</li>
+                        <li>Wichtige Mitteilungen zu Veranstaltungen</li>
+                    </ul>
+                    
+                    <h5>Rechtsgrundlage</h5>
+                    <p>Die Verarbeitung erfolgt auf Grundlage Ihrer Einwilligung gemäß Art. 6 Abs. 1 lit. a DSGVO.</p>
+                    
+                    <h4>3. Ihre Rechte</h4>
+                    <p>Sie haben jederzeit das Recht:</p>
+                    <ul>
+                        <li>Auskunft über Ihre gespeicherten Daten zu erhalten</li>
+                        <li>Berichtigung unrichtiger Daten zu verlangen</li>
+                        <li>Löschung Ihrer Daten zu verlangen</li>
+                        <li>Einschränkung der Verarbeitung zu verlangen</li>
+                        <li>Der Verarbeitung zu widersprechen</li>
+                        <li>Ihre Einwilligung jederzeit zu widerrufen</li>
+                    </ul>
+                    
+                    <h4>4. Datensicherheit</h4>
+                    <p>Wir verwenden geeignete technische und organisatorische Sicherheitsmaßnahmen, um Ihre Daten gegen zufällige oder vorsätzliche Manipulationen, Verlust, Zerstörung oder den Zugriff unberechtigter Personen zu schützen.</p>
+                    
+                    <h4>5. Weitergabe von Daten</h4>
+                    <p>Wir verwenden Twilio für den Versand von WhatsApp-Nachrichten. Twilio verarbeitet Ihre Telefonnummer zum Zweck der Nachrichtenübermittlung. Weitere Informationen finden Sie in der Datenschutzerklärung von Twilio.</p>
+                    
+                    <h4>6. Speicherdauer</h4>
+                    <p>Wir speichern Ihre Daten solange, wie Sie für unsere WhatsApp-Benachrichtigungen angemeldet sind. Nach Abmeldung werden Ihre Daten innerhalb von 30 Tagen gelöscht.</p>
+                    
+                    <h4>7. Widerruf Ihrer Einwilligung</h4>
+                    <p>Sie können Ihre Einwilligung jederzeit widerrufen, indem Sie uns eine Nachricht senden oder sich über WhatsApp abmelden. Der Widerruf berührt die Rechtmäßigkeit der bis dahin erfolgten Verarbeitung nicht.</p>
+                    
+                    <h4>8. Kontakt</h4>
+                    <p>Bei Fragen zum Datenschutz kontaktieren Sie uns bitte:</p>
+                    <p>
+                        <strong>WPC Series Europe</strong><br>
+                        E-Mail: privacy@wpc-series.com
+                    </p>
+                </div>
+            </div>
+            
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

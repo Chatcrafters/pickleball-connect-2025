@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Spieler importieren - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="mb-4">
+                <i class="bi bi-upload"></i> Spieler importieren
+            </h1>
+
+            <div class="row">
+                <!-- CSV/Excel Upload -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="bi bi-file-earmark-spreadsheet"></i> CSV/Excel Upload</h5>
+                        </div>
+                        <div class="card-body">
+                            <p>Importiere mehrere Spieler auf einmal aus einer CSV- oder Excel-Datei.</p>
+                            
+                            <form method="POST" enctype="multipart/form-data" action="{{ url_for('admin.import_players') }}">
+                                <div class="mb-3">
+                                    <label for="file" class="form-label">Datei auswählen</label>
+                                    <input type="file" class="form-control" id="file" name="file" accept=".csv,.xlsx,.xls" required>
+                                    <small class="form-text text-muted">Unterstützte Formate: CSV, XLSX, XLS</small>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="skip_duplicates" name="skip_duplicates" checked>
+                                        <label class="form-check-label" for="skip_duplicates">
+                                            Duplikate überspringen (basierend auf Telefonnummer)
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-upload"></i> Hochladen & Importieren
+                                </button>
+                            </form>
+                            
+                            <hr>
+                            
+                            <h6><i class="bi bi-info-circle"></i> Beispiel-Datei herunterladen:</h6>
+                            <a href="{{ url_for('admin.download_example_csv') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-download"></i> Beispiel-CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Required Columns Info -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0"><i class="bi bi-table"></i> Spalten-Format</h5>
+                        </div>
+                        <div class="card-body">
+                            <p><strong>Erforderliche Spalten:</strong></p>
+                            <ul>
+                                <li><code>first_name</code> - Vorname *</li>
+                                <li><code>last_name</code> - Nachname *</li>
+                                <li><code>phone</code> - Telefonnummer (mit Ländercode) *</li>
+                            </ul>
+                            
+                            <p class="mt-3"><strong>Optionale Spalten:</strong></p>
+                            <ul>
+                                <li><code>email</code> - E-Mail-Adresse</li>
+                                <li><code>skill_level</code> - Skill Level (2.0-5.0)</li>
+                                <li><code>city</code> - Stadt</li>
+                                <li><code>country</code> - Land</li>
+                                <li><code>preferred_language</code> - Sprache (EN/DE/ES/FR)</li>
+                            </ul>
+                            
+                            <div class="alert alert-warning mt-3">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>Wichtig:</strong> Telefonnummern müssen mit Ländercode beginnen (z.B. +49, +34, +44)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pickleball Global Integration (Coming Soon) -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-cloud-download"></i> Pickleball Global Integration</h5>
+                </div>
+                <div class="card-body">
+                    <p>Importiere Spieler direkt aus deinem Pickleball Global Account.</p>
+                    
+                    <form method="POST" action="{{ url_for('admin.import_players') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="pg_username" class="form-label">Pickleball Global Username</label>
+                                <input type="text" class="form-control" id="pg_username" name="pg_username" placeholder="dein_username">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="pg_api_key" class="form-label">API Key</label>
+                                <input type="password" class="form-control" id="pg_api_key" name="pg_api_key" placeholder="API Key">
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success" disabled>
+                            <i class="bi bi-cloud-download"></i> Von Pickleball Global importieren (Coming Soon)
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <a href="{{ url_for('players.player_list') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Zurück zur Spielerliste
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Newsletter-Anmeldung - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h2 class="mb-0">
+                        <i class="bi bi-whatsapp"></i> Pickleball Connect
+                    </h2>
+                    <p class="mb-0 mt-2">Bleib auf dem Laufenden!</p>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-center mb-4">
+                        Erhalte WhatsApp-Benachrichtigungen über kommende Turniere und Events der WPC Series Europe!
+                    </p>
+
+                    <div class="alert alert-info mb-4">
+                        <h6><i class="bi bi-bell"></i> Du erhältst:</h6>
+                        <ul class="mb-0">
+                            <li>Turnier-Einladungen</li>
+                            <li>Event-Updates</li>
+                            <li>Wichtige Mitteilungen</li>
+                            <li>Ergebnisse & News</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('admin.subscribe') }}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">Vorname *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Nachname *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">WhatsApp-Nummer *</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="+49123456789" required>
+                            <small class="form-text text-muted">Mit Ländervorwahl (z.B. +34 für Spanien)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">E-Mail (optional)</label>
+                            <input type="email" class="form-control" id="email" name="email">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="skill_level" class="form-label">Skill Level *</label>
+                                <select class="form-select" id="skill_level" name="skill_level" required>
+                                    <option value="">Wählen...</option>
+                                    <option value="2.0">2.0 - Beginner</option>
+                                    <option value="2.5">2.5</option>
+                                    <option value="3.0">3.0 - Intermediate</option>
+                                    <option value="3.5">3.5</option>
+                                    <option value="4.0">4.0 - Advanced</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="5.0">5.0+ - Professional</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="preferred_language" class="form-label">Sprache *</label>
+                                <select class="form-select" id="preferred_language" name="preferred_language" required>
+                                    <option value="EN">English</option>
+                                    <option value="DE" selected>Deutsch</option>
+                                    <option value="ES">Español</option>
+                                    <option value="FR">Français</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">Stadt</label>
+                                <input type="text" class="form-control" id="city" name="city">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="country" class="form-label">Land</label>
+                                <input type="text" class="form-control" id="country" name="country">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="privacy_accept" required>
+                                <label class="form-check-label" for="privacy_accept">
+                                    Ich akzeptiere die <a href="{{ url_for('main.privacy') }}" target="_blank">Datenschutzerklärung</a> *
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-bell"></i> Jetzt anmelden
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center text-muted">
+                    <small>Du kannst dich jederzeit wieder abmelden.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

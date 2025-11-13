@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Spieler einladen - {{ event.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('events.event_list') }}">Events</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('events.event_detail', event_id=event.id) }}">{{ event.name }}</a></li>
+            <li class="breadcrumb-item active">Spieler einladen</li>
+        </ol>
+    </nav>
+
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="bi bi-person-plus"></i> Spieler zu Event einladen</h2>
+            <p class="text-muted">{{ event.name }} - {{ event.start_date.strftime('%d.%m.%Y') }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="alert alert-info mb-0">
+                <strong>{{ invited_count }}</strong> Spieler bereits eingeladen
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('events.add_players_to_event', event_id=event.id) }}">
+        <div class="row mb-4">
+            <!-- Filters -->
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filter</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <input type="text" class="form-control" id="filterName" placeholder="Name suchen..." onkeyup="filterPlayers()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select class="form-select" id="filterLevel" onchange="filterPlayers()">
+                                    <option value="">Alle Levels</option>
+                                    <option value="2.0">2.0</option>
+                                    <option value="2.5">2.5</option>
+                                    <option value="3.0">3.0</option>
+                                    <option value="3.5">3.5</option>
+                                    <option value="4.0">4.0</option>
+                                    <option value="4.5">4.5</option>
+                                    <option value="5.0">5.0+</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <input type="text" class="form-control" id="filterCity" placeholder="Stadt..." onkeyup="filterPlayers()">
+                            </div>
+                            <div class="col-md-2 mb-2">
+                                <select class="form-select" id="filterLanguage" onchange="filterPlayers()">
+                                    <option value="">Alle Sprachen</option>
+                                    <option value="EN">English</option>
+                                    <option value="DE">Deutsch</option>
+                                    <option value="ES">Español</option>
+                                    <option value="FR">Français</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <button type="button" class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                    <i class="bi bi-x-circle"></i> Filter zurücksetzen
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Players List -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-people"></i> Verfügbare Spieler</h5>
+                </div>
+                <div>
+                    <span class="badge bg-primary" id="selectedCount">0</span> ausgewählt
+                </div>
+            </div>
+            <div class="card-body">
+                {% if available_players %}
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll" onchange="selectAll(this)">
+                        <label class="form-check-label fw-bold" for="selectAll">
+                            Alle auswählen
+                        </label>
+                    </div>
+                </div>
+                <hr>
+                <div class="row" id="playersList">
+                    {% for player in available_players %}
+                    <div class="col-md-6 mb-2 player-item" 
+                         data-name="{{ player.first_name }} {{ player.last_name }}" 
+                         data-level="{{ player.skill_level or '' }}"
+                         data-city="{{ player.city or '' }}"
+                         data-language="{{ player.preferred_language }}">
+                        <div class="card">
+                            <div class="card-body py-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="player_ids" 
+                                           value="{{ player.id }}" id="player{{ player.id }}" 
+                                           onchange="updateSelectedCount()">
+                                    <label class="form-check-label w-100" for="player{{ player.id }}">
+                                        <strong>{{ player.first_name }} {{ player.last_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            {% if player.skill_level %}
+                                            <span class="badge bg-success">{{ player.skill_level }}</span>
+                                            {% endif %}
+                                            {% if player.city %}{{ player.city }},{% endif %}
+                                            <span class="badge bg-info">{{ player.preferred_language }}</span>
+                                        </small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Alle verfügbaren Spieler sind bereits zu diesem Event eingeladen!
+                </div>
+                {% endif %}
+            </div>
+            {% if available_players %}
+            <div class="card-footer">
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Abbrechen
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-person-plus"></i> Ausgewählte Spieler einladen
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+function filterPlayers() {
+    const nameFilter = document.getElementById('filterName').value.toLowerCase();
+    const levelFilter = document.getElementById('filterLevel').value;
+    const cityFilter = document.getElementById('filterCity').value.toLowerCase();
+    const languageFilter = document.getElementById('filterLanguage').value;
+    
+    const players = document.querySelectorAll('.player-item');
+    
+    players.forEach(player => {
+        const name = player.dataset.name.toLowerCase();
+        const level = player.dataset.level;
+        const city = player.dataset.city.toLowerCase();
+        const language = player.dataset.language;
+        
+        const matchName = !nameFilter || name.includes(nameFilter);
+        const matchLevel = !levelFilter || level === levelFilter;
+        const matchCity = !cityFilter || city.includes(cityFilter);
+        const matchLanguage = !languageFilter || language === languageFilter;
+        
+        if (matchName && matchLevel && matchCity && matchLanguage) {
+            player.style.display = '';
+        } else {
+            player.style.display = 'none';
+        }
+    });
+}
+
+function resetFilters() {
+    document.getElementById('filterName').value = '';
+    document.getElementById('filterLevel').value = '';
+    document.getElementById('filterCity').value = '';
+    document.getElementById('filterLanguage').value = '';
+    filterPlayers();
+}
+</script>
+{% endblock %}

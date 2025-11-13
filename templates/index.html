@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">
+        <i class="bi bi-speedometer2"></i> Dashboard
+    </h1>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-people fs-1"></i>
+                    <h2 class="mt-2">{{ total_players }}</h2>
+                    <p class="mb-0">Spieler</p>
+                    <a href="{{ url_for('players.player_list') }}" class="btn btn-light btn-sm mt-2">Anzeigen</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-event fs-1"></i>
+                    <h2 class="mt-2">{{ total_events }}</h2>
+                    <p class="mb-0">Events</p>
+                    <a href="{{ url_for('events.event_list') }}" class="btn btn-light btn-sm mt-2">Anzeigen</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-chat-dots fs-1"></i>
+                    <h2 class="mt-2">{{ total_messages }}</h2>
+                    <p class="mb-0">Nachrichten</p>
+                    <a href="{{ url_for('messages.message_history') }}" class="btn btn-light btn-sm mt-2">Anzeigen</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="bi bi-calendar-check fs-1"></i>
+                    <h2 class="mt-2">{{ upcoming_events|length }}</h2>
+                    <p class="mb-0">Kommende Events</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Quick Actions -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-lightning"></i> Schnellaktionen</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('players.add_player') }}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Neuer Spieler
+                        </a>
+                        <a href="{{ url_for('events.create_event') }}" class="btn btn-outline-success">
+                            <i class="bi bi-calendar-plus"></i> Neues Event
+                        </a>
+                        <a href="{{ url_for('messages.send_bulk_message') }}" class="btn btn-outline-info">
+                            <i class="bi bi-chat-left-text"></i> Nachricht senden
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-check-circle"></i> System Status</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check-circle-fill text-success"></i> Datenbank verbunden</li>
+                        <li><i class="bi bi-check-circle-fill text-success"></i> WhatsApp Integration bereit</li>
+                        <li><i class="bi bi-info-circle-fill text-info"></i> Version 1.0</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Events -->
+    {% if upcoming_events %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Kommende Events</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for event in upcoming_events %}
+                        <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ event.name }}</h6>
+                                <small>{{ event.start_date.strftime('%d.%m.%Y') }}</small>
+                            </div>
+                            <p class="mb-1"><i class="bi bi-geo-alt"></i> {{ event.location }}</p>
+                            <small><i class="bi bi-people"></i> {{ event.invited_players|length }} Spieler eingeladen</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

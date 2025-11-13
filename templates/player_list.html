@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Spieler - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="bi bi-people"></i> Spieler</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('players.add_player') }}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Neuer Spieler
+                </a>
+                <a href="{{ url_for('admin.import_players') }}" class="btn btn-success">
+                    <i class="bi bi-upload"></i> Importieren
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <input type="text" class="form-control" id="playerSearch" onkeyup="filterPlayers()" placeholder="Spieler suchen...">
+        </div>
+        <div class="col-md-6 text-end">
+            <span class="badge bg-primary fs-6">{{ players|length }} Spieler</span>
+        </div>
+    </div>
+
+    <!-- Players Grid -->
+    <div class="row">
+        {% for player in players %}
+        <div class="col-md-4 mb-3 player-card">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        {{ player.first_name }} {{ player.last_name }}
+                    </h5>
+                    <p class="card-text">
+                        <i class="bi bi-phone"></i> {{ player.phone }}<br>
+                        {% if player.email %}
+                        <i class="bi bi-envelope"></i> {{ player.email }}<br>
+                        {% endif %}
+                        {% if player.skill_level %}
+                        <i class="bi bi-star"></i> Level: {{ player.skill_level }}<br>
+                        {% endif %}
+                        {% if player.city %}
+                        <i class="bi bi-geo-alt"></i> {{ player.city }}{% if player.country %}, {{ player.country }}{% endif %}<br>
+                        {% endif %}
+                        <i class="bi bi-translate"></i> {{ player.preferred_language }}
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('players.player_detail', player_id=player.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-eye"></i> Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not players %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Noch keine Spieler vorhanden. 
+        <a href="{{ url_for('players.add_player') }}">Ersten Spieler hinzufügen</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

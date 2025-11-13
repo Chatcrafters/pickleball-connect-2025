@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Nachrichten - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="bi bi-chat-dots"></i> Nachrichtenverlauf</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('messages.send_bulk_message') }}" class="btn btn-primary">
+                <i class="bi bi-chat-left-text"></i> Neue Nachricht
+            </a>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if messages %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Empfänger</th>
+                            <th>Event</th>
+                            <th>Typ</th>
+                            <th>Nachricht</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for message in messages %}
+                        <tr>
+                            <td>{{ message.sent_at.strftime('%d.%m.%Y %H:%M') }}</td>
+                            <td>
+                                {% if message.player %}
+                                <a href="{{ url_for('players.player_detail', player_id=message.player.id) }}">
+                                    {{ message.player.first_name }} {{ message.player.last_name }}
+                                </a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if message.event %}
+                                <a href="{{ url_for('events.event_detail', event_id=message.event.id) }}">
+                                    {{ message.event.name }}
+                                </a>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td><span class="badge bg-info">{{ message.message_type }}</span></td>
+                            <td>{{ message.content[:50] }}{% if message.content|length > 50 %}...{% endif %}</td>
+                            <td>
+                                {% if message.status == 'sent' %}
+                                <span class="badge bg-success">Gesendet</span>
+                                {% elif message.status == 'test' %}
+                                <span class="badge bg-warning">Test</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ message.status }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Noch keine Nachrichten versendet.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

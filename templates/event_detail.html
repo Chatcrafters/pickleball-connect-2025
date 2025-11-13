@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.name }} - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="bi bi-calendar-event"></i> 
+                {{ event.name }}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Bearbeiten
+                </a>
+                <a href="{{ url_for('admin.edit_event_advanced', event_id=event.id) }}" class="btn btn-outline-info">
+                    <i class="bi bi-gear"></i> Erweitert
+                </a>
+            </div>
+            <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" class="d-inline ms-2" onsubmit="return confirmDelete('Möchtest du dieses Event wirklich löschen?');">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Löschen
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Event Details</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%"><i class="bi bi-calendar"></i> Start:</th>
+                            <td>{{ event.start_date.strftime('%d.%m.%Y') }}</td>
+                        </tr>
+                        {% if event.end_date %}
+                        <tr>
+                            <th><i class="bi bi-calendar"></i> Ende:</th>
+                            <td>{{ event.end_date.strftime('%d.%m.%Y') }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th><i class="bi bi-geo-alt"></i> Ort:</th>
+                            <td>{{ event.location }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-clock"></i> Erstellt:</th>
+                            <td>{{ event.created_at.strftime('%d.%m.%Y') }}</td>
+                        </tr>
+                    </table>
+                    {% if event.description %}
+                    <hr>
+                    <p class="mb-0">{{ event.description }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="bi bi-people"></i> Eingeladene Spieler
+                        <span class="badge bg-primary ms-2">{{ invited_players|length }}</span>
+                    </h5>
+                    <div>
+                        <a href="{{ url_for('admin.invite_players', event_id=event.id) }}" class="btn btn-sm btn-success me-2">
+                            <i class="bi bi-person-plus"></i> Erweiterte Einladung
+                        </a>
+                        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#invitePlayersModal">
+                            <i class="bi bi-person-plus"></i> Schnell einladen
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if invited_players %}
+                    <div class="list-group">
+                        {% for player in invited_players %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{{ url_for('players.player_detail', player_id=player.id) }}">
+                                    {{ player.first_name }} {{ player.last_name }}
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    {% if player.skill_level %}<span class="badge bg-success">{{ player.skill_level }}</span>{% endif %}
+                                    {{ player.phone }}
+                                </small>
+                            </div>
+                            <form action="{{ url_for('events.remove_player_from_event', event_id=event.id, player_id=player.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Spieler entfernen?');">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Noch keine Spieler eingeladen</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Response Status Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-bar-chart"></i> Antwort-Status der eingeladenen Spieler</h5>
+                </div>
+                <div class="card-body">
+                    {% set stats = event.get_response_stats() %}
+                    <div class="row text-center mb-4">
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-success text-white h-100">
+                                <div class="card-body">
+                                    <h2>{{ stats.interested }}</h2>
+                                    <p class="mb-0">✅ Interessiert</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-info text-white h-100">
+                                <div class="card-body">
+                                    <h2>{{ stats.more_info }}</h2>
+                                    <p class="mb-0">ℹ️ Mehr Info</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-warning text-white h-100">
+                                <div class="card-body">
+                                    <h2>{{ stats.pending }}</h2>
+                                    <p class="mb-0">⏳ Keine Antwort</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <div class="card bg-secondary text-white h-100">
+                                <div class="card-body">
+                                    <h2>{{ stats.not_interested }}</h2>
+                                    <p class="mb-0">❌ Nicht interessiert</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interested Players Details -->
+                    {% if stats.interested > 0 %}
+                    <div class="accordion mb-3" id="interestedAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button bg-success text-white" type="button" data-bs-toggle="collapse" data-bs-target="#interestedPlayers">
+                                    ✅ Interessierte Spieler ({{ stats.interested }})
+                                </button>
+                            </h2>
+                            <div id="interestedPlayers" class="accordion-collapse collapse show" data-bs-parent="#interestedAccordion">
+                                <div class="accordion-body">
+                                    <div class="list-group">
+                                        {% for item in event.get_players_by_response('interested') %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-person-check text-success"></i>
+                                                        {{ item.player.first_name }} {{ item.player.last_name }}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-phone"></i> {{ item.player.phone }} | 
+                                                        {% if item.player.skill_level %}<span class="badge bg-success">{{ item.player.skill_level }}</span>{% endif %}
+                                                        {% if item.player.city %}| <i class="bi bi-geo-alt"></i> {{ item.player.city }}{% endif %}
+                                                        {% if item.response_date %}
+                                                        <br><i class="bi bi-clock"></i> Antwort: {{ item.response_date.strftime('%d.%m.%Y %H:%M') }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <a href="https://wa.me/{{ item.player.phone.replace('+', '') }}" class="btn btn-sm btn-success" target="_blank">
+                                                        <i class="bi bi-whatsapp"></i> Kontaktieren
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- More Info Players -->
+                    {% if stats.more_info > 0 %}
+                    <div class="accordion mb-3" id="moreInfoAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-info text-white" type="button" data-bs-toggle="collapse" data-bs-target="#moreInfoPlayers">
+                                    ℹ️ Mehr Info gewünscht ({{ stats.more_info }})
+                                </button>
+                            </h2>
+                            <div id="moreInfoPlayers" class="accordion-collapse collapse" data-bs-parent="#moreInfoAccordion">
+                                <div class="accordion-body">
+                                    <div class="list-group">
+                                        {% for item in event.get_players_by_response('more_info') %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-info-circle text-info"></i>
+                                                        {{ item.player.first_name }} {{ item.player.last_name }}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-phone"></i> {{ item.player.phone }} | 
+                                                        {% if item.player.skill_level %}<span class="badge bg-success">{{ item.player.skill_level }}</span>{% endif %}
+                                                        {% if item.player.city %}| <i class="bi bi-geo-alt"></i> {{ item.player.city }}{% endif %}
+                                                        {% if item.response_date %}
+                                                        <br><i class="bi bi-clock"></i> Antwort: {{ item.response_date.strftime('%d.%m.%Y %H:%M') }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <a href="https://wa.me/{{ item.player.phone.replace('+', '') }}" class="btn btn-sm btn-info" target="_blank">
+                                                        <i class="bi bi-whatsapp"></i> Kontaktieren
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Not Interested Players -->
+                    {% if stats.not_interested > 0 %}
+                    <div class="accordion mb-3" id="notInterestedAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed bg-secondary text-white" type="button" data-bs-toggle="collapse" data-bs-target="#notInterestedPlayers">
+                                    ❌ Nicht interessiert ({{ stats.not_interested }})
+                                </button>
+                            </h2>
+                            <div id="notInterestedPlayers" class="accordion-collapse collapse" data-bs-parent="#notInterestedAccordion">
+                                <div class="accordion-body">
+                                    <div class="list-group">
+                                        {% for item in event.get_players_by_response('not_interested') %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <h6 class="mb-1">
+                                                        <i class="bi bi-x-circle text-secondary"></i>
+                                                        {{ item.player.first_name }} {{ item.player.last_name }}
+                                                    </h6>
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-phone"></i> {{ item.player.phone }}
+                                                        {% if item.response_date %}
+                                                        | <i class="bi bi-clock"></i> Antwort: {{ item.response_date.strftime('%d.%m.%Y %H:%M') }}
+                                                        {% endif %}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- WhatsApp Messages Section -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-whatsapp"></i> WhatsApp Nachrichten senden
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Tipp:</strong> Nutze die 
+                        <a href="{{ url_for('admin.send_invitations_page', event_id=event.id) }}" class="alert-link">
+                            erweiterte Einladungsseite
+                        </a> 
+                        für mehr Optionen und Vorschau!
+                    </div>
+                    <form action="{{ url_for('events.send_event_invitations', event_id=event.id) }}" method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="message_type" class="form-label">Nachrichtentyp</label>
+                                <select class="form-select" id="message_type" name="message_type">
+                                    <option value="invitation">Einladung</option>
+                                    <option value="reminder">Erinnerung</option>
+                                    <option value="update">Update</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check mt-4">
+                                    <input class="form-check-input" type="checkbox" id="test_mode" name="test_mode">
+                                    <label class="form-check-label" for="test_mode">
+                                        Test-Modus (nur in Konsole anzeigen)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg" {% if not invited_players %}disabled{% endif %}>
+                            <i class="bi bi-send"></i> Einladungen versenden
+                            {% if invited_players %}({{ invited_players|length }} Spieler){% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Quick Invite -->
+<div class="modal fade" id="invitePlayersModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Spieler einladen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="{{ url_for('events.add_players_to_event', event_id=event.id) }}" method="POST">
+                <div class="modal-body">
+                    {% if available_players %}
+                    <div class="list-group">
+                        {% for player in available_players %}
+                        <label class="list-group-item">
+                            <input class="form-check-input me-2" type="checkbox" name="player_ids" value="{{ player.id }}">
+                            {{ player.first_name }} {{ player.last_name }}
+                            <small class="text-muted d-block">
+                                {% if player.skill_level %}<span class="badge bg-success">{{ player.skill_level }}</span>{% endif %}
+                                {{ player.city }}
+                            </small>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Alle Spieler sind bereits eingeladen!</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="submit" class="btn btn-primary" {% if not available_players %}disabled{% endif %}>
+                        Ausgewählte einladen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<a href="{{ url_for('events.event_list') }}" class="btn btn-secondary mt-3">
+    <i class="bi bi-arrow-left"></i> Zurück zur Liste
+</a>
+{% endblock %}

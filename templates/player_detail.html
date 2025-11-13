@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{{ player.first_name }} {{ player.last_name }} - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>
+                <i class="bi bi-person-circle"></i> 
+                {{ player.first_name }} {{ player.last_name }}
+            </h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('players.edit_player', player_id=player.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-pencil"></i> Bearbeiten
+            </a>
+            <form action="{{ url_for('players.delete_player', player_id=player.id) }}" method="POST" class="d-inline" onsubmit="return confirmDelete('Möchtest du diesen Spieler wirklich löschen?');">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Löschen
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informationen</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="40%"><i class="bi bi-phone"></i> Telefon:</th>
+                            <td>{{ player.phone }}</td>
+                        </tr>
+                        {% if player.email %}
+                        <tr>
+                            <th><i class="bi bi-envelope"></i> E-Mail:</th>
+                            <td>{{ player.email }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if player.skill_level %}
+                        <tr>
+                            <th><i class="bi bi-star"></i> Skill Level:</th>
+                            <td><span class="badge bg-success">{{ player.skill_level }}</span></td>
+                        </tr>
+                        {% endif %}
+                        {% if player.city %}
+                        <tr>
+                            <th><i class="bi bi-geo-alt"></i> Ort:</th>
+                            <td>{{ player.city }}{% if player.country %}, {{ player.country }}{% endif %}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th><i class="bi bi-translate"></i> Sprache:</th>
+                            <td>{{ player.preferred_language }}</td>
+                        </tr>
+                        <tr>
+                            <th><i class="bi bi-calendar"></i> Registriert:</th>
+                            <td>{{ player.created_at.strftime('%d.%m.%Y') }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-event"></i> Events ({{ player.invited_events|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if player.invited_events %}
+                    <div class="list-group">
+                        {% for event in player.invited_events %}
+                        <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">{{ event.name }}</h6>
+                                <small>{{ event.start_date.strftime('%d.%m.%Y') }}</small>
+                            </div>
+                            <small><i class="bi bi-geo-alt"></i> {{ event.location }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Noch keine Events</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ url_for('players.player_list') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> Zurück zur Liste
+    </a>
+</div>
+{% endblock %}

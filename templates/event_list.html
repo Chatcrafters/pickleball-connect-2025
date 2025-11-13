@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Events - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="bi bi-calendar-event"></i> Events</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('events.create_event') }}" class="btn btn-success">
+                <i class="bi bi-calendar-plus"></i> Neues Event
+            </a>
+        </div>
+    </div>
+
+    <!-- Events List -->
+    <div class="row">
+        {% for event in events %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ event.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        <i class="bi bi-calendar"></i> 
+                        <strong>Start:</strong> {{ event.start_date.strftime('%d.%m.%Y') }}<br>
+                        {% if event.end_date %}
+                        <i class="bi bi-calendar"></i> 
+                        <strong>Ende:</strong> {{ event.end_date.strftime('%d.%m.%Y') }}<br>
+                        {% endif %}
+                        <i class="bi bi-geo-alt"></i> 
+                        <strong>Ort:</strong> {{ event.location }}<br>
+                        <i class="bi bi-people"></i> 
+                        <strong>Eingeladen:</strong> {{ event.invited_players|length }} Spieler
+                    </p>
+                    {% if event.description %}
+                    <p class="card-text text-muted">{{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('events.event_detail', event_id=event.id) }}" class="btn btn-sm btn-primary">
+                        <i class="bi bi-eye"></i> Details
+                    </a>
+                    <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-pencil"></i> Bearbeiten
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not events %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> Noch keine Events vorhanden. 
+        <a href="{{ url_for('events.create_event') }}">Erstes Event erstellen</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
