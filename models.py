@@ -1,57 +1,54 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+import secrets
 
 db = SQLAlchemy()
 
-# Association table for event registrations
-event_players = db.Table('event_registration',
-    db.Column('id', db.Integer, primary_key=True),
-    db.Column('event_id', db.Integer, db.ForeignKey('event.id')),
-    db.Column('player_id', db.Integer, db.ForeignKey('player.id')),
+# ============================================================================
+# EXISTING MODELS (keeping for reference)
+# ============================================================================
+
+# Enhanced association table for many-to-many relationship between Events and Players
+event_players = db.Table('event_players',
+    db.Column('event_id', db.Integer, db.ForeignKey('event.id'), primary_key=True),
+    db.Column('player_id', db.Integer, db.ForeignKey('player.id'), primary_key=True),
     db.Column('response_status', db.String(20), default='pending'),
     db.Column('response_date', db.DateTime, nullable=True),
-    db.Column('notes', db.Text, nullable=True),
-    db.Column('created_at', db.DateTime, default=datetime.utcnow),
-    extend_existing=True
+    db.Column('notes', db.Text, nullable=True)
 )
 
 class Player(db.Model):
-    __tablename__ = 'player'
-    __table_args__ = {'extend_existing': True}
-    
+    """Base player model - for all players in the system"""
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
-    phone_number = db.Column(db.String(20), nullable=False)
-    email = db.Column(db.String(120), nullable=True)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=True)
     skill_level = db.Column(db.String(10), nullable=True)
     city = db.Column(db.String(100), nullable=True)
     country = db.Column(db.String(100), nullable=True)
     preferred_language = db.Column(db.String(10), default='EN')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # NEW: Coaching fields
+    coaching_notes = db.Column(db.Text, nullable=True)  # Private notes (only admin)
+    last_coaching_contact = db.Column(db.DateTime, nullable=True)
+    
+    # NEW: Weakness tracking (comma-separated or JSON)
+    weaknesses = db.Column(db.Text, nullable=True)  # e.g., "dink_control,footwork"
+    strengths = db.Column(db.Text, nullable=True)   # e.g., "serve,net_play"
+    
     # Relationships
-    invited_events = db.relationship('Event', secondary='event_registration', 
-                                    back_populates='invited_players',
-                                    overlaps="registrations")
-    
-    # Backward compatibility property
-    @property
-    def phone(self):
-        return self.phone_number
-    
-    @phone.setter
-    def phone(self, value):
-        self.phone_number = value
+    invited_events = db.relationship('Event', secondary=event_players, back_populates='invited_players')
+    pcl_registrations = db.relationship('PCLRegistration', back_populates='player', lazy='dynamic')
     
     def __repr__(self):
         return f'<Player {self.first_name} {self.last_name}>'
     
     def get_response_for_event(self, event_id):
         """Get player's response status for a specific event"""
-        from sqlalchemy import select
         result = db.session.execute(
-            select(event_players).where(
+            db.select(event_players).where(
                 event_players.c.player_id == self.id,
                 event_players.c.event_id == event_id
             )
@@ -64,11 +61,22 @@ class Player(db.Model):
                 'notes': result.notes
             }
         return None
+    
+    def get_weaknesses_list(self):
+        """Return weaknesses as a list"""
+        if self.weaknesses:
+            return [w.strip() for w in self.weaknesses.split(',')]
+        return []
+    
+    def get_strengths_list(self):
+        """Return strengths as a list"""
+        if self.strengths:
+            return [s.strip() for s in self.strengths.split(',')]
+        return []
+
 
 class Event(db.Model):
-    __tablename__ = 'event'
-    __table_args__ = {'extend_existing': True}
-    
+    """Base event model - for tournaments, workshops, clinics"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
@@ -77,10 +85,11 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # NEW: Event type
+    event_type = db.Column(db.String(50), default='tournament')  # tournament, workshop, clinic, invitational
+    
     # Relationships
-    invited_players = db.relationship('Player', secondary='event_registration',
-                                     back_populates='invited_events',
-                                     overlaps="registrations")
+    invited_players = db.relationship('Player', secondary=event_players, back_populates='invited_events')
     messages = db.relationship('Message', back_populates='event', cascade='all, delete-orphan')
     
     def __repr__(self):
@@ -88,12 +97,8 @@ class Event(db.Model):
     
     def get_response_stats(self):
         """Get statistics about player responses"""
-        from sqlalchemy import select, func
         results = db.session.execute(
-            select(
-                event_players.c.response_status, 
-                func.count()
-            ).where(
+            db.select(event_players.c.response_status, db.func.count()).where(
                 event_players.c.event_id == self.id
             ).group_by(event_players.c.response_status)
         ).all()
@@ -114,13 +119,8 @@ class Event(db.Model):
     
     def get_players_by_response(self, status):
         """Get all players with a specific response status"""
-        from sqlalchemy import select
         results = db.session.execute(
-            select(
-                Player, 
-                event_players.c.response_date, 
-                event_players.c.notes
-            ).join(
+            db.select(Player, event_players.c.response_date, event_players.c.notes).join(
                 event_players, Player.id == event_players.c.player_id
             ).where(
                 event_players.c.event_id == self.id,
@@ -130,19 +130,15 @@ class Event(db.Model):
         
         return [{'player': r[0], 'response_date': r[1], 'notes': r[2]} for r in results]
 
+
 class Message(db.Model):
-    __tablename__ = 'message'
-    __table_args__ = {'extend_existing': True}
-    
     id = db.Column(db.Integer, primary_key=True)
-    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=True)
-    content = db.Column(db.Text, nullable=True)
-    direction = db.Column(db.String, nullable=True)  # Deine zusätzliche Spalte
-    status = db.Column(db.String, nullable=True)
-    message_type = db.Column(db.String, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)  # Deine zusätzliche Spalte
-    sent_at = db.Column(db.DateTime(timezone=True), default=datetime.utcnow)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
+    message_type = db.Column(db.String(50), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='pending')
+    sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
     event = db.relationship('Event', back_populates='messages')
@@ -151,11 +147,9 @@ class Message(db.Model):
     def __repr__(self):
         return f'<Message {self.id} - {self.message_type}>'
 
+
 class PlayerResponse(db.Model):
     """Track individual WhatsApp responses from players"""
-    __tablename__ = 'player_response'
-    __table_args__ = {'extend_existing': True}
-    
     id = db.Column(db.Integer, primary_key=True)
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
@@ -170,3 +164,398 @@ class PlayerResponse(db.Model):
     
     def __repr__(self):
         return f'<PlayerResponse {self.id} - {self.response_type}>'
+
+
+# ============================================================================
+# NEW PCL MODELS
+# ============================================================================
+
+class PCLTournament(db.Model):
+    """PCL Tournament (e.g., PCL Malaga 2026)"""
+    __tablename__ = 'pcl_tournament'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)  # "PCL Malaga 2026"
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    
+    # Registration deadline
+    registration_deadline = db.Column(db.DateTime, nullable=False)
+    
+    # Status
+    status = db.Column(db.String(20), default='open')  # open, closed, completed
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    teams = db.relationship('PCLTeam', back_populates='tournament', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<PCLTournament {self.name}>'
+    
+    def get_stats(self):
+        """Get tournament statistics"""
+        teams = self.teams.all()
+        total_players = sum(team.registrations.count() for team in teams)
+        complete_players = sum(
+            team.registrations.filter_by(status='complete').count() 
+            for team in teams
+        )
+        return {
+            'total_teams': len(teams),
+            'total_players': total_players,
+            'complete_players': complete_players,
+            'completion_rate': round(complete_players / total_players * 100, 1) if total_players > 0 else 0
+        }
+
+
+class PCLTeam(db.Model):
+    """National team for PCL (e.g., Germany +19, Spain +50)"""
+    __tablename__ = 'pcl_team'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('pcl_tournament.id'), nullable=False)
+    
+    # Team info
+    country_code = db.Column(db.String(3), nullable=False)  # GER, ESP, ITA, etc.
+    country_name = db.Column(db.String(100), nullable=False)  # Germany, Spain, etc.
+    country_flag = db.Column(db.String(10), nullable=True)  # 🇩🇪, 🇪🇸, etc.
+    
+    # Age category
+    age_category = db.Column(db.String(10), nullable=False)  # +19, +50
+    
+    # Team limits
+    min_men = db.Column(db.Integer, default=2)
+    max_men = db.Column(db.Integer, default=4)
+    min_women = db.Column(db.Integer, default=2)
+    max_women = db.Column(db.Integer, default=4)
+    
+    # Secret token for captain access
+    captain_token = db.Column(db.String(64), unique=True, nullable=False)
+    
+    # Status
+    status = db.Column(db.String(20), default='incomplete')  # incomplete, complete, confirmed
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    tournament = db.relationship('PCLTournament', back_populates='teams')
+    registrations = db.relationship('PCLRegistration', back_populates='team', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<PCLTeam {self.country_code} {self.age_category}>'
+    
+    @staticmethod
+    def generate_token():
+        """Generate a unique captain token"""
+        return secrets.token_urlsafe(32)
+    
+    def get_captain_url(self):
+        """Get the secret URL for captain access"""
+        return f"/pcl/team/{self.captain_token}"
+    
+    def get_registration_url(self):
+        """Get the URL for player registration"""
+        return f"/pcl/register/{self.captain_token}"
+    
+    def get_stats(self):
+        """Get team registration statistics"""
+        registrations = self.registrations.all()
+        men = [r for r in registrations if r.gender == 'male']
+        women = [r for r in registrations if r.gender == 'female']
+        captains = [r for r in registrations if r.is_captain]
+        
+        men_complete = len([r for r in men if r.status == 'complete'])
+        women_complete = len([r for r in women if r.status == 'complete'])
+        
+        return {
+            'total': len(registrations),
+            'men': len(men),
+            'women': len(women),
+            'captains': len(captains),
+            'men_complete': men_complete,
+            'women_complete': women_complete,
+            'men_with_photo': len([r for r in men if r.photo_filename]),
+            'women_with_photo': len([r for r in women if r.photo_filename]),
+            'is_complete': (
+                len(men) >= self.min_men and 
+                len(women) >= self.min_women and
+                men_complete >= self.min_men and
+                women_complete >= self.min_women
+            )
+        }
+
+
+class PCLRegistration(db.Model):
+    """Player registration for PCL - contains all PCL-specific data"""
+    __tablename__ = 'pcl_registration'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Link to base player (optional)
+    
+    # Personal info (required)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    phone = db.Column(db.String(20), nullable=True)
+    
+    # Demographics
+    gender = db.Column(db.String(10), nullable=False)  # male, female
+    birth_year = db.Column(db.Integer, nullable=True)
+    
+    # Role
+    is_captain = db.Column(db.Boolean, default=False)
+    
+    # Shirt info (required)
+    shirt_name = db.Column(db.String(50), nullable=False)  # Name on shirt
+    shirt_size = db.Column(db.String(10), nullable=False)  # XS, S, M, L, XL, XXL
+    
+    # Profile (required)
+    photo_filename = db.Column(db.String(255), nullable=True)  # Uploaded photo
+    bio = db.Column(db.Text, nullable=True)  # Short bio
+    
+    # Social Media (optional)
+    instagram = db.Column(db.String(100), nullable=True)
+    tiktok = db.Column(db.String(100), nullable=True)
+    youtube = db.Column(db.String(200), nullable=True)
+    twitter = db.Column(db.String(100), nullable=True)
+    
+    # Optional extras
+    video_url = db.Column(db.String(500), nullable=True)  # Highlight video
+    dupr_rating = db.Column(db.String(10), nullable=True)
+    
+    # Registration status
+    status = db.Column(db.String(20), default='incomplete')  # incomplete, complete, confirmed
+    
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Language preference (for emails/notifications)
+    preferred_language = db.Column(db.String(10), default='EN')
+    
+    # Relationships
+    team = db.relationship('PCLTeam', back_populates='registrations')
+    player = db.relationship('Player', back_populates='pcl_registrations')
+    
+    def __repr__(self):
+        return f'<PCLRegistration {self.first_name} {self.last_name}>'
+    
+    def check_completeness(self):
+        """Check if registration is complete and update status"""
+        required_fields = [
+            self.first_name,
+            self.last_name,
+            self.email,
+            self.gender,
+            self.shirt_name,
+            self.shirt_size,
+            self.photo_filename,
+            self.bio
+        ]
+        
+        if all(required_fields):
+            self.status = 'complete'
+        else:
+            self.status = 'incomplete'
+        
+        return self.status == 'complete'
+    
+    def get_missing_fields(self):
+        """Get list of missing required fields"""
+        missing = []
+        if not self.photo_filename:
+            missing.append('photo')
+        if not self.bio:
+            missing.append('bio')
+        if not self.shirt_name:
+            missing.append('shirt_name')
+        if not self.shirt_size:
+            missing.append('shirt_size')
+        return missing
+    
+    def get_display_name(self):
+        """Get formatted display name"""
+        return f"{self.first_name} {self.last_name}"
+    
+    def get_social_links(self):
+        """Get dictionary of social media links"""
+        links = {}
+        if self.instagram:
+            handle = self.instagram.replace('@', '')
+            links['instagram'] = f"https://instagram.com/{handle}"
+        if self.tiktok:
+            handle = self.tiktok.replace('@', '')
+            links['tiktok'] = f"https://tiktok.com/@{handle}"
+        if self.youtube:
+            links['youtube'] = self.youtube
+        if self.twitter:
+            handle = self.twitter.replace('@', '')
+            links['twitter'] = f"https://x.com/{handle}"
+        return links
+
+
+# ============================================================================
+# COACHING MODELS (for future use)
+# ============================================================================
+
+class Workshop(db.Model):
+    """Workshop/Clinic for coaching"""
+    __tablename__ = 'workshop'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    workshop_type = db.Column(db.String(50), default='workshop')  # workshop, clinic
+    topic = db.Column(db.String(200), nullable=True)  # e.g., "Dink & Kitchen Play"
+    
+    date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    participants = db.relationship('WorkshopParticipant', back_populates='workshop', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<Workshop {self.name}>'
+
+
+class WorkshopParticipant(db.Model):
+    """Link between workshop and player with coaching notes"""
+    __tablename__ = 'workshop_participant'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    workshop_id = db.Column(db.Integer, db.ForeignKey('workshop.id'), nullable=False)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
+    
+    # Coaching notes for this specific workshop
+    notes = db.Column(db.Text, nullable=True)
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    workshop = db.relationship('Workshop', back_populates='participants')
+    player = db.relationship('Player')
+    
+    def __repr__(self):
+        return f'<WorkshopParticipant {self.player_id} @ {self.workshop_id}>'
+
+
+class VideoLibrary(db.Model):
+    """Training videos linked to weakness categories"""
+    __tablename__ = 'video_library'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    youtube_url = db.Column(db.String(500), nullable=False)
+    
+    # Category matches weakness categories
+    category = db.Column(db.String(50), nullable=False)  # dink_control, serve, footwork, etc.
+    
+    description = db.Column(db.Text, nullable=True)
+    
+    # Multi-language support
+    language = db.Column(db.String(10), default='EN')
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Video {self.title}>'
+
+
+# Weakness categories as constant
+WEAKNESS_CATEGORIES = [
+    ('dink_control', 'Dink Control'),
+    ('third_shot_drop', 'Third Shot Drop'),
+    ('serve', 'Serve / Aufschlag'),
+    ('return', 'Return'),
+    ('backhand', 'Backhand / Rückhand'),
+    ('forehand', 'Forehand / Vorhand'),
+    ('volley', 'Volley'),
+    ('footwork', 'Footwork'),
+    ('court_positioning', 'Court Positioning'),
+    ('shot_selection', 'Shot Selection'),
+    ('mental', 'Mental / Consistency'),
+]
+
+SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+
+COUNTRY_FLAGS = {
+    # Western Europe
+    'GER': '🇩🇪',
+    'FRA': '🇫🇷',
+    'NED': '🇳🇱',
+    'BEL': '🇧🇪',
+    'LUX': '🇱🇺',
+    'AUT': '🇦🇹',
+    'SUI': '🇨🇭',
+    
+    # Southern Europe
+    'ESP': '🇪🇸',
+    'POR': '🇵🇹',
+    'ITA': '🇮🇹',
+    'GRE': '🇬🇷',
+    'MLT': '🇲🇹',
+    'CYP': '🇨🇾',
+    'AND': '🇦🇩',
+    'MON': '🇲🇨',
+    'SMR': '🇸🇲',
+    'VAT': '🇻🇦',
+    
+    # Northern Europe
+    'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
+    'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+    'WAL': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+    'NIR': '🇬🇧',
+    'GBR': '🇬🇧',
+    'IRL': '🇮🇪',
+    'SWE': '🇸🇪',
+    'NOR': '🇳🇴',
+    'DEN': '🇩🇰',
+    'FIN': '🇫🇮',
+    'ISL': '🇮🇸',
+    
+    # Central Europe
+    'POL': '🇵🇱',
+    'CZE': '🇨🇿',
+    'SVK': '🇸🇰',
+    'HUN': '🇭🇺',
+    'SLO': '🇸🇮',
+    'CRO': '🇭🇷',
+    
+    # Eastern Europe
+    'RUS': '🇷🇺',
+    'UKR': '🇺🇦',
+    'BLR': '🇧🇾',
+    'MDA': '🇲🇩',
+    'ROM': '🇷🇴',
+    'BUL': '🇧🇬',
+    
+    # Baltic States
+    'EST': '🇪🇪',
+    'LAT': '🇱🇻',
+    'LTU': '🇱🇹',
+    
+    # Balkans
+    'SRB': '🇷🇸',
+    'MNE': '🇲🇪',
+    'BIH': '🇧🇦',
+    'MKD': '🇲🇰',
+    'ALB': '🇦🇱',
+    'KOS': '🇽🇰',
+    
+    # Other
+    'TUR': '🇹🇷',
+    'GEO': '🇬🇪',
+    'ARM': '🇦🇲',
+    'AZE': '🇦🇿',
+    
+    # Special
+    'ASIA': '🌏',
+    'EUR': '🇪🇺',
+    'WORLD': '🌍',
+}

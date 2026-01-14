@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}Add Team - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=tournament.id) }}">{{ tournament.name }}</a></li>
+                    <li class="breadcrumb-item active">Add Team</li>
+                </ol>
+            </nav>
+
+            <h1 class="mb-4"><i class="bi bi-flag"></i> Add Team to {{ tournament.name }}</h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label">Country Code *</label>
+                                <select class="form-select" name="country_code" id="countryCode" required onchange="updateCountryName()">
+                                    <option value="">Select...</option>
+                                    {% for code, flag in country_flags.items() %}
+                                    <option value="{{ code }}" data-flag="{{ flag }}">{{ flag }} {{ code }}</option>
+                                    {% endfor %}
+                                    <option value="OTHER">🏳️ Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-8 mb-3">
+                                <label class="form-label">Country Name *</label>
+                                <input type="text" class="form-control" name="country_name" id="countryName" required
+                                       placeholder="Germany">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Age Category *</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="age_category" id="cat19" value="+19" checked>
+                                <label class="btn btn-outline-primary" for="cat19">+19 Open</label>
+                                
+                                <input type="radio" class="btn-check" name="age_category" id="cat50" value="+50">
+                                <label class="btn btn-outline-primary" for="cat50">+50 Senior</label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <h5>Team Size Limits</h5>
+                        <div class="row">
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Min Men</label>
+                                <input type="number" class="form-control" name="min_men" value="2" min="1" max="10">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Max Men</label>
+                                <input type="number" class="form-control" name="max_men" value="4" min="1" max="10">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Min Women</label>
+                                <input type="number" class="form-control" name="min_women" value="2" min="1" max="10">
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Max Women</label>
+                                <input type="number" class="form-control" name="max_women" value="4" min="1" max="10">
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=tournament.id) }}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-plus-circle"></i> Add Team
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const countryNames = {
+    'GER': 'Germany',
+    'ESP': 'Spain',
+    'ITA': 'Italy',
+    'ENG': 'England',
+    'POR': 'Portugal',
+    'SWE': 'Sweden',
+    'FRA': 'France',
+    'NED': 'Netherlands',
+    'AUT': 'Austria',
+    'SUI': 'Switzerland',
+    'ASIA': 'Asia'
+};
+
+function updateCountryName() {
+    const select = document.getElementById('countryCode');
+    const nameInput = document.getElementById('countryName');
+    const code = select.value;
+    
+    if (countryNames[code]) {
+        nameInput.value = countryNames[code];
+    } else {
+        nameInput.value = '';
+    }
+}
+</script>
+{% endblock %}

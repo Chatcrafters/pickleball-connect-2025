@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} - {{ t.captain_dashboard }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Language Switcher -->
+    <div class="text-end mb-3">
+        <div class="btn-group btn-group-sm">
+            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇬🇧 EN</a>
+            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇩🇪 DE</a>
+            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇪🇸 ES</a>
+            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇫🇷 FR</a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <h1 class="display-4">
+                {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}
+            </h1>
+            <h2 class="text-muted">{{ team.tournament.name }}</h2>
+            <p class="lead">
+                <i class="bi bi-calendar"></i> {{ team.tournament.start_date.strftime('%d.%m.%Y') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
+                &nbsp;|&nbsp;
+                <i class="bi bi-geo-alt"></i> {{ team.tournament.location }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Deadline Warning -->
+    {% if days_left <= 10 and days_left > 0 %}
+    <div class="alert alert-warning alert-lg text-center">
+        <h4><i class="bi bi-exclamation-triangle"></i> {{ t.deadline }}: {{ days_left }} {{ t.days_left }}!</h4>
+        <p class="mb-0">{{ team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M') }}</p>
+    </div>
+    {% elif days_left <= 0 %}
+    <div class="alert alert-danger text-center">
+        <h4><i class="bi bi-x-circle"></i> Registration Closed</h4>
+    </div>
+    {% endif %}
+
+    <!-- Registration Link -->
+    <div class="card mb-4 border-primary">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-link-45deg"></i> {{ t.registration_link }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Share this link with your players:</p>
+            <div class="input-group">
+                <input type="text" class="form-control form-control-lg" id="registrationUrl" 
+                       value="{{ registration_url }}" readonly>
+                <button class="btn btn-outline-primary" onclick="copyLink()">
+                    <i class="bi bi-clipboard"></i> {{ t.copy_link }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Status -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card {% if stats.is_complete %}bg-success{% else %}bg-warning{% endif %} text-white text-center">
+                <div class="card-body">
+                    <h2>{{ stats.total }}</h2>
+                    <p class="mb-0">{{ t.players_registered }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center {% if stats.men >= team.min_men %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-body">
+                    <h2>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h2>
+                    <p class="mb-0">👨 {{ t.men }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center {% if stats.women >= team.min_women %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-body">
+                    <h2>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h2>
+                    <p class="mb-0">👩 {{ t.women }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2>{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h2>
+                    <p class="mb-0">✓ {{ t.complete }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Players Lists -->
+    <div class="row">
+        <!-- Men -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">👨 {{ t.men }} ({{ stats.men }}/{{ team.min_men }}-{{ team.max_men }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if men %}
+                    <div class="list-group list-group-flush">
+                        {% for reg in men %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                {% if reg.photo_filename %}
+                                <img src="{% if reg.photo_filename and reg.photo_filename.startswith('http') %}{{ reg.photo_filename }}{% elif reg.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + reg.photo_filename) }}{% else %}#{% endif %}" 
+                                     class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person text-white"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">
+                                        {{ reg.first_name }} {{ reg.last_name }}
+                                        {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        Shirt: {{ reg.shirt_name }} ({{ reg.shirt_size }})
+                                    </small>
+                                </div>
+                            </div>
+                            <div>
+                                {% if reg.status == 'complete' %}
+                                <span class="badge bg-success">✓</span>
+                                {% else %}
+                                <span class="badge bg-warning" title="{{ reg.get_missing_fields()|join(', ') }}">
+                                    {{ t.incomplete }}
+                                </span>
+                                {% endif %}
+                                <a href="{{ url_for('pcl.edit_registration', registration_id=reg.id, lang=current_lang) }}" 
+                                   class="btn btn-sm btn-outline-secondary ms-2">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4">No men registered yet</p>
+                    {% endif %}
+                    
+                    {% if stats.men < team.max_men %}
+                    <div class="text-center mt-3">
+                        <a href="{{ registration_url }}?lang={{ current_lang }}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Add Player
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Women -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">👩 {{ t.women }} ({{ stats.women }}/{{ team.min_women }}-{{ team.max_women }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if women %}
+                    <div class="list-group list-group-flush">
+                        {% for reg in women %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                {% if reg.photo_filename %}
+                                <img src="{% if reg.photo_filename and reg.photo_filename.startswith('http') %}{{ reg.photo_filename }}{% elif reg.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + reg.photo_filename) }}{% else %}#{% endif %}" 
+                                     class="rounded-circle me-3" width="50" height="50" style="object-fit: cover;">
+                                {% else %}
+                                <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 50px; height: 50px;">
+                                    <i class="bi bi-person text-white"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">
+                                        {{ reg.first_name }} {{ reg.last_name }}
+                                        {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
+                                    </h6>
+                                    <small class="text-muted">
+                                        Shirt: {{ reg.shirt_name }} ({{ reg.shirt_size }})
+                                    </small>
+                                </div>
+                            </div>
+                            <div>
+                                {% if reg.status == 'complete' %}
+                                <span class="badge bg-success">✓</span>
+                                {% else %}
+                                <span class="badge bg-warning" title="{{ reg.get_missing_fields()|join(', ') }}">
+                                    {{ t.incomplete }}
+                                </span>
+                                {% endif %}
+                                <a href="{{ url_for('pcl.edit_registration', registration_id=reg.id, lang=current_lang) }}" 
+                                   class="btn btn-sm btn-outline-secondary ms-2">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-4">No women registered yet</p>
+                    {% endif %}
+                    
+                    {% if stats.women < team.max_women %}
+                    <div class="text-center mt-3">
+                        <a href="{{ registration_url }}?lang={{ current_lang }}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus"></i> Add Player
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Requirements Info -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Team Requirements</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Minimum required:</h6>
+                    <ul>
+                        <li>{{ team.min_men }} Men</li>
+                        <li>{{ team.min_women }} Women</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Each player needs:</h6>
+                    <ul>
+                        <li>✓ Profile photo</li>
+                        <li>✓ Short bio</li>
+                        <li>✓ Shirt name & size</li>
+                        <li>○ Social media (optional)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    const input = document.getElementById('registrationUrl');
+    input.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    btn.classList.remove('btn-outline-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-primary');
+    }, 2000);
+}
+</script>
+{% endblock %}

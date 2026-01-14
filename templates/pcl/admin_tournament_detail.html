@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tournament.name }} - PCL Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
+                    <li class="breadcrumb-item active">{{ tournament.name }}</li>
+                </ol>
+            </nav>
+            <h1><i class="bi bi-trophy"></i> {{ tournament.name }}</h1>
+            <p class="text-muted">
+                <i class="bi bi-calendar"></i> {{ tournament.start_date.strftime('%d.%m.%Y') }} - {{ tournament.end_date.strftime('%d.%m.%Y') }}
+                &nbsp;|&nbsp;
+                <i class="bi bi-geo-alt"></i> {{ tournament.location }}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('pcl.add_team', tournament_id=tournament.id) }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> Add Team
+            </a>
+            <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-download"></i> Export Shirts
+            </a>
+        </div>
+    </div>
+
+    <!-- Deadline Warning -->
+    {% set days_left = (tournament.registration_deadline - now).days if now else 0 %}
+    {% if days_left <= 10 and days_left > 0 %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>Deadline in {{ days_left }} days!</strong>
+        Registration closes on {{ tournament.registration_deadline.strftime('%d.%m.%Y at %H:%M') }}
+    </div>
+    {% elif days_left <= 0 %}
+    <div class="alert alert-danger">
+        <i class="bi bi-x-circle"></i>
+        <strong>Registration closed!</strong>
+    </div>
+    {% endif %}
+
+    <!-- Stats Overview -->
+    {% set stats = tournament.get_stats() %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white text-center">
+                <div class="card-body">
+                    <h2>{{ stats.total_teams }}</h2>
+                    <p class="mb-0">Teams</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white text-center">
+                <div class="card-body">
+                    <h2>{{ stats.total_players }}</h2>
+                    <p class="mb-0">Players</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white text-center">
+                <div class="card-body">
+                    <h2>{{ stats.complete_players }}</h2>
+                    <p class="mb-0">Complete</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white text-center">
+                <div class="card-body">
+                    <h2>{{ stats.completion_rate }}%</h2>
+                    <p class="mb-0">Progress</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- +19 Teams -->
+    <div class="card mb-4">
+        <div class="card-header bg-dark text-white">
+            <h5 class="mb-0"><i class="bi bi-people"></i> +19 Open ({{ teams_19|length }} Teams)</h5>
+        </div>
+        <div class="card-body">
+            {% if teams_19 %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th class="text-center">Men</th>
+                            <th class="text-center">Women</th>
+                            <th class="text-center">Photos</th>
+                            <th class="text-center">Status</th>
+                            <th>Captain Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams_19 %}
+                        {% set team_stats = team.get_stats() %}
+                        <tr>
+                            <td>
+                                <strong>{{ team.country_flag }} {{ team.country_name }}</strong>
+                            </td>
+                            <td class="text-center">
+                                <span class="{% if team_stats.men >= team.min_men %}text-success{% else %}text-danger{% endif %}">
+                                    {{ team_stats.men }}/{{ team.min_men }}-{{ team.max_men }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="{% if team_stats.women >= team.min_women %}text-success{% else %}text-danger{% endif %}">
+                                    {{ team_stats.women }}/{{ team.min_women }}-{{ team.max_women }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {{ team_stats.men_with_photo + team_stats.women_with_photo }}/{{ team_stats.total }}
+                            </td>
+                            <td class="text-center">
+                                {% if team_stats.is_complete %}
+                                <span class="badge bg-success">✓ Complete</span>
+                                {% else %}
+                                <span class="badge bg-warning">Incomplete</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" 
+                                       value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" 
+                                       readonly onclick="this.select()">
+                            </td>
+                            <td>
+                                <a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}" class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-sm btn-outline-secondary" title="Export">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete {{ team.country_name }} {{ team.age_category }}?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No +19 teams yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- +50 Teams -->
+    <div class="card mb-4">
+        <div class="card-header bg-secondary text-white">
+            <h5 class="mb-0"><i class="bi bi-people"></i> +50 Senior ({{ teams_50|length }} Teams)</h5>
+        </div>
+        <div class="card-body">
+            {% if teams_50 %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Team</th>
+                            <th class="text-center">Men</th>
+                            <th class="text-center">Women</th>
+                            <th class="text-center">Photos</th>
+                            <th class="text-center">Status</th>
+                            <th>Captain Link</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for team in teams_50 %}
+                        {% set team_stats = team.get_stats() %}
+                        <tr>
+                            <td>
+                                <strong>{{ team.country_flag }} {{ team.country_name }}</strong>
+                            </td>
+                            <td class="text-center">
+                                <span class="{% if team_stats.men >= team.min_men %}text-success{% else %}text-danger{% endif %}">
+                                    {{ team_stats.men }}/{{ team.min_men }}-{{ team.max_men }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="{% if team_stats.women >= team.min_women %}text-success{% else %}text-danger{% endif %}">
+                                    {{ team_stats.women }}/{{ team.min_women }}-{{ team.max_women }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {{ team_stats.men_with_photo + team_stats.women_with_photo }}/{{ team_stats.total }}
+                            </td>
+                            <td class="text-center">
+                                {% if team_stats.is_complete %}
+                                <span class="badge bg-success">✓ Complete</span>
+                                {% else %}
+                                <span class="badge bg-warning">Incomplete</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <input type="text" class="form-control form-control-sm" 
+                                       value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" 
+                                       readonly onclick="this.select()">
+                            </td>
+                            <td>
+                                <a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}" class="btn btn-sm btn-outline-primary" title="View">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-sm btn-outline-secondary" title="Export">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete {{ team.country_name }} {{ team.age_category }}?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted">No +50 teams yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -8,6 +8,7 @@ from routes.messages import messages
 from routes.admin import admin
 from routes.webhook import webhook
 from dotenv import load_dotenv
+from routes.pcl import pcl
 
 # Load environment variables from .env
 load_dotenv()
@@ -45,6 +46,7 @@ app.register_blueprint(events, url_prefix='/events')
 app.register_blueprint(messages, url_prefix='/messages')
 app.register_blueprint(admin, url_prefix='/admin')
 app.register_blueprint(webhook, url_prefix='/webhook')
+app.register_blueprint(pcl, url_prefix='/pcl')
 
 # Create tables on first run
 with app.app_context():

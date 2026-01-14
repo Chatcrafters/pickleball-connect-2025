@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.page_title }} - {{ team.country_flag }} {{ team.country_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Language Switcher -->
+    <div class="text-end mb-3">
+        <div class="btn-group btn-group-sm">
+            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇬🇧 EN</a>
+            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇩🇪 DE</a>
+            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇪🇸 ES</a>
+            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇫🇷 FR</a>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <h1 class="display-5">
+                    {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}
+                </h1>
+                <h2>{{ t.page_title }}</h2>
+                <p class="text-muted">
+                    {{ team.tournament.name }} | {{ team.tournament.location }}
+                </p>
+            </div>
+
+            <!-- Form -->
+            <div class="card shadow">
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="preferred_language" value="{{ current_lang }}">
+                        
+                        <!-- Personal Info -->
+                        <h5 class="mb-3"><i class="bi bi-person"></i> {{ t.personal_info }}</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.first_name }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="first_name" 
+                                       value="{{ registration.first_name if registration else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.last_name }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="last_name" 
+                                       value="{{ registration.last_name if registration else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.email }} <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" name="email" 
+                                       value="{{ registration.email if registration else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.phone }}</label>
+                                <input type="tel" class="form-control" name="phone" 
+                                       value="{{ registration.phone if registration else '' }}"
+                                       placeholder="+49...">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.gender }} <span class="text-danger">*</span></label>
+                                <select class="form-select" name="gender" required>
+                                    <option value="">-- Select --</option>
+                                    <option value="male" {% if registration and registration.gender == 'male' %}selected{% endif %}>
+                                        👨 {{ t.male }}
+                                    </option>
+                                    <option value="female" {% if registration and registration.gender == 'female' %}selected{% endif %}>
+                                        👩 {{ t.female }}
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.birth_year }}</label>
+                                <input type="number" class="form-control" name="birth_year" 
+                                       value="{{ registration.birth_year if registration else '' }}"
+                                       min="1940" max="2010" placeholder="1985">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_captain" id="is_captain"
+                                       {% if registration and registration.is_captain %}checked{% endif %}>
+                                <label class="form-check-label" for="is_captain">
+                                    🎖️ {{ t.captain }}
+                                </label>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Shirt Info -->
+                        <h5 class="mb-3"><i class="bi bi-tshirt"></i> {{ t.shirt_info }}</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.shirt_name }} <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="shirt_name" 
+                                       value="{{ registration.shirt_name if registration else '' }}"
+                                       placeholder="MÜLLER" required>
+                                <small class="form-text text-muted">{{ t.shirt_name_help }}</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.shirt_size }} <span class="text-danger">*</span></label>
+                                <select class="form-select" name="shirt_size" required>
+                                    <option value="">-- Select --</option>
+                                    {% for size in shirt_sizes %}
+                                    <option value="{{ size }}" 
+                                            {% if registration and registration.shirt_size == size %}selected{% endif %}>
+                                        {{ size }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Profile -->
+                        <h5 class="mb-3"><i class="bi bi-camera"></i> {{ t.profile }}</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">{{ t.photo }} <span class="text-danger">*</span></label>
+                            {% if registration and registration.photo_filename %}
+                            <div class="mb-2">
+                                <img src="{% if registration.photo_filename and registration.photo_filename.startswith('http') %}{{ registration.photo_filename }}{% elif registration.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + registration.photo_filename) }}{% else %}#{% endif %}"
+                                     class="rounded" width="100" height="100" style="object-fit: cover;">
+                                <span class="text-success ms-2">✓ Photo uploaded</span>
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" name="photo" accept="image/*"
+                                   {% if not registration %}required{% endif %}>
+                            <small class="form-text text-muted">{{ t.photo_help }}</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">{{ t.bio }} <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="bio" rows="4" 
+                                      placeholder="{{ t.bio_placeholder }}" required>{{ registration.bio if registration else '' }}</textarea>
+                            <small class="form-text text-muted">100-500 characters</small>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Social Media -->
+                        <h5 class="mb-3"><i class="bi bi-share"></i> {{ t.social_media }}</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-instagram"></i> Instagram</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" name="instagram" 
+                                           value="{{ registration.instagram if registration else '' }}"
+                                           placeholder="username">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-tiktok"></i> TikTok</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" name="tiktok" 
+                                           value="{{ registration.tiktok if registration else '' }}"
+                                           placeholder="username">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-youtube"></i> YouTube</label>
+                                <input type="url" class="form-control" name="youtube" 
+                                       value="{{ registration.youtube if registration else '' }}"
+                                       placeholder="https://youtube.com/@channel">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="bi bi-twitter-x"></i> X (Twitter)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" name="twitter" 
+                                           value="{{ registration.twitter if registration else '' }}"
+                                           placeholder="username">
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Optional -->
+                        <h5 class="mb-3"><i class="bi bi-stars"></i> {{ t.optional_info }}</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.video_url }}</label>
+                                <input type="url" class="form-control" name="video_url" 
+                                       value="{{ registration.video_url if registration else '' }}"
+                                       placeholder="https://youtube.com/...">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ t.dupr_rating }}</label>
+                                <input type="text" class="form-control" name="dupr_rating" 
+                                       value="{{ registration.dupr_rating if registration else '' }}"
+                                       placeholder="4.25">
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <!-- Privacy -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="privacy_accept" required>
+                                <label class="form-check-label" for="privacy_accept">
+                                    {{ t.privacy_accept }} <span class="text-danger">*</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if edit_mode %}{{ t.update }}{% else %}{{ t.submit }}{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Back Link -->
+            <div class="text-center mt-3">
+                <a href="{{ url_for('pcl.captain_dashboard', token=team.captain_token, lang=current_lang) }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Team Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}PCL Admin - Pickleball Connect{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1><i class="bi bi-trophy"></i> PCL Administration</h1>
+            <p class="text-muted">Pickleball Champions League - Team Management</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('pcl.create_tournament') }}" class="btn btn-success">
+                <i class="bi bi-plus-circle"></i> New Tournament
+            </a>
+        </div>
+    </div>
+
+    {% if tournaments %}
+    <div class="row">
+        {% for tournament in tournaments %}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy"></i> {{ tournament.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <i class="bi bi-calendar"></i> 
+                        {{ tournament.start_date.strftime('%d.%m.%Y') }} - {{ tournament.end_date.strftime('%d.%m.%Y') }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-geo-alt"></i> {{ tournament.location }}
+                    </p>
+                    <p class="mb-2">
+                        <i class="bi bi-clock"></i> 
+                        <strong>Deadline:</strong> {{ tournament.registration_deadline.strftime('%d.%m.%Y %H:%M') }}
+                    </p>
+                    
+                    {% set stats = tournament.get_stats() %}
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h4>{{ stats.total_teams }}</h4>
+                            <small class="text-muted">Teams</small>
+                        </div>
+                        <div class="col-4">
+                            <h4>{{ stats.total_players }}</h4>
+                            <small class="text-muted">Players</small>
+                        </div>
+                        <div class="col-4">
+                            <h4>{{ stats.completion_rate }}%</h4>
+                            <small class="text-muted">Complete</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=tournament.id) }}" class="btn btn-primary">
+                        <i class="bi bi-eye"></i> Manage
+                    </a>
+                    <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-download"></i> Shirt List
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle"></i> No tournaments yet. 
+        <a href="{{ url_for('pcl.create_tournament') }}">Create your first PCL tournament</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

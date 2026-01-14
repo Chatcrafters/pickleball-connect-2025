@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}{% if tournament %}Edit Tournament{% else %}Create Tournament{% endif %} - PCL Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
+                    <li class="breadcrumb-item active">{% if tournament %}Edit{% else %}New{% endif %} Tournament</li>
+                </ol>
+            </nav>
+
+            <h1 class="mb-4">
+                <i class="bi bi-trophy"></i> 
+                {% if tournament %}Edit Tournament{% else %}Create New Tournament{% endif %}
+            </h1>
+
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label class="form-label">Tournament Name *</label>
+                            <input type="text" class="form-control" name="name" 
+                                   value="{{ tournament.name if tournament else '' }}"
+                                   placeholder="PCL Malaga 2026" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Start Date *</label>
+                                <input type="date" class="form-control" name="start_date" 
+                                       value="{{ tournament.start_date.strftime('%Y-%m-%d') if tournament else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">End Date *</label>
+                                <input type="date" class="form-control" name="end_date" 
+                                       value="{{ tournament.end_date.strftime('%Y-%m-%d') if tournament else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Location *</label>
+                            <input type="text" class="form-control" name="location" 
+                                   value="{{ tournament.location if tournament else '' }}"
+                                   placeholder="Malaga, Spain" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Registration Deadline *</label>
+                            <input type="datetime-local" class="form-control" name="registration_deadline" 
+                                   value="{{ tournament.registration_deadline.strftime('%Y-%m-%dT%H:%M') if tournament else '' }}" required>
+                            <small class="form-text text-muted">After this date, players cannot register anymore.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="3">{{ tournament.description if tournament else '' }}</textarea>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{{ url_for('pcl.admin_dashboard') }}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> 
+                                {% if tournament %}Update{% else %}Create{% endif %} Tournament
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
