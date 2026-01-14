@@ -817,3 +817,140 @@ def send_all_profile_links(token):
         flash(f'âš ï¸ {error_count} message(s) could not be sent.', 'warning')
     
     return redirect(url_for('pcl.captain_dashboard', token=token))
+
+# ============================================================================
+# CAPTAIN MESSAGING ROUTES (WhatsApp Invitations & Reminders)
+# ============================================================================
+
+@pcl.route('/admin/team/<int:team_id>/send-captain-invite', methods=['GET', 'POST'])
+def send_captain_invite(team_id):
+    """Send captain invitation via WhatsApp"""
+    from utils.whatsapp import send_whatsapp_message, get_captain_invitation_message
+    
+    team = PCLTeam.query.get_or_404(team_id)
+    
+    if request.method == 'POST':
+        captain_name = request.form.get('captain_name', 'Captain')
+        captain_phone = request.form.get('captain_phone', '')
+        language = request.form.get('language', 'EN')
+        test_mode = request.form.get('test_mode') == 'on'
+        
+        if not captain_phone:
+            flash('Phone number is required!', 'danger')
+            return redirect(url_for('pcl.send_captain_invite', team_id=team_id))
+        
+        # Build captain URL
+        captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+        
+        # Get message in selected language
+        message = get_captain_invitation_message(team, captain_name, captain_url, language)
+        
+        # Send WhatsApp
+        result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
+        
+        if result['status'] in ['sent', 'test_mode']:
+            mode_text = " (TEST MODE)" if test_mode else ""
+            flash(f'Captain invitation sent to {captain_name}{mode_text}!', 'success')
+        else:
+            flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
+        
+        return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+    
+    # GET - show form
+    return render_template('pcl/send_captain_invite.html', team=team)
+
+
+@pcl.route('/admin/team/<int:team_id>/send-captain-reminder', methods=['POST'])
+def send_captain_reminder(team_id):
+    """Send captain reminder via WhatsApp"""
+    from utils.whatsapp import send_whatsapp_message, get_captain_reminder_message
+    
+    team = PCLTeam.query.get_or_404(team_id)
+    
+    captain_name = request.form.get('captain_name', 'Captain')
+    captain_phone = request.form.get('captain_phone', '')
+    language = request.form.get('language', 'EN')
+    test_mode = request.form.get('test_mode') == 'on'
+    
+    if not captain_phone:
+        flash('Phone number is required!', 'danger')
+        return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+    
+    # Build captain URL
+    captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+    
+    # Get team stats
+    stats = team.get_stats()
+    
+    # Get message in selected language
+    message = get_captain_reminder_message(team, captain_name, captain_url, stats, language)
+    
+    # Send WhatsApp
+    result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
+    
+    if result['status'] in ['sent', 'test_mode']:
+        mode_text = " (TEST MODE)" if test_mode else ""
+        flash(f'Reminder sent to {captain_name}{mode_text}!', 'success')
+    else:
+        flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
+    
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+
+
+@pcl.route('/admin/tournament/<int:tournament_id>/send-all-reminders', methods=['POST'])
+def send_all_captain_reminders(tournament_id):
+    """Send reminders to all captains with incomplete teams"""
+    from utils.whatsapp import send_whatsapp_message, get_captain_reminder_message
+    
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    test_mode = request.form.get('test_mode') == 'on'
+    
+    sent_count = 0
+    error_count = 0
+    skipped_count = 0
+    
+    for team in tournament.teams.all():
+        stats = team.get_stats()
+        
+        # Skip complete teams
+        if stats['is_complete']:
+            skipped_count += 1
+            continue
+        
+        # Find captain registration
+        captain_reg = team.registrations.filter_by(is_captain=True).first()
+        
+        if not captain_reg or not captain_reg.phone:
+            error_count += 1
+            continue
+        
+        # Build captain URL
+        captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+        
+        # Get message
+        message = get_captain_reminder_message(
+            team, 
+            captain_reg.first_name, 
+            captain_url, 
+            stats, 
+            captain_reg.preferred_language
+        )
+        
+        # Send WhatsApp
+        result = send_whatsapp_message(captain_reg.phone, message, test_mode=test_mode)
+        
+        if result['status'] in ['sent', 'test_mode']:
+            sent_count += 1
+        else:
+            error_count += 1
+    
+    # Summary
+    mode_text = " (TEST MODE)" if test_mode else ""
+    if sent_count > 0:
+        flash(f'{sent_count} reminder(s) sent{mode_text}!', 'success')
+    if skipped_count > 0:
+        flash(f'{skipped_count} complete team(s) skipped.', 'info')
+    if error_count > 0:
+        flash(f'{error_count} could not be sent (no captain/phone).', 'warning')
+    
+    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))

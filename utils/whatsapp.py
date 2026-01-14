@@ -20,7 +20,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
     """
     if test_mode or not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
         print(f"\n{'='*60}")
-        print(f"📱 [TEST MODE] WhatsApp to {to_number}:")
+        print(f"ðŸ“± [TEST MODE] WhatsApp to {to_number}:")
         print(f"{'='*60}")
         print(message)
         print(f"{'='*60}\n")
@@ -39,7 +39,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
             to=to_number
         )
         
-        print(f"✅ Message sent to {to_number}! SID: {message_obj.sid}")
+        print(f"âœ… Message sent to {to_number}! SID: {message_obj.sid}")
         
         return {
             'status': 'sent',
@@ -47,7 +47,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
             'to': to_number
         }
     except Exception as e:
-        print(f"❌ Error sending WhatsApp message: {str(e)}")
+        print(f"âŒ Error sending WhatsApp message: {str(e)}")
         return {
             'status': 'failed',
             'error': str(e)
@@ -72,54 +72,292 @@ def send_profile_completion_link(player, test_mode=False):
     
     # Messages in different languages
     messages = {
-        'EN': f"""🎾 Welcome to WPC Series Europe!
+        'EN': f"""ðŸŽ¾ Welcome to WPC Series Europe!
 
-Hi {player.first_name}! 👋
+Hi {player.first_name}! ðŸ‘‹
 
 Please complete your player profile to participate in our tournaments:
 
 {update_url}
 
-See you on the courts! 🏓
+See you on the courts! ðŸ“
 WPC Series Europe""",
         
-        'DE': f"""🎾 Willkommen bei WPC Series Europe!
+        'DE': f"""ðŸŽ¾ Willkommen bei WPC Series Europe!
 
-Hallo {player.first_name}! 👋
+Hallo {player.first_name}! ðŸ‘‹
 
-Bitte vervollständige dein Spielerprofil, um an unseren Turnieren teilzunehmen:
+Bitte vervollstÃ¤ndige dein Spielerprofil, um an unseren Turnieren teilzunehmen:
 
 {update_url}
 
-Wir sehen uns auf dem Platz! 🏓
+Wir sehen uns auf dem Platz! ðŸ“
 WPC Series Europe""",
         
-        'ES': f"""🎾 ¡Bienvenido a WPC Series Europe!
+        'ES': f"""ðŸŽ¾ Â¡Bienvenido a WPC Series Europe!
 
-¡Hola {player.first_name}! 👋
+Â¡Hola {player.first_name}! ðŸ‘‹
 
 Por favor completa tu perfil de jugador para participar en nuestros torneos:
 
 {update_url}
 
-¡Nos vemos en las canchas! 🏓
+Â¡Nos vemos en las canchas! ðŸ“
 WPC Series Europe""",
         
-        'FR': f"""🎾 Bienvenue à WPC Series Europe!
+        'FR': f"""ðŸŽ¾ Bienvenue Ã  WPC Series Europe!
 
-Bonjour {player.first_name}! 👋
+Bonjour {player.first_name}! ðŸ‘‹
 
-Veuillez compléter votre profil de joueur pour participer à nos tournois:
+Veuillez complÃ©ter votre profil de joueur pour participer Ã  nos tournois:
 
 {update_url}
 
-À bientôt sur les courts! 🏓
+Ã€ bientÃ´t sur les courts! ðŸ“
 WPC Series Europe"""
     }
     
     message = messages.get(player.preferred_language, messages['EN'])
     
     return send_whatsapp_message(player.phone, message, test_mode=test_mode)
+
+def get_captain_invitation_message(team, captain_name, captain_url, language='EN'):
+    """
+    Get captain invitation message in the specified language
+    
+    Args:
+        team: PCLTeam object
+        captain_name: Name of the captain
+        captain_url: Full URL to captain dashboard
+        language: Language code (EN, DE, ES, FR)
+    
+    Returns:
+        str: Formatted message
+    """
+    tournament = team.tournament
+    
+    messages = {
+        'EN': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Team Captain Invitation
+
+Hello {captain_name}! 👋
+
+You are the captain of Team {team.country_flag} {team.country_name} {team.age_category} at the Pickleball Champions League!
+
+📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
+📍 {tournament.location}
+
+🔗 Your Captain Dashboard:
+{captain_url}
+
+➡️ What you need to do:
+1. Open the link above
+2. Register yourself (photo, bio, shirt size)
+3. Add your team members
+4. Make sure all profiles are complete
+
+👥 Team Requirements:
+• Minimum {team.min_men} men + {team.min_women} women
+• Everyone needs: Photo, Bio, Shirt Name & Size
+
+⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Questions? Just reach out!
+
+Good luck! 🎾
+WPC Series Europe""",
+
+        'DE': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Team Captain Einladung
+
+Hallo {captain_name}! 👋
+
+Du bist der Kapitän von Team {team.country_flag} {team.country_name} {team.age_category} bei der Pickleball Champions League!
+
+📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
+📍 {tournament.location}
+
+🔗 Dein Captain-Dashboard:
+{captain_url}
+
+➡️ Was du tun musst:
+1. Öffne den Link oben
+2. Registriere dich selbst (Foto, Bio, Shirt-Größe)
+3. Füge deine Teammitglieder hinzu
+4. Stelle sicher, dass alle Profile vollständig sind
+
+👥 Team-Anforderungen:
+• Mindestens {team.min_men} Männer + {team.min_women} Frauen
+• Jeder braucht: Foto, Bio, Shirt-Name & Größe
+
+⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Bei Fragen melde dich einfach!
+
+Viel Erfolg! 🎾
+WPC Series Europe""",
+
+        'ES': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Invitación Capitán
+
+¡Hola {captain_name}! 👋
+
+Eres el capitán del Equipo {team.country_flag} {team.country_name} {team.age_category} en la Pickleball Champions League!
+
+📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
+📍 {tournament.location}
+
+🔗 Tu Panel de Capitán:
+{captain_url}
+
+➡️ Lo que debes hacer:
+1. Abre el enlace
+2. Regístrate (foto, bio, talla de camiseta)
+3. Añade a tus compañeros de equipo
+4. Asegúrate de que todos los perfiles estén completos
+
+👥 Requisitos del equipo:
+• Mínimo {team.min_men} hombres + {team.min_women} mujeres
+• Todos necesitan: Foto, Bio, Nombre y Talla de camiseta
+
+⏰ Fecha límite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+¿Preguntas? ¡Escríbeme!
+
+¡Buena suerte! 🎾
+WPC Series Europe""",
+
+        'FR': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Invitation Capitaine
+
+Bonjour {captain_name}! 👋
+
+Tu es le capitaine de l'équipe {team.country_flag} {team.country_name} {team.age_category} à la Pickleball Champions League!
+
+📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
+📍 {tournament.location}
+
+🔗 Ton tableau de bord Capitaine:
+{captain_url}
+
+➡️ Ce que tu dois faire:
+1. Ouvre le lien ci-dessus
+2. Inscris-toi (photo, bio, taille de maillot)
+3. Ajoute tes coéquipiers
+4. Assure-toi que tous les profils sont complets
+
+👥 Exigences de l'équipe:
+• Minimum {team.min_men} hommes + {team.min_women} femmes
+• Chacun a besoin de: Photo, Bio, Nom et Taille de maillot
+
+⏰ Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Des questions? Contacte-moi!
+
+Bonne chance! 🎾
+WPC Series Europe"""
+    }
+    
+    return messages.get(language, messages['EN'])
+
+
+def get_captain_reminder_message(team, captain_name, captain_url, stats, language='EN'):
+    """
+    Get captain reminder message in the specified language
+    
+    Args:
+        team: PCLTeam object
+        captain_name: Name of the captain
+        captain_url: Full URL to captain dashboard
+        stats: Team statistics dict
+        language: Language code (EN, DE, ES, FR)
+    
+    Returns:
+        str: Formatted message
+    """
+    tournament = team.tournament
+    
+    # Calculate missing requirements
+    men_needed = max(0, team.min_men - stats['men'])
+    women_needed = max(0, team.min_women - stats['women'])
+    incomplete_profiles = stats['total'] - (stats['men_complete'] + stats['women_complete'])
+    
+    messages = {
+        'EN': f"""⏰ Reminder: PCL {tournament.location} {tournament.start_date.year}
+
+Hello {captain_name}!
+
+Your Team {team.country_flag} {team.country_name} {team.age_category} status:
+
+{"✅ Men: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Still need " + str(men_needed) + " more men"}
+{"✅ Women: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Still need " + str(women_needed) + " more women"}
+{"⚠️ " + str(incomplete_profiles) + " profile(s) incomplete" if incomplete_profiles > 0 else "✅ All profiles complete"}
+
+🔗 Your Dashboard:
+{captain_url}
+
+⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Please complete your team as soon as possible!
+
+WPC Series Europe""",
+
+        'DE': f"""⏰ Erinnerung: PCL {tournament.location} {tournament.start_date.year}
+
+Hallo {captain_name}!
+
+Dein Team {team.country_flag} {team.country_name} {team.age_category} Status:
+
+{"✅ Männer: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Noch " + str(men_needed) + " Männer benötigt"}
+{"✅ Frauen: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Noch " + str(women_needed) + " Frauen benötigt"}
+{"⚠️ " + str(incomplete_profiles) + " Profil(e) unvollständig" if incomplete_profiles > 0 else "✅ Alle Profile vollständig"}
+
+🔗 Dein Dashboard:
+{captain_url}
+
+⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Bitte vervollständige dein Team so schnell wie möglich!
+
+WPC Series Europe""",
+
+        'ES': f"""⏰ Recordatorio: PCL {tournament.location} {tournament.start_date.year}
+
+¡Hola {captain_name}!
+
+Estado de tu Equipo {team.country_flag} {team.country_name} {team.age_category}:
+
+{"✅ Hombres: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Faltan " + str(men_needed) + " hombres"}
+{"✅ Mujeres: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Faltan " + str(women_needed) + " mujeres"}
+{"⚠️ " + str(incomplete_profiles) + " perfil(es) incompleto(s)" if incomplete_profiles > 0 else "✅ Todos los perfiles completos"}
+
+🔗 Tu Dashboard:
+{captain_url}
+
+⏰ Fecha límite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+¡Por favor completa tu equipo lo antes posible!
+
+WPC Series Europe""",
+
+        'FR': f"""⏰ Rappel: PCL {tournament.location} {tournament.start_date.year}
+
+Bonjour {captain_name}!
+
+Statut de ton équipe {team.country_flag} {team.country_name} {team.age_category}:
+
+{"✅ Hommes: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Il manque encore " + str(men_needed) + " hommes"}
+{"✅ Femmes: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Il manque encore " + str(women_needed) + " femmes"}
+{"⚠️ " + str(incomplete_profiles) + " profil(s) incomplet(s)" if incomplete_profiles > 0 else "✅ Tous les profils sont complets"}
+
+🔗 Ton Dashboard:
+{captain_url}
+
+⏰ Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Complète ton équipe dès que possible!
+
+WPC Series Europe"""
+    }
+    
+    return messages.get(language, messages['EN'])
+
 
 def get_message_template(message_type, language='EN', **kwargs):
     """
@@ -137,125 +375,125 @@ def get_message_template(message_type, language='EN', **kwargs):
     end_date_line = ""
     if kwargs.get('end_date'):
         date_labels = {
-            'EN': '📅 End: ',
-            'DE': '📅 Ende: ',
-            'ES': '📅 Fin: ',
-            'FR': '📅 Fin: '
+            'EN': 'ðŸ“… End: ',
+            'DE': 'ðŸ“… Ende: ',
+            'ES': 'ðŸ“… Fin: ',
+            'FR': 'ðŸ“… Fin: '
         }
         end_date_line = date_labels.get(language, date_labels['EN']) + kwargs.get('end_date') + '\n'
     
     templates = {
         'invitation': {
-            'EN': """🎾 {event_name}
+            'EN': """ðŸŽ¾ {event_name}
 
-📅 Start: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… Start: {start_date}
+{end_date_line}ðŸ“ {location}
 
 {description}
 
-━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 Please reply with:
-✅ YES - I'm interested
-ℹ️ INFO - Send me more details
-❌ NO - Not interested
+âœ… YES - I'm interested
+â„¹ï¸ INFO - Send me more details
+âŒ NO - Not interested
 
 Looking forward to hearing from you!""",
             
-            'DE': """🎾 {event_name}
+            'DE': """ðŸŽ¾ {event_name}
 
-📅 Start: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… Start: {start_date}
+{end_date_line}ðŸ“ {location}
 
 {description}
 
-━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 Bitte antworte mit:
-✅ JA - Ich bin interessiert
-ℹ️ INFO - Schick mir mehr Details
-❌ NEIN - Nicht interessiert
+âœ… JA - Ich bin interessiert
+â„¹ï¸ INFO - Schick mir mehr Details
+âŒ NEIN - Nicht interessiert
 
 Wir freuen uns auf deine Antwort!""",
             
-            'ES': """🎾 {event_name}
+            'ES': """ðŸŽ¾ {event_name}
 
-📅 Inicio: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… Inicio: {start_date}
+{end_date_line}ðŸ“ {location}
 
 {description}
 
-━━━━━━━━━━━━━━━━━━━━━━
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
 Por favor responde con:
-✅ SÍ - Estoy interesado
-ℹ️ INFO - Envíame más detalles
-❌ NO - No estoy interesado
+âœ… SÃ - Estoy interesado
+â„¹ï¸ INFO - EnvÃ­ame mÃ¡s detalles
+âŒ NO - No estoy interesado
 
-¡Esperamos tu respuesta!""",
+Â¡Esperamos tu respuesta!""",
             
-            'FR': """🎾 {event_name}
+            'FR': """ðŸŽ¾ {event_name}
 
-📅 Début: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… DÃ©but: {start_date}
+{end_date_line}ðŸ“ {location}
 
 {description}
 
-━━━━━━━━━━━━━━━━━━━━━━
-Veuillez répondre avec:
-✅ OUI - Je suis intéressé
-ℹ️ INFO - Envoyez-moi plus de détails
-❌ NON - Pas intéressé
+â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+Veuillez rÃ©pondre avec:
+âœ… OUI - Je suis intÃ©ressÃ©
+â„¹ï¸ INFO - Envoyez-moi plus de dÃ©tails
+âŒ NON - Pas intÃ©ressÃ©
 
 Au plaisir de vous lire!"""
         },
         'reminder': {
-            'EN': """⏰ Reminder: {event_name}
+            'EN': """â° Reminder: {event_name}
 
-📅 Start: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… Start: {start_date}
+{end_date_line}ðŸ“ {location}
 
 Don't forget to confirm your participation!
 
 Reply with:
-✅ YES - Confirmed
-❌ NO - Cancel""",
+âœ… YES - Confirmed
+âŒ NO - Cancel""",
             
-            'DE': """⏰ Erinnerung: {event_name}
+            'DE': """â° Erinnerung: {event_name}
 
-📅 Start: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… Start: {start_date}
+{end_date_line}ðŸ“ {location}
 
-Vergiss nicht, deine Teilnahme zu bestätigen!
+Vergiss nicht, deine Teilnahme zu bestÃ¤tigen!
 
 Antworte mit:
-✅ JA - Bestätigt
-❌ NEIN - Absagen""",
+âœ… JA - BestÃ¤tigt
+âŒ NEIN - Absagen""",
             
-            'ES': """⏰ Recordatorio: {event_name}
+            'ES': """â° Recordatorio: {event_name}
 
-📅 Inicio: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… Inicio: {start_date}
+{end_date_line}ðŸ“ {location}
 
-¡No olvides confirmar tu participación!
+Â¡No olvides confirmar tu participaciÃ³n!
 
 Responde con:
-✅ SÍ - Confirmado
-❌ NO - Cancelar""",
+âœ… SÃ - Confirmado
+âŒ NO - Cancelar""",
             
-            'FR': """⏰ Rappel: {event_name}
+            'FR': """â° Rappel: {event_name}
 
-📅 Début: {start_date}
-{end_date_line}📍 {location}
+ðŸ“… DÃ©but: {start_date}
+{end_date_line}ðŸ“ {location}
 
 N'oubliez pas de confirmer votre participation!
 
-Répondez avec:
-✅ OUI - Confirmé
-❌ NON - Annuler"""
+RÃ©pondez avec:
+âœ… OUI - ConfirmÃ©
+âŒ NON - Annuler"""
         },
         'update': {
-            'EN': "📢 Update for {event_name}:\n\n{message}",
-            'DE': "📢 Update zu {event_name}:\n\n{message}",
-            'ES': "📢 Actualización de {event_name}:\n\n{message}",
-            'FR': "📢 Mise à jour pour {event_name}:\n\n{message}"
+            'EN': "ðŸ“¢ Update for {event_name}:\n\n{message}",
+            'DE': "ðŸ“¢ Update zu {event_name}:\n\n{message}",
+            'ES': "ðŸ“¢ ActualizaciÃ³n de {event_name}:\n\n{message}",
+            'FR': "ðŸ“¢ Mise Ã  jour pour {event_name}:\n\n{message}"
         }
     }
     

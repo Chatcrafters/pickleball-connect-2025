@@ -82,6 +82,32 @@
         </div>
     </div>
 
+    <!-- Bulk WhatsApp Actions -->
+    <div class="card mb-4 border-success">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-whatsapp"></i> WhatsApp Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <p class="mb-0"><strong>Send Reminders to All Incomplete Teams</strong></p>
+                    <small class="text-muted">Sends a reminder to all team captains whose teams are not yet complete.</small>
+                </div>
+                <div class="col-md-4 text-end">
+                    <form action="{{ url_for('pcl.send_all_captain_reminders', tournament_id=tournament.id) }}" method="POST" class="d-inline">
+                        <div class="form-check form-check-inline mb-2">
+                            <input class="form-check-input" type="checkbox" name="test_mode" id="bulkTestMode">
+                            <label class="form-check-label" for="bulkTestMode">Test Mode</label>
+                        </div>
+                        <button type="submit" class="btn btn-warning" onclick="return confirm('Send reminders to all incomplete team captains?');">
+                            <i class="bi bi-bell"></i> Send All Reminders
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- +19 Teams -->
     <div class="card mb-4">
         <div class="card-header bg-dark text-white">
@@ -124,7 +150,7 @@
                             </td>
                             <td class="text-center">
                                 {% if team_stats.is_complete %}
-                                <span class="badge bg-success">✓ Complete</span>
+                                <span class="badge bg-success">âœ“ Complete</span>
                                 {% else %}
                                 <span class="badge bg-warning">Incomplete</span>
                                 {% endif %}
@@ -200,7 +226,7 @@
                             </td>
                             <td class="text-center">
                                 {% if team_stats.is_complete %}
-                                <span class="badge bg-success">✓ Complete</span>
+                                <span class="badge bg-success">âœ“ Complete</span>
                                 {% else %}
                                 <span class="badge bg-warning">Incomplete</span>
                                 {% endif %}

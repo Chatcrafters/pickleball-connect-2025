@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block title %}Send Captain Invitation - {{ team.country_flag }} {{ team.country_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=team.tournament_id) }}">{{ team.tournament.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}">{{ team.country_name }} {{ team.age_category }}</a></li>
+            <li class="breadcrumb-item active">Send Invitation</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <h1 class="mb-4">
+                <i class="bi bi-whatsapp text-success"></i> 
+                Send Captain Invitation
+            </h1>
+
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="captain_name" class="form-label">Captain Name *</label>
+                                <input type="text" class="form-control" id="captain_name" name="captain_name" 
+                                       placeholder="Max Mustermann" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="captain_phone" class="form-label">WhatsApp Number *</label>
+                                <input type="tel" class="form-control" id="captain_phone" name="captain_phone" 
+                                       placeholder="+49123456789" required>
+                                <small class="form-text text-muted">With country code (e.g., +49, +34)</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="language" class="form-label">Message Language *</label>
+                            <select class="form-select" id="language" name="language" onchange="updatePreview()">
+                                <option value="EN">🇬🇧 English</option>
+                                <option value="DE">🇩🇪 Deutsch</option>
+                                <option value="ES">🇪🇸 Español</option>
+                                <option value="FR">🇫🇷 Français</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="test_mode" name="test_mode">
+                                <label class="form-check-label" for="test_mode">
+                                    <strong>Test Mode</strong> (only show in console, don't send)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-whatsapp"></i> Send Invitation
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Message Preview -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-eye"></i> Message Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="bg-light p-3 rounded" style="white-space: pre-line; font-family: monospace; font-size: 0.9rem;">
+                        <div id="preview-EN">
+🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Team Captain Invitation
+
+Hello [NAME]! 👋
+
+You are the captain of Team {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} at the Pickleball Champions League!
+
+📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
+📍 {{ team.tournament.location }}
+
+🔗 Your Captain Dashboard:
+{{ request.host_url }}pcl/team/{{ team.captain_token }}
+
+➡️ What you need to do:
+1. Open the link above
+2. Register yourself (photo, bio, shirt size)
+3. Add your team members
+4. Make sure all profiles are complete
+
+👥 Team Requirements:
+• Minimum {{ team.min_men }} men + {{ team.min_women }} women
+• Everyone needs: Photo, Bio, Shirt Name & Size
+
+⏰ Deadline: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
+
+Questions? Just reach out!
+
+Good luck! 🎾
+WPC Series Europe
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Captain Link Info -->
+            <div class="card mt-4 border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Link (for manual sharing)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="captainLink" 
+                               value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">
+                            <i class="bi bi-clipboard"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyLink() {
+    const input = document.getElementById('captainLink');
+    input.select();
+    document.execCommand('copy');
+    
+    const btn = event.target.closest('button');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalText;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+</script>
+{% endblock %}
