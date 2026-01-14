@@ -104,7 +104,7 @@ class Event(db.Model):
     event_type = db.Column(db.String(50), default='tournament')  # tournament, workshop, clinic, invitational
     
     # Relationships
-    invited_players = db.relationship('Player', secondary=event_players, back_populates='invited_players')
+    invited_players = db.relationship('Player', secondary=event_players, back_populates='invited_events')
     messages = db.relationship('Message', back_populates='event', cascade='all, delete-orphan')
     
     def __repr__(self):
