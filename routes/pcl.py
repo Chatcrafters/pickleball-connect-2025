@@ -3,16 +3,13 @@ from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SI
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
-from utils.whatsapp import send_profile_completion_link
 import os
 import csv
 import io
 
 pcl = Blueprint('pcl', __name__)
 
-# ============================================================================
-# FILE UPLOAD CONFIGURATION
-# ============================================================================
+# Configuration for file uploads (kept for fallback)
 UPLOAD_FOLDER = 'static/uploads/pcl'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -22,8 +19,9 @@ def allowed_file(filename):
 
 
 # ============================================================================
-# MULTI-LANGUAGE TRANSLATIONS
+# TRANSLATIONS
 # ============================================================================
+
 TRANSLATIONS = {
     'EN': {
         'page_title': 'PCL Player Registration',
@@ -39,7 +37,7 @@ TRANSLATIONS = {
         'birth_year': 'Birth Year',
         'role': 'Role',
         'player': 'Player',
-        'captain': 'Team Captain',
+        'captain': 'Captain',
         'shirt_info': 'Shirt Information',
         'shirt_name': 'Name on Shirt',
         'shirt_name_help': 'How your name appears on the jersey',
@@ -60,7 +58,8 @@ TRANSLATIONS = {
         'required': 'Required',
         'success_title': 'Registration Complete!',
         'success_message': 'Thank you for registering for PCL.',
-        'captain_dashboard': 'Team Captain Dashboard',
+        'missing_fields': 'Please complete all required fields',
+        'captain_dashboard': 'Captain Dashboard',
         'team_status': 'Team Status',
         'registration_link': 'Registration Link for Players',
         'copy_link': 'Copy Link',
@@ -69,82 +68,89 @@ TRANSLATIONS = {
         'women': 'Women',
         'complete': 'Complete',
         'incomplete': 'Incomplete',
-        'send_reminder': 'Send Profile Link',
-        'export_data': 'Export CSV',
+        'photo_missing': 'Photo missing',
+        'deadline': 'Registration Deadline',
+        'days_left': 'days left',
+        'send_reminder': 'Send Reminder',
+        'export_data': 'Export Team Data',
     },
     'DE': {
         'page_title': 'PCL Spieler-Registrierung',
         'team': 'Team',
-        'personal_info': 'Persönliche Informationen',
+        'personal_info': 'PersÃ¶nliche Informationen',
         'first_name': 'Vorname',
         'last_name': 'Nachname',
         'email': 'E-Mail',
         'phone': 'Telefon (optional)',
         'gender': 'Geschlecht',
-        'male': 'Männlich',
+        'male': 'MÃ¤nnlich',
         'female': 'Weiblich',
         'birth_year': 'Geburtsjahr',
         'role': 'Rolle',
         'player': 'Spieler',
-        'captain': 'Teamkapitän',
+        'captain': 'KapitÃ¤n',
         'shirt_info': 'Shirt-Informationen',
         'shirt_name': 'Name auf dem Shirt',
         'shirt_name_help': 'So erscheint dein Name auf dem Trikot',
-        'shirt_size': 'Shirt-Größe',
+        'shirt_size': 'Shirt-GrÃ¶ÃŸe',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
         'bio': 'Kurze Bio',
-        'bio_placeholder': 'Erzähl uns von dir und deiner Pickleball-Reise...',
+        'bio_placeholder': 'ErzÃ¤hl uns von dir und deiner Pickleball-Reise...',
         'social_media': 'Social Media (optional)',
         'optional_info': 'Optionale Informationen',
         'video_url': 'Video-URL (Highlight-Video)',
         'dupr_rating': 'DUPR Rating',
         'language': 'Bevorzugte Sprache',
-        'privacy_accept': 'Ich stimme der Datenverarbeitung für die PCL-Registrierung zu',
+        'privacy_accept': 'Ich stimme der Datenverarbeitung fÃ¼r die PCL-Registrierung zu',
         'submit': 'Registrieren',
         'update': 'Registrierung aktualisieren',
         'required': 'Pflichtfeld',
         'success_title': 'Registrierung erfolgreich!',
-        'success_message': 'Danke für deine Registrierung zur PCL.',
-        'captain_dashboard': 'Teamkapitän Dashboard',
+        'success_message': 'Danke fÃ¼r deine Registrierung zur PCL.',
+        'missing_fields': 'Bitte fÃ¼lle alle Pflichtfelder aus',
+        'captain_dashboard': 'KapitÃ¤n Dashboard',
         'team_status': 'Team-Status',
-        'registration_link': 'Registrierungslink für Spieler',
+        'registration_link': 'Registrierungslink fÃ¼r Spieler',
         'copy_link': 'Link kopieren',
         'players_registered': 'Registrierte Spieler',
-        'men': 'Männer',
+        'men': 'MÃ¤nner',
         'women': 'Frauen',
-        'complete': 'Vollständig',
-        'incomplete': 'Unvollständig',
-        'send_reminder': 'Profil-Link senden',
-        'export_data': 'CSV exportieren',
+        'complete': 'VollstÃ¤ndig',
+        'incomplete': 'UnvollstÃ¤ndig',
+        'photo_missing': 'Foto fehlt',
+        'deadline': 'Anmeldeschluss',
+        'days_left': 'Tage verbleibend',
+        'send_reminder': 'Erinnerung senden',
+        'export_data': 'Team-Daten exportieren',
     },
     'ES': {
         'page_title': 'Registro de Jugadores PCL',
         'team': 'Equipo',
-        'personal_info': 'Información Personal',
+        'personal_info': 'InformaciÃ³n Personal',
         'first_name': 'Nombre',
         'last_name': 'Apellido',
-        'email': 'Correo electrónico',
-        'phone': 'Teléfono (opcional)',
-        'gender': 'Género',
+        'email': 'Correo electrÃ³nico',
+        'phone': 'TelÃ©fono (opcional)',
+        'gender': 'GÃ©nero',
         'male': 'Masculino',
         'female': 'Femenino',
-        'birth_year': 'Año de nacimiento',
+        'birth_year': 'AÃ±o de nacimiento',
         'role': 'Rol',
         'player': 'Jugador',
-        'captain': 'Capitán',
-        'shirt_info': 'Información de la Camiseta',
+        'captain': 'CapitÃ¡n',
+        'shirt_info': 'InformaciÃ³n de la Camiseta',
         'shirt_name': 'Nombre en la camiseta',
-        'shirt_name_help': 'Así aparecerá tu nombre en la camiseta',
+        'shirt_name_help': 'AsÃ­ aparecerÃ¡ tu nombre en la camiseta',
         'shirt_size': 'Talla de camiseta',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
-        'photo_help': 'Obligatorio. JPG, PNG, máx 5MB. Formato cuadrado recomendado.',
-        'bio': 'Biografía breve',
-        'bio_placeholder': 'Cuéntanos sobre ti y tu viaje en pickleball...',
+        'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
+        'bio': 'BiografÃ­a breve',
+        'bio_placeholder': 'CuÃ©ntanos sobre ti y tu viaje en pickleball...',
         'social_media': 'Redes Sociales (opcional)',
-        'optional_info': 'Información Opcional',
+        'optional_info': 'InformaciÃ³n Opcional',
         'video_url': 'URL del Video (Highlights)',
         'dupr_rating': 'Rating DUPR',
         'language': 'Idioma preferido',
@@ -152,9 +158,10 @@ TRANSLATIONS = {
         'submit': 'Registrarse',
         'update': 'Actualizar registro',
         'required': 'Obligatorio',
-        'success_title': '¡Registro completado!',
+        'success_title': 'Â¡Registro completado!',
         'success_message': 'Gracias por registrarte en PCL.',
-        'captain_dashboard': 'Panel del Capitán',
+        'missing_fields': 'Por favor completa todos los campos obligatorios',
+        'captain_dashboard': 'Panel del CapitÃ¡n',
         'team_status': 'Estado del Equipo',
         'registration_link': 'Enlace de registro para jugadores',
         'copy_link': 'Copiar enlace',
@@ -163,46 +170,50 @@ TRANSLATIONS = {
         'women': 'Mujeres',
         'complete': 'Completo',
         'incomplete': 'Incompleto',
-        'send_reminder': 'Enviar enlace de perfil',
-        'export_data': 'Exportar CSV',
+        'photo_missing': 'Falta foto',
+        'deadline': 'Fecha lÃ­mite',
+        'days_left': 'dÃ­as restantes',
+        'send_reminder': 'Enviar recordatorio',
+        'export_data': 'Exportar datos del equipo',
     },
     'FR': {
         'page_title': 'Inscription Joueur PCL',
-        'team': 'Équipe',
+        'team': 'Ã‰quipe',
         'personal_info': 'Informations Personnelles',
-        'first_name': 'Prénom',
+        'first_name': 'PrÃ©nom',
         'last_name': 'Nom',
         'email': 'E-mail',
-        'phone': 'Téléphone (optionnel)',
+        'phone': 'TÃ©lÃ©phone (optionnel)',
         'gender': 'Genre',
         'male': 'Homme',
         'female': 'Femme',
-        'birth_year': 'Année de naissance',
-        'role': 'Rôle',
+        'birth_year': 'AnnÃ©e de naissance',
+        'role': 'RÃ´le',
         'player': 'Joueur',
         'captain': 'Capitaine',
         'shirt_info': 'Informations Maillot',
         'shirt_name': 'Nom sur le maillot',
-        'shirt_name_help': 'Comment votre nom apparaîtra sur le maillot',
+        'shirt_name_help': 'Comment votre nom apparaÃ®tra sur le maillot',
         'shirt_size': 'Taille du maillot',
         'profile': 'Profil',
         'photo': 'Photo de profil',
-        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carré recommandé.',
+        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
         'bio': 'Courte bio',
         'bio_placeholder': 'Parlez-nous de vous et de votre parcours pickleball...',
-        'social_media': 'Réseaux Sociaux (optionnel)',
+        'social_media': 'RÃ©seaux Sociaux (optionnel)',
         'optional_info': 'Informations Optionnelles',
-        'video_url': 'URL Vidéo (Highlights)',
+        'video_url': 'URL VidÃ©o (Highlights)',
         'dupr_rating': 'Rating DUPR',
-        'language': 'Langue préférée',
-        'privacy_accept': "J'accepte le traitement des données pour l'inscription PCL",
+        'language': 'Langue prÃ©fÃ©rÃ©e',
+        'privacy_accept': "J'accepte le traitement des donnÃ©es pour l'inscription PCL",
         'submit': "S'inscrire",
-        'update': "Mettre à jour l'inscription",
+        'update': "Mettre Ã  jour l'inscription",
         'required': 'Obligatoire',
-        'success_title': 'Inscription réussie!',
-        'success_message': 'Merci pour votre inscription à PCL.',
+        'success_title': 'Inscription rÃ©ussie!',
+        'success_message': 'Merci pour votre inscription Ã  PCL.',
+        'missing_fields': 'Veuillez remplir tous les champs obligatoires',
         'captain_dashboard': 'Tableau de bord Capitaine',
-        'team_status': "Statut de l'équipe",
+        'team_status': "Statut de l'Ã©quipe",
         'registration_link': "Lien d'inscription pour les joueurs",
         'copy_link': 'Copier le lien',
         'players_registered': 'Joueurs inscrits',
@@ -210,8 +221,11 @@ TRANSLATIONS = {
         'women': 'Femmes',
         'complete': 'Complet',
         'incomplete': 'Incomplet',
-        'send_reminder': 'Envoyer lien de profil',
-        'export_data': 'Exporter CSV',
+        'photo_missing': 'Photo manquante',
+        'deadline': "Date limite d'inscription",
+        'days_left': 'jours restants',
+        'send_reminder': 'Envoyer un rappel',
+        'export_data': "Exporter les donnÃ©es de l'Ã©quipe",
     }
 }
 
@@ -221,7 +235,7 @@ def get_translations(lang='EN'):
 
 
 # ============================================================================
-# ADMIN ROUTES - TOURNAMENT MANAGEMENT
+# ADMIN ROUTES
 # ============================================================================
 
 @pcl.route('/admin')
@@ -235,23 +249,23 @@ def admin_dashboard():
 def create_tournament():
     """Create a new PCL tournament"""
     if request.method == 'POST':
+        tournament = PCLTournament(
+            name=request.form['name'],
+            start_date=datetime.strptime(request.form['start_date'], '%Y-%m-%d').date(),
+            end_date=datetime.strptime(request.form['end_date'], '%Y-%m-%d').date(),
+            location=request.form['location'],
+            description=request.form.get('description'),
+            registration_deadline=datetime.strptime(request.form['registration_deadline'], '%Y-%m-%dT%H:%M')
+        )
+        
         try:
-            tournament = PCLTournament(
-                name=request.form['name'],
-                start_date=datetime.strptime(request.form['start_date'], '%Y-%m-%d').date(),
-                end_date=datetime.strptime(request.form['end_date'], '%Y-%m-%d').date(),
-                location=request.form['location'],
-                description=request.form.get('description'),
-                registration_deadline=datetime.strptime(request.form['registration_deadline'], '%Y-%m-%dT%H:%M')
-            )
-            
             db.session.add(tournament)
             db.session.commit()
-            flash(f'Tournament "{tournament.name}" created successfully!', 'success')
+            flash(f'Tournament "{tournament.name}" created!', 'success')
             return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament.id))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating tournament: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
     
     return render_template('pcl/admin_tournament_form.html', tournament=None)
 
@@ -278,29 +292,29 @@ def add_team(tournament_id):
     tournament = PCLTournament.query.get_or_404(tournament_id)
     
     if request.method == 'POST':
+        country_code = request.form['country_code'].upper()
+        
+        team = PCLTeam(
+            tournament_id=tournament.id,
+            country_code=country_code,
+            country_name=request.form['country_name'],
+            country_flag=COUNTRY_FLAGS.get(country_code, 'ðŸ³ï¸'),
+            age_category=request.form['age_category'],
+            min_men=int(request.form.get('min_men', 2)),
+            max_men=int(request.form.get('max_men', 4)),
+            min_women=int(request.form.get('min_women', 2)),
+            max_women=int(request.form.get('max_women', 4)),
+            captain_token=PCLTeam.generate_token()
+        )
+        
         try:
-            country_code = request.form['country_code'].upper()
-            
-            team = PCLTeam(
-                tournament_id=tournament.id,
-                country_code=country_code,
-                country_name=request.form['country_name'],
-                country_flag=COUNTRY_FLAGS.get(country_code, '🏳️'),
-                age_category=request.form['age_category'],
-                min_men=int(request.form.get('min_men', 2)),
-                max_men=int(request.form.get('max_men', 4)),
-                min_women=int(request.form.get('min_women', 2)),
-                max_women=int(request.form.get('max_women', 4)),
-                captain_token=PCLTeam.generate_token()
-            )
-            
             db.session.add(team)
             db.session.commit()
             flash(f'Team {team.country_flag} {team.country_name} {team.age_category} added!', 'success')
             return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament.id))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error adding team: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
     
     return render_template('pcl/admin_add_team.html', 
                          tournament=tournament,
@@ -309,7 +323,7 @@ def add_team(tournament_id):
 
 @pcl.route('/admin/team/<int:team_id>')
 def admin_team_detail(team_id):
-    """Admin view of a specific team with edit/delete functionality"""
+    """Admin view of a specific team"""
     team = PCLTeam.query.get_or_404(team_id)
     
     men = team.registrations.filter_by(gender='male').all()
@@ -319,26 +333,6 @@ def admin_team_detail(team_id):
                          team=team,
                          men=men,
                          women=women)
-
-
-@pcl.route('/admin/team/<int:team_id>/delete', methods=['POST'])
-def delete_team(team_id):
-    """Delete a team and all its registrations"""
-    team = PCLTeam.query.get_or_404(team_id)
-    tournament_id = team.tournament_id
-    team_name = f"{team.country_name} {team.age_category}"
-    
-    try:
-        # Delete all registrations first
-        PCLRegistration.query.filter_by(team_id=team_id).delete()
-        db.session.delete(team)
-        db.session.commit()
-        flash(f'Team "{team_name}" deleted successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error deleting team: {str(e)}', 'danger')
-    
-    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
 
 
 @pcl.route('/admin/team/<int:team_id>/export')
@@ -351,22 +345,16 @@ def export_team_data(team_id):
     
     writer.writerow([
         'First Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Birth Year',
-        'Captain', 'Shirt Name', 'Shirt Size', 'Status', 'Bio'
+        'Captain', 'Shirt Name', 'Shirt Size', 'Bio',
+        'Instagram', 'TikTok', 'YouTube', 'Twitter', 'DUPR', 'Status', 'Photo URL'
     ])
     
     for reg in team.registrations.all():
         writer.writerow([
-            reg.first_name,
-            reg.last_name,
-            reg.email,
-            reg.phone or '',
-            reg.gender,
-            reg.birth_year or '',
-            'Yes' if reg.is_captain else 'No',
-            reg.shirt_name,
-            reg.shirt_size,
-            reg.status,
-            reg.bio or ''
+            reg.first_name, reg.last_name, reg.email, reg.phone or '', reg.gender, reg.birth_year or '',
+            'Yes' if reg.is_captain else 'No', reg.shirt_name, reg.shirt_size, reg.bio or '',
+            reg.instagram or '', reg.tiktok or '', reg.youtube or '', reg.twitter or '',
+            reg.dupr_rating or '', reg.status, reg.photo_filename or ''
         ])
     
     output.seek(0)
@@ -410,12 +398,12 @@ def export_shirt_list(tournament_id):
 
 
 # ============================================================================
-# CAPTAIN DASHBOARD ROUTES (Secret Link Access)
+# CAPTAIN ROUTES (Secret Link)
 # ============================================================================
 
 @pcl.route('/team/<token>')
 def captain_dashboard(token):
-    """Captain dashboard - accessed via secret captain token"""
+    """Captain dashboard - accessed via secret link"""
     team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
     
     lang = request.args.get('lang', 'EN').upper()
@@ -444,7 +432,7 @@ def captain_dashboard(token):
 
 
 # ============================================================================
-# PLAYER REGISTRATION ROUTES
+# PLAYER REGISTRATION ROUTES (with Supabase Storage)
 # ============================================================================
 
 @pcl.route('/register/<token>', methods=['GET', 'POST'])
@@ -460,21 +448,22 @@ def player_register(token):
     
     # Check if registration is still open
     if datetime.now() > team.tournament.registration_deadline:
-        flash('Registration period has closed.', 'danger')
+        flash('Registration is closed.', 'danger')
         return redirect(url_for('pcl.captain_dashboard', token=token))
     
     if request.method == 'POST':
-        photo_url = None
-        
         # Handle photo upload to Supabase
+        photo_url = None
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename and allowed_file(file.filename):
-                result = upload_photo_to_supabase(file, folder='pcl-players')
+                result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     photo_url = result['url']
+                    print(f"âœ… Photo uploaded to Supabase: {photo_url}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
+                    print(f"âŒ Photo upload failed: {result['error']}")
         
         # Create registration
         registration = PCLRegistration(
@@ -488,7 +477,7 @@ def player_register(token):
             is_captain=request.form.get('is_captain') == 'on',
             shirt_name=request.form['shirt_name'],
             shirt_size=request.form['shirt_size'],
-            photo_filename=photo_url,
+            photo_filename=photo_url,  # Now stores full Supabase URL
             bio=request.form.get('bio'),
             instagram=request.form.get('instagram'),
             tiktok=request.form.get('tiktok'),
@@ -504,13 +493,15 @@ def player_register(token):
         try:
             db.session.add(registration)
             db.session.commit()
+            print(f"âœ… Registration saved: {registration.first_name} {registration.last_name}")
             
             return redirect(url_for('pcl.registration_success', 
                                   registration_id=registration.id,
                                   lang=lang))
         except Exception as e:
             db.session.rollback()
-            flash(f'Registration error: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
+            print(f"âŒ Registration error: {str(e)}")
     
     return render_template('pcl/player_register.html',
                          team=team,
@@ -534,143 +525,178 @@ def registration_success(registration_id):
 
 @pcl.route('/register/edit/<int:registration_id>', methods=['GET', 'POST'])
 def edit_registration(registration_id):
-    """Edit existing registration with photo upload"""
+    """Edit existing registration with Supabase photo upload"""
     registration = PCLRegistration.query.get_or_404(registration_id)
     team = registration.team
     
-    lang = request.args.get('lang', request.form.get('preferred_language', registration.preferred_language)).upper()
-    if lang not in TRANSLATIONS:
-        lang = 'EN'
-    
+    lang = request.args.get('lang', registration.preferred_language).upper()
     t = get_translations(lang)
     
     if request.method == 'POST':
+        # Update fields
+        registration.first_name = request.form['first_name']
+        registration.last_name = request.form['last_name']
+        registration.email = request.form['email']
+        registration.phone = request.form.get('phone')
+        registration.gender = request.form['gender']
+        registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
+        registration.is_captain = request.form.get('is_captain') == 'on'
+        registration.shirt_name = request.form['shirt_name']
+        registration.shirt_size = request.form['shirt_size']
+        registration.bio = request.form.get('bio')
+        registration.instagram = request.form.get('instagram')
+        registration.tiktok = request.form.get('tiktok')
+        registration.youtube = request.form.get('youtube')
+        registration.twitter = request.form.get('twitter')
+        registration.video_url = request.form.get('video_url')
+        registration.dupr_rating = request.form.get('dupr_rating')
+        registration.preferred_language = lang
+        
+        # Handle new photo upload to Supabase
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename and allowed_file(file.filename):
+                result = upload_photo_to_supabase(file, folder='players')
+                if result['success']:
+                    registration.photo_filename = result['url']
+                    print(f"âœ… New photo uploaded: {result['url']}")
+                else:
+                    flash(f'Photo upload failed: {result["error"]}', 'warning')
+        
+        registration.check_completeness()
+        
         try:
-            # Update basic fields
-            registration.first_name = request.form['first_name']
-            registration.last_name = request.form['last_name']
-            registration.email = request.form['email']
-            registration.phone = request.form.get('phone')
-            registration.gender = request.form['gender']
-            registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
-            registration.is_captain = request.form.get('is_captain') == 'on'
-            registration.shirt_name = request.form['shirt_name']
-            registration.shirt_size = request.form['shirt_size']
-            registration.bio = request.form.get('bio')
-            registration.instagram = request.form.get('instagram')
-            registration.tiktok = request.form.get('tiktok')
-            registration.youtube = request.form.get('youtube')
-            registration.twitter = request.form.get('twitter')
-            registration.video_url = request.form.get('video_url')
-            registration.dupr_rating = request.form.get('dupr_rating')
-            registration.preferred_language = lang
-            
-            # Handle photo upload
-            if 'photo' in request.files:
-                file = request.files['photo']
-                if file and file.filename and allowed_file(file.filename):
-                    result = upload_photo_to_supabase(file, folder='pcl-players')
-                    if result['success']:
-                        registration.photo_filename = result['url']
-                    else:
-                        flash(f'Photo upload failed: {result["error"]}', 'warning')
-            
-            registration.check_completeness()
-            
             db.session.commit()
-            flash('Registration updated successfully!', 'success')
-            
+            flash(t['success_message'], 'success')
             return redirect(url_for('pcl.registration_success', 
                                   registration_id=registration.id,
                                   lang=lang))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating registration: {str(e)}', 'danger')
+            flash(f'Error: {str(e)}', 'danger')
     
-    return render_template('pcl/pcl_registration_edit.html',
-                         registration=registration,
+    return render_template('pcl/player_register.html',
                          team=team,
+                         registration=registration,
                          shirt_sizes=SHIRT_SIZES,
                          t=t,
-                         current_lang=lang)
+                         current_lang=lang,
+                         edit_mode=True)
 
+
+
+# ============================================================================
+# ADMIN REGISTRATION EDIT
+# ============================================================================
 
 @pcl.route('/admin/registration/<int:registration_id>/edit', methods=['GET', 'POST'])
 def admin_edit_registration(registration_id):
-    """Admin edit for registration"""
+    """Admin edit registration - allows editing player data including photo upload"""
     registration = PCLRegistration.query.get_or_404(registration_id)
+    team = registration.team
     
     if request.method == 'POST':
+        # Update fields
+        registration.first_name = request.form['first_name']
+        registration.last_name = request.form['last_name']
+        registration.email = request.form['email']
+        registration.phone = request.form.get('phone')
+        registration.gender = request.form['gender']
+        registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
+        registration.is_captain = request.form.get('is_captain') == 'on'
+        registration.shirt_name = request.form['shirt_name']
+        registration.shirt_size = request.form['shirt_size']
+        registration.bio = request.form.get('bio')
+        registration.instagram = request.form.get('instagram')
+        registration.tiktok = request.form.get('tiktok')
+        registration.youtube = request.form.get('youtube')
+        registration.twitter = request.form.get('twitter')
+        registration.video_url = request.form.get('video_url')
+        registration.dupr_rating = request.form.get('dupr_rating')
+        registration.preferred_language = request.form.get('preferred_language', 'EN')
+        registration.status = request.form.get('status', registration.status)
+        
+        # Handle photo URL (direct input) or file upload
+        photo_url = request.form.get('photo_filename')
+        if photo_url:
+            registration.photo_filename = photo_url
+        
+        # Handle new photo upload to Supabase
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename and allowed_file(file.filename):
+                result = upload_photo_to_supabase(file, folder='players')
+                if result['success']:
+                    registration.photo_filename = result['url']
+                    print(f"✅ New photo uploaded: {result['url']}")
+                else:
+                    flash(f'Photo upload failed: {result["error"]}', 'warning')
+        
+        registration.check_completeness()
+        
         try:
-            registration.first_name = request.form['first_name']
-            registration.last_name = request.form['last_name']
-            registration.email = request.form['email']
-            registration.phone = request.form.get('phone')
-            registration.gender = request.form['gender']
-            registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
-            registration.is_captain = request.form.get('is_captain') == 'on'
-            registration.shirt_name = request.form['shirt_name']
-            registration.shirt_size = request.form['shirt_size']
-            registration.bio = request.form.get('bio')
-            registration.instagram = request.form.get('instagram')
-            registration.tiktok = request.form.get('tiktok')
-            registration.youtube = request.form.get('youtube')
-            registration.twitter = request.form.get('twitter')
-            registration.video_url = request.form.get('video_url')
-            registration.dupr_rating = request.form.get('dupr_rating')
-            registration.preferred_language = request.form.get('preferred_language', 'EN')
-            registration.status = request.form.get('status', 'incomplete')
-            
-            # Handle photo upload
-            if 'photo' in request.files:
-                file = request.files['photo']
-                if file and file.filename and allowed_file(file.filename):
-                    result = upload_photo_to_supabase(file, folder='pcl-players')
-                    if result['success']:
-                        registration.photo_filename = result['url']
-            
-            registration.check_completeness()
-            
             db.session.commit()
-            flash('Registration updated successfully!', 'success')
-            
-            return redirect(url_for('pcl.admin_team_detail', team_id=registration.team_id))
+            flash(f'Registration for {registration.first_name} {registration.last_name} updated!', 'success')
+            return redirect(url_for('pcl.admin_team_detail', team_id=team.id))
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
     
     return render_template('pcl/pcl_registration_edit.html',
                          registration=registration,
-                         team=registration.team,
-                         shirt_sizes=SHIRT_SIZES,
-                         is_admin=True)
-
-
-@pcl.route('/admin/registration/<int:registration_id>/delete', methods=['POST'])
-def delete_registration(registration_id):
-    """Delete a registration"""
-    registration = PCLRegistration.query.get_or_404(registration_id)
-    team_id = registration.team_id
-    player_name = f"{registration.first_name} {registration.last_name}"
-    
-    try:
-        db.session.delete(registration)
-        db.session.commit()
-        flash(f'Player "{player_name}" deleted successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error deleting player: {str(e)}', 'danger')
-    
-    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+                         team=team)
 
 
 # ============================================================================
-# WHATSAPP PROFILE LINK ROUTES
+# API ENDPOINTS
+# ============================================================================
+
+@pcl.route('/api/team/<token>/status')
+def api_team_status(token):
+    """API endpoint for team status (for AJAX updates)"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    stats = team.get_stats()
+    
+    return jsonify({
+        'team': f"{team.country_flag} {team.country_name} {team.age_category}",
+        'stats': stats,
+        'deadline': team.tournament.registration_deadline.isoformat(),
+        'is_complete': stats['is_complete']
+    })
+
+
+# ============================================================================
+# DELETE TEAM
+# ============================================================================
+
+@pcl.route('/admin/team/<int:team_id>/delete', methods=['POST'])
+def delete_team(team_id):
+    """Delete a team and all its registrations"""
+    team = PCLTeam.query.get_or_404(team_id)
+    tournament_id = team.tournament_id
+    team_name = f"{team.country_name} {team.age_category}"
+    
+    try:
+        PCLRegistration.query.filter_by(team_id=team_id).delete()
+        db.session.delete(team)
+        db.session.commit()
+        flash(f'Team "{team_name}" deleted!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting team: {str(e)}', 'danger')
+    
+    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
+
+
+# ============================================================================
+# PROFILE LINK MANAGEMENT (NEW - Added for Player Profile Completion)
 # ============================================================================
 
 @pcl.route('/team/<token>/send-profile-link/<int:registration_id>', methods=['POST'])
 def send_player_profile_link(token, registration_id):
     """Send profile completion link to a single player"""
+    from utils.whatsapp import send_profile_completion_link
+    
     team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
     registration = PCLRegistration.query.get_or_404(registration_id)
     
@@ -679,8 +705,9 @@ def send_player_profile_link(token, registration_id):
         flash('Invalid request!', 'danger')
         return redirect(url_for('pcl.captain_dashboard', token=token))
     
-    # Create player if doesn't exist
+    # Check if player exists and has update_token
     if not registration.player:
+        # Create player if doesn't exist
         player = Player(
             first_name=registration.first_name,
             last_name=registration.last_name,
@@ -690,6 +717,8 @@ def send_player_profile_link(token, registration_id):
         )
         player.generate_update_token()
         db.session.add(player)
+        
+        # Link to registration
         registration.player = player
         db.session.commit()
     
@@ -704,9 +733,9 @@ def send_player_profile_link(token, registration_id):
     result = send_profile_completion_link(player, test_mode=False)
     
     if result['status'] == 'sent':
-        flash(f'Profile link sent to {player.first_name}!', 'success')
+        flash(f'Profile link successfully sent to {player.first_name} {player.last_name}!', 'success')
     else:
-        flash(f'Error sending link: {result.get("error", "Unknown error")}', 'danger')
+        flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
     
     return redirect(url_for('pcl.captain_dashboard', token=token))
 
@@ -714,6 +743,8 @@ def send_player_profile_link(token, registration_id):
 @pcl.route('/team/<token>/send-all-profile-links', methods=['POST'])
 def send_all_profile_links(token):
     """Send profile completion links to all team players"""
+    from utils.whatsapp import send_profile_completion_link
+    
     team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
     registrations = team.registrations.all()
     
@@ -721,6 +752,7 @@ def send_all_profile_links(token):
     error_count = 0
     
     for registration in registrations:
+        # Skip if no phone number
         if not registration.phone:
             error_count += 1
             continue
@@ -744,7 +776,7 @@ def send_all_profile_links(token):
         if not player.update_token:
             player.generate_update_token()
         
-        # Send WhatsApp
+        # Send WhatsApp message
         result = send_profile_completion_link(player, test_mode=False)
         
         if result['status'] == 'sent':
@@ -752,34 +784,18 @@ def send_all_profile_links(token):
         else:
             error_count += 1
     
+    # Commit all changes
     try:
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        flash(f'Error: {str(e)}', 'danger')
+        flash(f'Error saving: {str(e)}', 'danger')
         return redirect(url_for('pcl.captain_dashboard', token=token))
     
+    # Show summary
     if sent_count > 0:
-        flash(f'✅ {sent_count} profile link(s) sent!', 'success')
+        flash(f'âœ… {sent_count} profile link(s) successfully sent!', 'success')
     if error_count > 0:
-        flash(f'⚠️ {error_count} message(s) could not be sent.', 'warning')
+        flash(f'âš ï¸ {error_count} message(s) could not be sent.', 'warning')
     
     return redirect(url_for('pcl.captain_dashboard', token=token))
-
-
-# ============================================================================
-# API ENDPOINTS
-# ============================================================================
-
-@pcl.route('/api/team/<token>/status')
-def api_team_status(token):
-    """API endpoint for team status (JSON response)"""
-    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
-    stats = team.get_stats()
-    
-    return jsonify({
-        'team': f"{team.country_flag} {team.country_name} {team.age_category}",
-        'stats': stats,
-        'deadline': team.tournament.registration_deadline.isoformat(),
-        'is_complete': stats['is_complete']
-    })
