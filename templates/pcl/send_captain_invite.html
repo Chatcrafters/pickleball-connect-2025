@@ -78,8 +78,8 @@
                 </div>
                 <div class="card-body">
                     <div class="bg-light p-3 rounded" style="white-space: pre-line; font-family: monospace; font-size: 0.9rem;">
-                        <div id="preview-EN">
-🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Team Captain Invitation
+                        <!-- English -->
+                        <div id="preview-EN" class="preview-text">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Team Captain Invitation
 
 Hello [NAME]! 👋
 
@@ -106,8 +106,94 @@ You are the captain of Team {{ team.country_flag }} {{ team.country_name }} {{ t
 Questions? Just reach out!
 
 Good luck! 🎾
-WPC Series Europe
-                        </div>
+WPC Series Europe</div>
+                        <!-- Deutsch -->
+                        <div id="preview-DE" class="preview-text" style="display: none;">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Team Captain Einladung
+
+Hallo [NAME]! 👋
+
+Du bist der Kapitän von Team {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} bei der Pickleball Champions League!
+
+📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
+📍 {{ team.tournament.location }}
+
+🔗 Dein Captain-Dashboard:
+{{ request.host_url }}pcl/team/{{ team.captain_token }}
+
+➡️ Was du tun musst:
+1. Öffne den Link oben
+2. Registriere dich selbst (Foto, Bio, Shirt-Größe)
+3. Füge deine Teammitglieder hinzu
+4. Stelle sicher, dass alle Profile vollständig sind
+
+👥 Team-Anforderungen:
+• Mindestens {{ team.min_men }} Männer + {{ team.min_women }} Frauen
+• Jeder braucht: Foto, Bio, Shirt-Name & Größe
+
+⏰ Deadline: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
+
+Bei Fragen melde dich einfach!
+
+Viel Erfolg! 🎾
+WPC Series Europe</div>
+                        <!-- Español -->
+                        <div id="preview-ES" class="preview-text" style="display: none;">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Invitación Capitán
+
+¡Hola [NAME]! 👋
+
+Eres el capitán del Equipo {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} en la Pickleball Champions League!
+
+📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
+📍 {{ team.tournament.location }}
+
+🔗 Tu Panel de Capitán:
+{{ request.host_url }}pcl/team/{{ team.captain_token }}
+
+➡️ Lo que debes hacer:
+1. Abre el enlace
+2. Regístrate (foto, bio, talla de camiseta)
+3. Añade a tus compañeros de equipo
+4. Asegúrate de que todos los perfiles estén completos
+
+👥 Requisitos del equipo:
+• Mínimo {{ team.min_men }} hombres + {{ team.min_women }} mujeres
+• Todos necesitan: Foto, Bio, Nombre y Talla de camiseta
+
+⏰ Fecha límite: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
+
+¿Preguntas? ¡Escríbeme!
+
+¡Buena suerte! 🎾
+WPC Series Europe</div>
+                        <!-- Français -->
+                        <div id="preview-FR" class="preview-text" style="display: none;">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Invitation Capitaine
+
+Bonjour [NAME]! 👋
+
+Tu es le capitaine de l'équipe {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} à la Pickleball Champions League!
+
+📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
+📍 {{ team.tournament.location }}
+
+🔗 Ton tableau de bord Capitaine:
+{{ request.host_url }}pcl/team/{{ team.captain_token }}
+
+➡️ Ce que tu dois faire:
+1. Ouvre le lien ci-dessus
+2. Inscris-toi (photo, bio, taille de maillot)
+3. Ajoute tes coéquipiers
+4. Assure-toi que tous les profils sont complets
+
+👥 Exigences de l'équipe:
+• Minimum {{ team.min_men }} hommes + {{ team.min_women }} femmes
+• Chacun a besoin de: Photo, Bio, Nom et Taille de maillot
+
+⏰ Date limite: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
+
+Des questions? Contacte-moi!
+
+Bonne chance! 🎾
+WPC Series Europe</div>
                     </div>
                 </div>
             </div>
@@ -149,5 +235,22 @@ function copyLink() {
         btn.classList.add('btn-outline-secondary');
     }, 2000);
 }
+
+function updatePreview() {
+    const lang = document.getElementById('language').value;
+    
+    // Hide all previews
+    document.querySelectorAll('.preview-text').forEach(el => {
+        el.style.display = 'none';
+    });
+    
+    // Show selected language
+    document.getElementById('preview-' + lang).style.display = 'block';
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updatePreview();
+});
 </script>
 {% endblock %}
