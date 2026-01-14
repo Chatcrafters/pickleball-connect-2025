@@ -688,6 +688,24 @@ def delete_team(team_id):
     return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
 
 
+@pcl.route('/admin/registration/<int:registration_id>/delete', methods=['POST'])
+def delete_registration(registration_id):
+    """Delete a single player registration"""
+    registration = PCLRegistration.query.get_or_404(registration_id)
+    team_id = registration.team_id
+    player_name = f"{registration.first_name} {registration.last_name}"
+    
+    try:
+        db.session.delete(registration)
+        db.session.commit()
+        flash(f'Registration "{player_name}" deleted!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting registration: {str(e)}', 'danger')
+    
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+
+
 # ============================================================================
 # PROFILE LINK MANAGEMENT (NEW - Added for Player Profile Completion)
 # ============================================================================
