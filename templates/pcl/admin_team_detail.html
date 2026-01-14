@@ -4,6 +4,7 @@
 
 {% block content %}
 <div class="container">
+    <!-- Breadcrumb Navigation -->
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
@@ -12,6 +13,7 @@
         </ol>
     </nav>
 
+    <!-- Header Section -->
     <div class="row mb-4">
         <div class="col-md-8">
             <h1>{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</h1>
@@ -21,26 +23,32 @@
             <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
                 <i class="bi bi-download"></i> Export CSV
             </a>
+            <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this team? All registrations will be removed!');">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-trash"></i> Delete Team
+                </button>
+            </form>
         </div>
     </div>
 
-    <!-- Captain Link -->
+    <!-- Captain Access Link -->
     <div class="card mb-4 border-primary">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Access Link</h5>
+            <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Secret Link</h5>
         </div>
         <div class="card-body">
-            <div class="input-group">
-                <input type="text" class="form-control" 
+            <div class="input-group mb-2">
+                <input type="text" class="form-control" id="captainLink" 
                        value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" readonly>
-                <button class="btn btn-outline-secondary" onclick="navigator.clipboard.writeText(this.previousElementSibling.value); this.innerHTML='✓ Copied!'">
+                <button class="btn btn-outline-secondary" type="button" onclick="copyCaptainLink()">
                     <i class="bi bi-clipboard"></i> Copy
                 </button>
             </div>
+            <small class="text-muted">Share this link with the team captain only</small>
         </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Team Statistics -->
     {% set stats = team.get_stats() %}
     <div class="row mb-4">
         <div class="col-md-3">
@@ -52,149 +60,254 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center {% if stats.men >= team.min_men %}border-success{% else %}border-warning{% endif %}">
+            <div class="card text-center {% if stats.men >= team.min_men %}border-success border-3{% else %}border-warning border-3{% endif %}">
                 <div class="card-body">
                     <h3>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
                     <p class="mb-0">👨 Men</p>
+                    <small class="text-muted">{% if stats.men >= team.min_men %}✅ OK{% else %}⚠️ Need {{ team.min_men - stats.men }}{% endif %}</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card text-center {% if stats.women >= team.min_women %}border-success{% else %}border-warning{% endif %}">
+            <div class="card text-center {% if stats.women >= team.min_women %}border-success border-3{% else %}border-warning border-3{% endif %}">
                 <div class="card-body">
                     <h3>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
                     <p class="mb-0">👩 Women</p>
+                    <small class="text-muted">{% if stats.women >= team.min_women %}✅ OK{% else %}⚠️ Need {{ team.min_women - stats.women }}{% endif %}</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center {% if stats.is_complete %}bg-success text-white{% else %}bg-warning{% endif %}">
                 <div class="card-body">
-                    <h3>{% if stats.is_complete %}✓{% else %}⚠{% endif %}</h3>
+                    <h3>{% if stats.is_complete %}✓{% else %}✗{% endif %}</h3>
                     <p class="mb-0">{% if stats.is_complete %}Complete{% else %}Incomplete{% endif %}</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Men Players Section -->
     <div class="row">
-        <!-- Men -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-info text-white">
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">👨 Men ({{ stats.men }})</h5>
+                    <span class="badge bg-light text-dark">{{ stats.men_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
                     {% if men %}
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Shirt</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for reg in men %}
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        {% if reg.photo_filename %}
-                                        <img src="{% if reg.photo_filename and reg.photo_filename.startswith('http') %}{{ reg.photo_filename }}{% elif reg.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + reg.photo_filename) }}{% else %}#{% endif %}" 
-                                             class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
-                                        {% else %}
-                                        <div class="rounded-circle bg-secondary me-2" style="width: 40px; height: 40px;"></div>
-                                        {% endif %}
-                                        <div>
-                                            <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                            {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
-                                            <br>
-                                            <small class="text-muted">{{ reg.email }}</small>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Shirt</th>
+                                    <th>Status</th>
+                                    <th width="100">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in men %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if reg.photo_filename %}
+                                            <img src="{{ reg.photo_filename }}" 
+                                                 class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
+                                                {% if reg.is_captain %}<span class="badge bg-warning">👑 Captain</span>{% endif %}
+                                                <br>
+                                                <small class="text-muted">{{ reg.email }}</small>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    {{ reg.shirt_name }}<br>
-                                    <small class="text-muted">{{ reg.shirt_size }}</small>
-                                </td>
-                                <td>
-                                    {% if reg.status == 'complete' %}
-                                    <span class="badge bg-success">✓ Complete</span>
-                                    {% else %}
-                                    <span class="badge bg-warning">Incomplete</span>
-                                    <br>
-                                    <small class="text-danger">{{ reg.get_missing_fields()|join(', ') }}</small>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td>
+                                        <strong>{{ reg.shirt_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">Size {{ reg.shirt_size }}</small>
+                                    </td>
+                                    <td>
+                                        {% if reg.status == 'complete' %}
+                                        <span class="badge bg-success">✓ Complete</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">⚠️ Incomplete</span>
+                                        <br>
+                                        <small class="text-danger">{{ reg.get_missing_fields()|join(', ') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('pcl.admin_edit_registration', registration_id=reg.id) }}" 
+                                               class="btn btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form action="{{ url_for('pcl.delete_registration', registration_id=reg.id) }}" 
+                                                  method="POST" class="d-inline" 
+                                                  onsubmit="return confirm('Delete {{ reg.first_name }}?');">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <p class="text-muted text-center py-4">No men registered</p>
+                    <p class="text-muted text-center py-4">No men registered yet</p>
                     {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Women -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header bg-danger text-white">
+        <!-- Women Players Section -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">👩 Women ({{ stats.women }})</h5>
+                    <span class="badge bg-light text-dark">{{ stats.women_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
                     {% if women %}
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>Player</th>
-                                <th>Shirt</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for reg in women %}
-                            <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        {% if reg.photo_filename %}
-                                        <img src="{% if reg.photo_filename and reg.photo_filename.startswith('http') %}{{ reg.photo_filename }}{% elif reg.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + reg.photo_filename) }}{% else %}#{% endif %}" 
-                                             class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
-                                        {% else %}
-                                        <div class="rounded-circle bg-secondary me-2" style="width: 40px; height: 40px;"></div>
-                                        {% endif %}
-                                        <div>
-                                            <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                            {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
-                                            <br>
-                                            <small class="text-muted">{{ reg.email }}</small>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Player</th>
+                                    <th>Shirt</th>
+                                    <th>Status</th>
+                                    <th width="100">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for reg in women %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if reg.photo_filename %}
+                                            <img src="{{ reg.photo_filename }}" 
+                                                 class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                            {% else %}
+                                            <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person text-white"></i>
+                                            </div>
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
+                                                {% if reg.is_captain %}<span class="badge bg-warning">👑 Captain</span>{% endif %}
+                                                <br>
+                                                <small class="text-muted">{{ reg.email }}</small>
+                                            </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td>
-                                    {{ reg.shirt_name }}<br>
-                                    <small class="text-muted">{{ reg.shirt_size }}</small>
-                                </td>
-                                <td>
-                                    {% if reg.status == 'complete' %}
-                                    <span class="badge bg-success">✓ Complete</span>
-                                    {% else %}
-                                    <span class="badge bg-warning">Incomplete</span>
-                                    <br>
-                                    <small class="text-danger">{{ reg.get_missing_fields()|join(', ') }}</small>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                    </td>
+                                    <td>
+                                        <strong>{{ reg.shirt_name }}</strong>
+                                        <br>
+                                        <small class="text-muted">Size {{ reg.shirt_size }}</small>
+                                    </td>
+                                    <td>
+                                        {% if reg.status == 'complete' %}
+                                        <span class="badge bg-success">✓ Complete</span>
+                                        {% else %}
+                                        <span class="badge bg-warning">⚠️ Incomplete</span>
+                                        <br>
+                                        <small class="text-danger">{{ reg.get_missing_fields()|join(', ') }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ url_for('pcl.admin_edit_registration', registration_id=reg.id) }}" 
+                                               class="btn btn-outline-primary" title="Edit">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <form action="{{ url_for('pcl.delete_registration', registration_id=reg.id) }}" 
+                                                  method="POST" class="d-inline" 
+                                                  onsubmit="return confirm('Delete {{ reg.first_name }}?');">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                    <p class="text-muted text-center py-4">No women registered</p>
+                    <p class="text-muted text-center py-4">No women registered yet</p>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Team Requirements Info -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-info-circle"></i> Team Requirements</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h6>Minimum Players Required:</h6>
+                    <ul class="mb-0">
+                        <li><strong>Men:</strong> {{ team.min_men }} (max {{ team.max_men }})</li>
+                        <li><strong>Women:</strong> {{ team.min_women }} (max {{ team.max_women }})</li>
+                    </ul>
+                </div>
+                <div class="col-md-6">
+                    <h6>Required Profile Fields:</h6>
+                    <ul class="mb-0">
+                        <li>✓ Profile Photo</li>
+                        <li>✓ Bio</li>
+                        <li>✓ Shirt Name & Size</li>
+                        <li>○ Social Media (optional)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Navigation -->
+    <div class="mt-4">
+        <a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=team.tournament.id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Tournament
+        </a>
+    </div>
 </div>
+
+<!-- JavaScript for Copy Link Function -->
+<script>
+function copyCaptainLink() {
+    const linkInput = document.getElementById('captainLink');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+        const btn = event.target;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy link');
+    });
+}
+</script>
 {% endblock %}

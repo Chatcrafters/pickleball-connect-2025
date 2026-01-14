@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ registration.first_name }} {{ registration.last_name }} - PCL Admin{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Breadcrumb Navigation -->
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=registration.team.tournament_id) }}">{{ registration.team.tournament.name }}</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_team_detail', team_id=registration.team_id) }}">{{ registration.team.country_flag }} {{ registration.team.country_name }} {{ registration.team.age_category }}</a></li>
+            <li class="breadcrumb-item active">Edit {{ registration.first_name }}</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <h1 class="mb-4">
+                <i class="bi bi-pencil"></i> Edit Player Registration
+            </h1>
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ registration.first_name }} {{ registration.last_name }}</h5>
+                </div>
+                
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="card-body">
+                        <!-- Alert for Admin -->
+                        {% if is_admin %}
+                        <div class="alert alert-info mb-4">
+                            <i class="bi bi-shield-lock"></i> <strong>Admin Edit Mode:</strong> You can edit all fields and change the registration status.
+                        </div>
+                        {% endif %}
+
+                        <!-- ========== PERSONAL INFORMATION ========== -->
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-person"></i> Personal Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="first_name" class="form-label">First Name *</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" 
+                                       value="{{ registration.first_name }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="last_name" class="form-label">Last Name *</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" 
+                                       value="{{ registration.last_name }}" required>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">Email *</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ registration.email }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone</label>
+                                <input type="tel" class="form-control" id="phone" name="phone" 
+                                       value="{{ registration.phone or '' }}" placeholder="+49...">
+                            </div>
+                        </div>
+
+                        <!-- ========== DEMOGRAPHICS ========== -->
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-info-circle"></i> Demographics</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="gender" class="form-label">Gender *</label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="">Select...</option>
+                                    <option value="male" {% if registration.gender == 'male' %}selected{% endif %}>Male</option>
+                                    <option value="female" {% if registration.gender == 'female' %}selected{% endif %}>Female</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="birth_year" class="form-label">Birth Year</label>
+                                <input type="number" class="form-control" id="birth_year" name="birth_year" 
+                                       value="{{ registration.birth_year or '' }}" min="1940" max="2010">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="is_captain" class="form-label">Role</label>
+                                <div class="mt-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="is_captain" name="is_captain" 
+                                               {% if registration.is_captain %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_captain">
+                                            👑 Team Captain
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========== SHIRT INFORMATION ========== -->
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-tshirt"></i> Shirt Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="shirt_name" class="form-label">Name on Shirt *</label>
+                                <input type="text" class="form-control" id="shirt_name" name="shirt_name" 
+                                       value="{{ registration.shirt_name }}" required maxlength="50">
+                                <small class="text-muted">How name appears on jersey</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="shirt_size" class="form-label">Shirt Size *</label>
+                                <select class="form-select" id="shirt_size" name="shirt_size" required>
+                                    <option value="">Select...</option>
+                                    {% for size in shirt_sizes %}
+                                    <option value="{{ size }}" {% if registration.shirt_size == size %}selected{% endif %}>{{ size }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- ========== PROFILE ========== -->
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-image"></i> Profile</h5>
+                        
+                        <div class="mb-3">
+                            <label for="photo" class="form-label">Profile Photo</label>
+                            {% if registration.photo_filename %}
+                            <div class="mb-3">
+                                <img src="{{ registration.photo_filename }}" alt="Current photo" 
+                                     style="max-width: 200px; max-height: 200px; border-radius: 8px;">
+                                <p class="text-muted small mt-2">Current photo ✓</p>
+                            </div>
+                            {% endif %}
+                            <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                            <small class="text-muted">JPG, PNG. Max 5MB. Upload new photo to replace.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Short Bio</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="4">{{ registration.bio or '' }}</textarea>
+                            <small class="text-muted">Tell us about yourself and your pickleball journey (100-500 chars)</small>
+                        </div>
+
+                        <!-- ========== SOCIAL MEDIA ========== -->
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-share"></i> Social Media (Optional)</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="instagram" class="form-label"><i class="bi bi-instagram"></i> Instagram</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="instagram" name="instagram" 
+                                           value="{{ registration.instagram or '' }}" placeholder="username">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="tiktok" class="form-label"><i class="bi bi-tiktok"></i> TikTok</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="tiktok" name="tiktok" 
+                                           value="{{ registration.tiktok or '' }}" placeholder="username">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="youtube" class="form-label"><i class="bi bi-youtube"></i> YouTube</label>
+                                <input type="url" class="form-control" id="youtube" name="youtube" 
+                                       value="{{ registration.youtube or '' }}" placeholder="https://youtube.com/@channel">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="twitter" class="form-label"><i class="bi bi-twitter-x"></i> X / Twitter</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="twitter" name="twitter" 
+                                           value="{{ registration.twitter or '' }}" placeholder="username">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========== OPTIONAL INFORMATION ========== -->
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-star"></i> Optional Information</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="dupr_rating" class="form-label">DUPR Rating</label>
+                                <input type="text" class="form-control" id="dupr_rating" name="dupr_rating" 
+                                       value="{{ registration.dupr_rating or '' }}" placeholder="4.25">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="video_url" class="form-label">Highlight Video URL</label>
+                                <input type="url" class="form-control" id="video_url" name="video_url" 
+                                       value="{{ registration.video_url or '' }}" placeholder="https://youtube.com/...">
+                            </div>
+                        </div>
+
+                        <!-- ========== LANGUAGE & STATUS (Admin Only) ========== -->
+                        {% if is_admin %}
+                        <h5 class="mb-3 border-bottom pb-2"><i class="bi bi-sliders"></i> Admin Options</h5>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="preferred_language" class="form-label">Preferred Language</label>
+                                <select class="form-select" id="preferred_language" name="preferred_language">
+                                    <option value="EN" {% if registration.preferred_language == 'EN' %}selected{% endif %}>English</option>
+                                    <option value="DE" {% if registration.preferred_language == 'DE' %}selected{% endif %}>Deutsch</option>
+                                    <option value="ES" {% if registration.preferred_language == 'ES' %}selected{% endif %}>Español</option>
+                                    <option value="FR" {% if registration.preferred_language == 'FR' %}selected{% endif %}>Français</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Registration Status</label>
+                                <select class="form-select" id="status" name="status">
+                                    <option value="incomplete" {% if registration.status == 'incomplete' %}selected{% endif %}>Incomplete</option>
+                                    <option value="complete" {% if registration.status == 'complete' %}selected{% endif %}>Complete</option>
+                                    <option value="confirmed" {% if registration.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-light border">
+                            <small><strong>Completion Status:</strong> {{ registration.status }}</small><br>
+                            {% if registration.get_missing_fields() %}
+                            <small class="text-warning">
+                                <strong>Missing Fields:</strong> {{ registration.get_missing_fields()|join(', ') }}
+                            </small>
+                            {% else %}
+                            <small class="text-success"><strong>✓ All required fields complete</strong></small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Footer with Action Buttons -->
+                    <div class="card-footer bg-light">
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('pcl.admin_team_detail', team_id=registration.team_id) }}" 
+                               class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-check-circle"></i> Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Additional Info Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Registration Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-md-3">Team:</dt>
+                        <dd class="col-md-9">{{ registration.team.country_flag }} {{ registration.team.country_name }} {{ registration.team.age_category }}</dd>
+                        
+                        <dt class="col-md-3">Tournament:</dt>
+                        <dd class="col-md-9">{{ registration.team.tournament.name }}</dd>
+                        
+                        <dt class="col-md-3">Registered:</dt>
+                        <dd class="col-md-9">{{ registration.created_at.strftime('%d.%m.%Y %H:%M') }}</dd>
+                        
+                        <dt class="col-md-3">Last Updated:</dt>
+                        <dd class="col-md-9">{{ registration.updated_at.strftime('%d.%m.%Y %H:%M') }}</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card-header h5 {
+    margin: 0;
+}
+
+.border-bottom {
+    border-bottom: 2px solid #dee2e6 !important;
+}
+</style>
+{% endblock %}
