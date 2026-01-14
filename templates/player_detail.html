@@ -64,6 +64,52 @@
                     </table>
                 </div>
             </div>
+
+            <!-- NEW: Profile Update Link Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Profil-Vervollständigung</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        <strong>Spieler-Link zum Profil vervollständigen:</strong>
+                    </p>
+                    
+                    {% if player.update_token %}
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="profileLink" 
+                               value="{{ request.host_url }}player/update/{{ player.update_token }}" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyProfileLink()">
+                            <i class="bi bi-clipboard"></i> Kopieren
+                        </button>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <form action="{{ url_for('players.send_profile_link', player_id=player.id) }}" method="POST">
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="bi bi-whatsapp"></i> Link per WhatsApp senden
+                            </button>
+                        </form>
+                        
+                        <a href="{{ url_for('players.update_profile', token=player.update_token) }}" 
+                           class="btn btn-outline-primary" target="_blank">
+                            <i class="bi bi-box-arrow-up-right"></i> Link öffnen (Vorschau)
+                        </a>
+                    </div>
+                    
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        Kein Update-Token vorhanden!
+                        <form action="{{ url_for('players.generate_token', player_id=player.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-warning ms-2">
+                                Token generieren
+                            </button>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
 
         <div class="col-md-6">
@@ -96,4 +142,27 @@
         <i class="bi bi-arrow-left"></i> Zurück zur Liste
     </a>
 </div>
+
+<script>
+function copyProfileLink() {
+    const linkInput = document.getElementById('profileLink');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // For mobile
+    
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+        // Show success feedback
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Kopiert!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+</script>
 {% endblock %}

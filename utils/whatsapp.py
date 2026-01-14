@@ -20,7 +20,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
     """
     if test_mode or not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
         print(f"\n{'='*60}")
-        print(f"ðŸ“± [TEST MODE] WhatsApp to {to_number}:")
+        print(f"📱 [TEST MODE] WhatsApp to {to_number}:")
         print(f"{'='*60}")
         print(message)
         print(f"{'='*60}\n")
@@ -39,7 +39,7 @@ def send_whatsapp_message(to_number, message, test_mode=True):
             to=to_number
         )
         
-        print(f"âœ… Message sent to {to_number}! SID: {message_obj.sid}")
+        print(f"✅ Message sent to {to_number}! SID: {message_obj.sid}")
         
         return {
             'status': 'sent',
@@ -47,11 +47,79 @@ def send_whatsapp_message(to_number, message, test_mode=True):
             'to': to_number
         }
     except Exception as e:
-        print(f"âŒ Error sending WhatsApp message: {str(e)}")
+        print(f"❌ Error sending WhatsApp message: {str(e)}")
         return {
             'status': 'failed',
             'error': str(e)
         }
+
+def send_profile_completion_link(player, test_mode=False):
+    """
+    Send profile completion link to a player
+    
+    Args:
+        player: Player object
+        test_mode: If True, only print message instead of sending
+    
+    Returns:
+        dict: Status of the message
+    """
+    # Generate token if not exists
+    if not player.update_token:
+        player.generate_update_token()
+    
+    update_url = player.get_update_url()
+    
+    # Messages in different languages
+    messages = {
+        'EN': f"""🎾 Welcome to WPC Series Europe!
+
+Hi {player.first_name}! 👋
+
+Please complete your player profile to participate in our tournaments:
+
+{update_url}
+
+See you on the courts! 🏓
+WPC Series Europe""",
+        
+        'DE': f"""🎾 Willkommen bei WPC Series Europe!
+
+Hallo {player.first_name}! 👋
+
+Bitte vervollständige dein Spielerprofil, um an unseren Turnieren teilzunehmen:
+
+{update_url}
+
+Wir sehen uns auf dem Platz! 🏓
+WPC Series Europe""",
+        
+        'ES': f"""🎾 ¡Bienvenido a WPC Series Europe!
+
+¡Hola {player.first_name}! 👋
+
+Por favor completa tu perfil de jugador para participar en nuestros torneos:
+
+{update_url}
+
+¡Nos vemos en las canchas! 🏓
+WPC Series Europe""",
+        
+        'FR': f"""🎾 Bienvenue à WPC Series Europe!
+
+Bonjour {player.first_name}! 👋
+
+Veuillez compléter votre profil de joueur pour participer à nos tournois:
+
+{update_url}
+
+À bientôt sur les courts! 🏓
+WPC Series Europe"""
+    }
+    
+    message = messages.get(player.preferred_language, messages['EN'])
+    
+    return send_whatsapp_message(player.phone, message, test_mode=test_mode)
 
 def get_message_template(message_type, language='EN', **kwargs):
     """
@@ -69,125 +137,125 @@ def get_message_template(message_type, language='EN', **kwargs):
     end_date_line = ""
     if kwargs.get('end_date'):
         date_labels = {
-            'EN': 'ðŸ“… End: ',
-            'DE': 'ðŸ“… Ende: ',
-            'ES': 'ðŸ“… Fin: ',
-            'FR': 'ðŸ“… Fin: '
+            'EN': '📅 End: ',
+            'DE': '📅 Ende: ',
+            'ES': '📅 Fin: ',
+            'FR': '📅 Fin: '
         }
         end_date_line = date_labels.get(language, date_labels['EN']) + kwargs.get('end_date') + '\n'
     
     templates = {
         'invitation': {
-            'EN': """ðŸŽ¾ {event_name}
+            'EN': """🎾 {event_name}
 
-ðŸ“… Start: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━━
 Please reply with:
-âœ… YES - I'm interested
-â„¹ï¸ INFO - Send me more details
-âŒ NO - Not interested
+✅ YES - I'm interested
+ℹ️ INFO - Send me more details
+❌ NO - Not interested
 
 Looking forward to hearing from you!""",
             
-            'DE': """ðŸŽ¾ {event_name}
+            'DE': """🎾 {event_name}
 
-ðŸ“… Start: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━━
 Bitte antworte mit:
-âœ… JA - Ich bin interessiert
-â„¹ï¸ INFO - Schick mir mehr Details
-âŒ NEIN - Nicht interessiert
+✅ JA - Ich bin interessiert
+ℹ️ INFO - Schick mir mehr Details
+❌ NEIN - Nicht interessiert
 
 Wir freuen uns auf deine Antwort!""",
             
-            'ES': """ðŸŽ¾ {event_name}
+            'ES': """🎾 {event_name}
 
-ðŸ“… Inicio: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Inicio: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
+━━━━━━━━━━━━━━━━━━━━━━
 Por favor responde con:
-âœ… SÃ - Estoy interesado
-â„¹ï¸ INFO - EnvÃ­ame mÃ¡s detalles
-âŒ NO - No estoy interesado
+✅ SÍ - Estoy interesado
+ℹ️ INFO - Envíame más detalles
+❌ NO - No estoy interesado
 
-Â¡Esperamos tu respuesta!""",
+¡Esperamos tu respuesta!""",
             
-            'FR': """ðŸŽ¾ {event_name}
+            'FR': """🎾 {event_name}
 
-ðŸ“… DÃ©but: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Début: {start_date}
+{end_date_line}📍 {location}
 
 {description}
 
-â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”
-Veuillez rÃ©pondre avec:
-âœ… OUI - Je suis intÃ©ressÃ©
-â„¹ï¸ INFO - Envoyez-moi plus de dÃ©tails
-âŒ NON - Pas intÃ©ressÃ©
+━━━━━━━━━━━━━━━━━━━━━━
+Veuillez répondre avec:
+✅ OUI - Je suis intéressé
+ℹ️ INFO - Envoyez-moi plus de détails
+❌ NON - Pas intéressé
 
 Au plaisir de vous lire!"""
         },
         'reminder': {
-            'EN': """â° Reminder: {event_name}
+            'EN': """⏰ Reminder: {event_name}
 
-ðŸ“… Start: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
 Don't forget to confirm your participation!
 
 Reply with:
-âœ… YES - Confirmed
-âŒ NO - Cancel""",
+✅ YES - Confirmed
+❌ NO - Cancel""",
             
-            'DE': """â° Erinnerung: {event_name}
+            'DE': """⏰ Erinnerung: {event_name}
 
-ðŸ“… Start: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Start: {start_date}
+{end_date_line}📍 {location}
 
-Vergiss nicht, deine Teilnahme zu bestÃ¤tigen!
+Vergiss nicht, deine Teilnahme zu bestätigen!
 
 Antworte mit:
-âœ… JA - BestÃ¤tigt
-âŒ NEIN - Absagen""",
+✅ JA - Bestätigt
+❌ NEIN - Absagen""",
             
-            'ES': """â° Recordatorio: {event_name}
+            'ES': """⏰ Recordatorio: {event_name}
 
-ðŸ“… Inicio: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Inicio: {start_date}
+{end_date_line}📍 {location}
 
-Â¡No olvides confirmar tu participaciÃ³n!
+¡No olvides confirmar tu participación!
 
 Responde con:
-âœ… SÃ - Confirmado
-âŒ NO - Cancelar""",
+✅ SÍ - Confirmado
+❌ NO - Cancelar""",
             
-            'FR': """â° Rappel: {event_name}
+            'FR': """⏰ Rappel: {event_name}
 
-ðŸ“… DÃ©but: {start_date}
-{end_date_line}ðŸ“ {location}
+📅 Début: {start_date}
+{end_date_line}📍 {location}
 
 N'oubliez pas de confirmer votre participation!
 
-RÃ©pondez avec:
-âœ… OUI - ConfirmÃ©
-âŒ NON - Annuler"""
+Répondez avec:
+✅ OUI - Confirmé
+❌ NON - Annuler"""
         },
         'update': {
-            'EN': "ðŸ“¢ Update for {event_name}:\n\n{message}",
-            'DE': "ðŸ“¢ Update zu {event_name}:\n\n{message}",
-            'ES': "ðŸ“¢ ActualizaciÃ³n de {event_name}:\n\n{message}",
-            'FR': "ðŸ“¢ Mise Ã  jour pour {event_name}:\n\n{message}"
+            'EN': "📢 Update for {event_name}:\n\n{message}",
+            'DE': "📢 Update zu {event_name}:\n\n{message}",
+            'ES': "📢 Actualización de {event_name}:\n\n{message}",
+            'FR': "📢 Mise à jour pour {event_name}:\n\n{message}"
         }
     }
     

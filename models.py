@@ -30,13 +30,16 @@ class Player(db.Model):
     preferred_language = db.Column(db.String(10), default='EN')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # NEW: Coaching fields
+    # Coaching fields
     coaching_notes = db.Column(db.Text, nullable=True)  # Private notes (only admin)
     last_coaching_contact = db.Column(db.DateTime, nullable=True)
     
-    # NEW: Weakness tracking (comma-separated or JSON)
+    # Weakness tracking (comma-separated or JSON)
     weaknesses = db.Column(db.Text, nullable=True)  # e.g., "dink_control,footwork"
     strengths = db.Column(db.Text, nullable=True)   # e.g., "serve,net_play"
+    
+    # NEW: Profile update token
+    update_token = db.Column(db.String(64), unique=True, nullable=True)
     
     # Relationships
     invited_events = db.relationship('Event', secondary=event_players, back_populates='invited_players')
@@ -44,6 +47,18 @@ class Player(db.Model):
     
     def __repr__(self):
         return f'<Player {self.first_name} {self.last_name}>'
+    
+    # NEW: Profile update methods
+    def generate_update_token(self):
+        """Generate a unique token for profile updates"""
+        self.update_token = secrets.token_urlsafe(32)
+        return self.update_token
+    
+    def get_update_url(self, base_url='https://pickleball-connect-2025.vercel.app'):
+        """Get the update URL for this player"""
+        if not self.update_token:
+            self.generate_update_token()
+        return f"{base_url}/player/update/{self.update_token}"
     
     def get_response_for_event(self, event_id):
         """Get player's response status for a specific event"""
@@ -85,11 +100,11 @@ class Event(db.Model):
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    # NEW: Event type
+    # Event type
     event_type = db.Column(db.String(50), default='tournament')  # tournament, workshop, clinic, invitational
     
     # Relationships
-    invited_players = db.relationship('Player', secondary=event_players, back_populates='invited_events')
+    invited_players = db.relationship('Player', secondary=event_players, back_populates='invited_players')
     messages = db.relationship('Message', back_populates='event', cascade='all, delete-orphan')
     
     def __repr__(self):

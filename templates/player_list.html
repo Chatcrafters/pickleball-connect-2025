@@ -20,47 +20,146 @@
         </div>
     </div>
 
-    <!-- Search -->
+    <!-- Bulk Actions Bar -->
     <div class="row mb-3">
-        <div class="col-md-6">
-            <input type="text" class="form-control" id="playerSearch" onkeyup="filterPlayers()" placeholder="Spieler suchen...">
-        </div>
-        <div class="col-md-6 text-end">
-            <span class="badge bg-primary fs-6">{{ players|length }} Spieler</span>
-        </div>
-    </div>
-
-    <!-- Players Grid -->
-    <div class="row">
-        {% for player in players %}
-        <div class="col-md-4 mb-3 player-card">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        {{ player.first_name }} {{ player.last_name }}
-                    </h5>
-                    <p class="card-text">
-                        <i class="bi bi-phone"></i> {{ player.phone }}<br>
-                        {% if player.email %}
-                        <i class="bi bi-envelope"></i> {{ player.email }}<br>
-                        {% endif %}
-                        {% if player.skill_level %}
-                        <i class="bi bi-star"></i> Level: {{ player.skill_level }}<br>
-                        {% endif %}
-                        {% if player.city %}
-                        <i class="bi bi-geo-alt"></i> {{ player.city }}{% if player.country %}, {{ player.country }}{% endif %}<br>
-                        {% endif %}
-                        <i class="bi bi-translate"></i> {{ player.preferred_language }}
-                    </p>
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('players.player_detail', player_id=player.id) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-eye"></i> Details
-                        </a>
+        <div class="col-12">
+            <div class="card bg-light" id="bulkActionsBar" style="display: none;">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong><span id="selectedCount">0</span> Spieler ausgewählt</strong>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-sm btn-success" onclick="sendBulkProfileLinks()">
+                                <i class="bi bi-whatsapp"></i> Profil-Links senden
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="deselectAll()">
+                                <i class="bi bi-x"></i> Abwählen
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        {% endfor %}
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="text" class="form-control" id="playerSearch" onkeyup="filterPlayers()" placeholder="Spieler suchen...">
+        </div>
+        <div class="col-md-3">
+            <select class="form-select" id="filterToken" onchange="filterPlayers()">
+                <option value="">Alle Spieler</option>
+                <option value="with_token">Mit Token</option>
+                <option value="without_token">Ohne Token</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)">
+                <label class="form-check-label" for="selectAllCheckbox">
+                    Alle auswählen
+                </label>
+            </div>
+        </div>
+        <div class="col-md-3 text-end">
+            <span class="badge bg-primary fs-6">{{ players|length }} Spieler</span>
+        </div>
+    </div>
+
+    <!-- Players Table -->
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th width="40">
+                        <input type="checkbox" id="selectAllTable" onchange="toggleSelectAll(this)">
+                    </th>
+                    <th>Name</th>
+                    <th>Kontakt</th>
+                    <th>Level</th>
+                    <th>Ort</th>
+                    <th>Token</th>
+                    <th width="280">Aktionen</th>
+                </tr>
+            </thead>
+            <tbody id="playersTableBody">
+                {% for player in players %}
+                <tr class="player-row" 
+                    data-name="{{ player.first_name }} {{ player.last_name }}" 
+                    data-token="{{ 'with_token' if player.update_token else 'without_token' }}">
+                    <td>
+                        <input type="checkbox" class="player-checkbox" value="{{ player.id }}" onchange="updateBulkActions()">
+                    </td>
+                    <td>
+                        <strong>{{ player.first_name }} {{ player.last_name }}</strong>
+                        <br>
+                        <small class="text-muted">
+                            <i class="bi bi-translate"></i> {{ player.preferred_language }}
+                        </small>
+                    </td>
+                    <td>
+                        <i class="bi bi-phone"></i> {{ player.phone }}<br>
+                        {% if player.email %}
+                        <i class="bi bi-envelope"></i> {{ player.email }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player.skill_level %}
+                        <span class="badge bg-success">{{ player.skill_level }}</span>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player.city %}
+                        {{ player.city }}{% if player.country %}, {{ player.country }}{% endif %}
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if player.update_token %}
+                        <span class="badge bg-success"><i class="bi bi-check-circle"></i> Ja</span>
+                        {% else %}
+                        <span class="badge bg-warning"><i class="bi bi-x-circle"></i> Nein</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <a href="{{ url_for('players.player_detail', player_id=player.id) }}" 
+                               class="btn btn-outline-primary" title="Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            
+                            {% if player.update_token %}
+                            <button type="button" class="btn btn-outline-secondary" 
+                                    onclick="copyLink('{{ request.host_url }}player/update/{{ player.update_token }}', this)" 
+                                    title="Link kopieren">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                            
+                            <form action="{{ url_for('players.send_profile_link', player_id=player.id) }}" 
+                                  method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-outline-success" title="WhatsApp senden">
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form action="{{ url_for('players.generate_token', player_id=player.id) }}" 
+                                  method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-outline-warning" title="Token generieren">
+                                    <i class="bi bi-key"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
     {% if not players %}
@@ -70,4 +169,139 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+function filterPlayers() {
+    const searchValue = document.getElementById('playerSearch').value.toLowerCase();
+    const tokenFilter = document.getElementById('filterToken').value;
+    const rows = document.querySelectorAll('.player-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name.toLowerCase();
+        const token = row.dataset.token;
+        
+        const matchesSearch = name.includes(searchValue);
+        const matchesToken = !tokenFilter || token === tokenFilter;
+        
+        if (matchesSearch && matchesToken) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function toggleSelectAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.player-checkbox');
+    const visibleCheckboxes = Array.from(checkboxes).filter(cb => {
+        const row = cb.closest('.player-row');
+        return row.style.display !== 'none';
+    });
+    
+    visibleCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.player-checkbox:checked');
+    const count = checkboxes.length;
+    const bulkBar = document.getElementById('bulkActionsBar');
+    const countSpan = document.getElementById('selectedCount');
+    
+    countSpan.textContent = count;
+    
+    if (count > 0) {
+        bulkBar.style.display = 'block';
+    } else {
+        bulkBar.style.display = 'none';
+    }
+}
+
+function deselectAll() {
+    document.querySelectorAll('.player-checkbox').forEach(cb => cb.checked = false);
+    document.getElementById('selectAllCheckbox').checked = false;
+    document.getElementById('selectAllTable').checked = false;
+    updateBulkActions();
+}
+
+function copyLink(url, button) {
+    navigator.clipboard.writeText(url).then(() => {
+        const originalHTML = button.innerHTML;
+        button.innerHTML = '<i class="bi bi-check"></i>';
+        button.classList.remove('btn-outline-secondary');
+        button.classList.add('btn-success');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHTML;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+function sendBulkProfileLinks() {
+    const selectedIds = Array.from(document.querySelectorAll('.player-checkbox:checked'))
+        .map(cb => cb.value);
+    
+    if (selectedIds.length === 0) {
+        alert('Keine Spieler ausgewählt!');
+        return;
+    }
+    
+    if (!confirm(`Profil-Links an ${selectedIds.length} Spieler per WhatsApp senden?`)) {
+        return;
+    }
+    
+    // Create form and submit
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("players.send_bulk_profile_links") }}';
+    
+    selectedIds.forEach(id => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'player_ids';
+        input.value = id;
+        form.appendChild(input);
+    });
+    
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
+
+<style>
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.player-row {
+    transition: background-color 0.2s;
+}
+
+.player-row:hover {
+    background-color: #f8f9fa;
+}
+
+#bulkActionsBar {
+    border-left: 4px solid #28a745;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
 {% endblock %}

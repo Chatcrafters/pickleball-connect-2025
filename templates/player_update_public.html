@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="{{ player.preferred_language.lower() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if player.preferred_language == 'DE' %}Profil vervollständigen{% elif player.preferred_language == 'ES' %}Completar perfil{% elif player.preferred_language == 'FR' %}Compléter le profil{% else %}Complete Your Profile{% endif %} - Pickleball Connect</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 20px 0;
+        }
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .profile-icon {
+            font-size: 4rem;
+            margin-bottom: 10px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            border: none;
+            padding: 12px 40px;
+            font-weight: 600;
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+        .readonly-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="profile-card">
+                    <!-- Header -->
+                    <div class="profile-header">
+                        <div class="profile-icon">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <h2 class="mb-2">
+                            {% if player.preferred_language == 'DE' %}
+                                Hallo {{ player.first_name }}!
+                            {% elif player.preferred_language == 'ES' %}
+                                ¡Hola {{ player.first_name }}!
+                            {% elif player.preferred_language == 'FR' %}
+                                Bonjour {{ player.first_name }}!
+                            {% else %}
+                                Hello {{ player.first_name }}!
+                            {% endif %}
+                        </h2>
+                        <p class="mb-0">
+                            {% if player.preferred_language == 'DE' %}
+                                Vervollständige dein Spielerprofil
+                            {% elif player.preferred_language == 'ES' %}
+                                Completa tu perfil de jugador
+                            {% elif player.preferred_language == 'FR' %}
+                                Complétez votre profil de joueur
+                            {% else %}
+                                Complete Your Player Profile
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="p-3">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Form -->
+                    <div class="p-4">
+                        <!-- Read-only Info -->
+                        <div class="readonly-info">
+                            <p class="mb-2"><strong><i class="bi bi-person"></i> Name:</strong> {{ player.first_name }} {{ player.last_name }}</p>
+                            <p class="mb-0"><strong><i class="bi bi-phone"></i> WhatsApp:</strong> {{ player.phone }}</p>
+                        </div>
+
+                        <form method="POST">
+                            <!-- Email -->
+                            <div class="mb-3">
+                                <label for="email" class="form-label">
+                                    <i class="bi bi-envelope"></i>
+                                    {% if player.preferred_language == 'DE' %}E-Mail{% elif player.preferred_language == 'ES' %}Correo electrónico{% elif player.preferred_language == 'FR' %}E-mail{% else %}Email{% endif %}
+                                </label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ player.email or '' }}" 
+                                       placeholder="{% if player.preferred_language == 'DE' %}deine@email.com{% else %}your@email.com{% endif %}">
+                            </div>
+
+                            <!-- Skill Level -->
+                            <div class="mb-3">
+                                <label for="skill_level" class="form-label">
+                                    <i class="bi bi-star"></i>
+                                    {% if player.preferred_language == 'DE' %}Spielstärke{% elif player.preferred_language == 'ES' %}Nivel de habilidad{% elif player.preferred_language == 'FR' %}Niveau de compétence{% else %}Skill Level{% endif %}
+                                    *
+                                </label>
+                                <select class="form-select" id="skill_level" name="skill_level" required>
+                                    <option value="">
+                                        {% if player.preferred_language == 'DE' %}Wählen...{% elif player.preferred_language == 'ES' %}Seleccionar...{% elif player.preferred_language == 'FR' %}Choisir...{% else %}Select...{% endif %}
+                                    </option>
+                                    <option value="2.0" {% if player.skill_level == '2.0' %}selected{% endif %}>2.0 - Beginner</option>
+                                    <option value="2.5" {% if player.skill_level == '2.5' %}selected{% endif %}>2.5</option>
+                                    <option value="3.0" {% if player.skill_level == '3.0' %}selected{% endif %}>3.0 - Intermediate</option>
+                                    <option value="3.5" {% if player.skill_level == '3.5' %}selected{% endif %}>3.5</option>
+                                    <option value="4.0" {% if player.skill_level == '4.0' %}selected{% endif %}>4.0 - Advanced</option>
+                                    <option value="4.5" {% if player.skill_level == '4.5' %}selected{% endif %}>4.5</option>
+                                    <option value="5.0" {% if player.skill_level == '5.0' %}selected{% endif %}>5.0+ - Professional</option>
+                                </select>
+                            </div>
+
+                            <!-- City -->
+                            <div class="mb-3">
+                                <label for="city" class="form-label">
+                                    <i class="bi bi-geo-alt"></i>
+                                    {% if player.preferred_language == 'DE' %}Stadt{% elif player.preferred_language == 'ES' %}Ciudad{% elif player.preferred_language == 'FR' %}Ville{% else %}City{% endif %}
+                                </label>
+                                <input type="text" class="form-control" id="city" name="city" 
+                                       value="{{ player.city or '' }}" 
+                                       placeholder="{% if player.preferred_language == 'DE' %}Berlin{% elif player.preferred_language == 'ES' %}Madrid{% elif player.preferred_language == 'FR' %}Paris{% else %}London{% endif %}">
+                            </div>
+
+                            <!-- Country -->
+                            <div class="mb-3">
+                                <label for="country" class="form-label">
+                                    <i class="bi bi-flag"></i>
+                                    {% if player.preferred_language == 'DE' %}Land{% elif player.preferred_language == 'ES' %}País{% elif player.preferred_language == 'FR' %}Pays{% else %}Country{% endif %}
+                                </label>
+                                <input type="text" class="form-control" id="country" name="country" 
+                                       value="{{ player.country or '' }}" 
+                                       placeholder="{% if player.preferred_language == 'DE' %}Deutschland{% elif player.preferred_language == 'ES' %}España{% elif player.preferred_language == 'FR' %}France{% else %}United Kingdom{% endif %}">
+                            </div>
+
+                            <!-- Language -->
+                            <div class="mb-4">
+                                <label for="preferred_language" class="form-label">
+                                    <i class="bi bi-translate"></i>
+                                    {% if player.preferred_language == 'DE' %}Bevorzugte Sprache{% elif player.preferred_language == 'ES' %}Idioma preferido{% elif player.preferred_language == 'FR' %}Langue préférée{% else %}Preferred Language{% endif %}
+                                    *
+                                </label>
+                                <select class="form-select" id="preferred_language" name="preferred_language" required>
+                                    <option value="EN" {% if player.preferred_language == 'EN' %}selected{% endif %}>English</option>
+                                    <option value="DE" {% if player.preferred_language == 'DE' %}selected{% endif %}>Deutsch</option>
+                                    <option value="ES" {% if player.preferred_language == 'ES' %}selected{% endif %}>Español</option>
+                                    <option value="FR" {% if player.preferred_language == 'FR' %}selected{% endif %}>Français</option>
+                                </select>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg btn-save">
+                                    <i class="bi bi-check-circle"></i>
+                                    {% if player.preferred_language == 'DE' %}
+                                        Profil speichern
+                                    {% elif player.preferred_language == 'ES' %}
+                                        Guardar perfil
+                                    {% elif player.preferred_language == 'FR' %}
+                                        Enregistrer le profil
+                                    {% else %}
+                                        Save Profile
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Footer -->
+                    <div class="text-center p-3 bg-light">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check"></i>
+                            {% if player.preferred_language == 'DE' %}
+                                Deine Daten sind sicher geschützt
+                            {% elif player.preferred_language == 'ES' %}
+                                Tus datos están protegidos de forma segura
+                            {% elif player.preferred_language == 'FR' %}
+                                Vos données sont protégées en toute sécurité
+                            {% else %}
+                                Your data is securely protected
+                            {% endif %}
+                            | WPC Series Europe
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

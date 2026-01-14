@@ -623,3 +623,116 @@ def delete_team(team_id):
         flash(f'Error deleting team: {str(e)}', 'danger')
     
     return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
+
+
+# ============================================================================
+# PROFILE LINK MANAGEMENT (NEW - Added for Player Profile Completion)
+# ============================================================================
+
+@pcl.route('/team/<token>/send-profile-link/<int:registration_id>', methods=['POST'])
+def send_player_profile_link(token, registration_id):
+    """Send profile completion link to a single player"""
+    from utils.whatsapp import send_profile_completion_link
+    
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    registration = PCLRegistration.query.get_or_404(registration_id)
+    
+    # Verify registration belongs to this team
+    if registration.team_id != team.id:
+        flash('Invalid request!', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token))
+    
+    # Check if player exists and has update_token
+    if not registration.player:
+        # Create player if doesn't exist
+        player = Player(
+            first_name=registration.first_name,
+            last_name=registration.last_name,
+            phone=registration.phone or '',
+            email=registration.email,
+            preferred_language=registration.preferred_language
+        )
+        player.generate_update_token()
+        db.session.add(player)
+        
+        # Link to registration
+        registration.player = player
+        db.session.commit()
+    
+    player = registration.player
+    
+    # Generate token if not exists
+    if not player.update_token:
+        player.generate_update_token()
+        db.session.commit()
+    
+    # Send WhatsApp message
+    result = send_profile_completion_link(player, test_mode=False)
+    
+    if result['status'] == 'sent':
+        flash(f'Profile link successfully sent to {player.first_name} {player.last_name}!', 'success')
+    else:
+        flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
+    
+    return redirect(url_for('pcl.captain_dashboard', token=token))
+
+
+@pcl.route('/team/<token>/send-all-profile-links', methods=['POST'])
+def send_all_profile_links(token):
+    """Send profile completion links to all team players"""
+    from utils.whatsapp import send_profile_completion_link
+    
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    registrations = team.registrations.all()
+    
+    sent_count = 0
+    error_count = 0
+    
+    for registration in registrations:
+        # Skip if no phone number
+        if not registration.phone:
+            error_count += 1
+            continue
+        
+        # Create player if doesn't exist
+        if not registration.player:
+            player = Player(
+                first_name=registration.first_name,
+                last_name=registration.last_name,
+                phone=registration.phone,
+                email=registration.email,
+                preferred_language=registration.preferred_language
+            )
+            player.generate_update_token()
+            db.session.add(player)
+            registration.player = player
+        
+        player = registration.player
+        
+        # Generate token if not exists
+        if not player.update_token:
+            player.generate_update_token()
+        
+        # Send WhatsApp message
+        result = send_profile_completion_link(player, test_mode=False)
+        
+        if result['status'] == 'sent':
+            sent_count += 1
+        else:
+            error_count += 1
+    
+    # Commit all changes
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error saving: {str(e)}', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token))
+    
+    # Show summary
+    if sent_count > 0:
+        flash(f'✅ {sent_count} profile link(s) successfully sent!', 'success')
+    if error_count > 0:
+        flash(f'⚠️ {error_count} message(s) could not be sent.', 'warning')
+    
+    return redirect(url_for('pcl.captain_dashboard', token=token))

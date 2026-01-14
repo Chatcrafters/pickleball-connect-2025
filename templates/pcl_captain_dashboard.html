@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Captain Dashboard - {{ team.country_name }} {{ team.age_category }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+        .team-header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px 15px 0 0;
+            text-align: center;
+        }
+        .flag-icon {
+            font-size: 3rem;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .stat-box h3 {
+            margin: 0;
+            color: #2ecc71;
+        }
+        .player-status {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        .status-complete {
+            background-color: #28a745;
+        }
+        .status-incomplete {
+            background-color: #ffc107;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="dashboard-card">
+            <!-- Team Header -->
+            <div class="team-header">
+                <div class="flag-icon">{{ team.country_flag }}</div>
+                <h1 class="mt-2">{{ team.country_name }}</h1>
+                <h3>{{ team.age_category }} Team</h3>
+                <p class="mb-0">{{ tournament.name }}</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="p-3">
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            <!-- Team Statistics -->
+            <div class="p-4">
+                <h4><i class="bi bi-graph-up"></i> Team Status</h4>
+                <div class="row mt-3">
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3>{{ stats.men }}</h3>
+                            <p class="mb-0">Männer</p>
+                            <small class="text-muted">({{ team.min_men }}-{{ team.max_men }} erforderlich)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3>{{ stats.women }}</h3>
+                            <p class="mb-0">Frauen</p>
+                            <small class="text-muted">({{ team.min_women }}-{{ team.max_women }} erforderlich)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            <h3>{{ stats.men_complete + stats.women_complete }}</h3>
+                            <p class="mb-0">Profile vollständig</p>
+                            <small class="text-muted">von {{ stats.total }}</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-box">
+                            {% if stats.is_complete %}
+                            <h3 class="text-success"><i class="bi bi-check-circle-fill"></i></h3>
+                            <p class="mb-0">Team komplett!</p>
+                            {% else %}
+                            <h3 class="text-warning"><i class="bi bi-exclamation-circle-fill"></i></h3>
+                            <p class="mb-0">Unvollständig</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Player List -->
+            <div class="p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4><i class="bi bi-people"></i> Team-Spieler ({{ registrations|length }})</h4>
+                    <div>
+                        <button class="btn btn-success" onclick="sendAllProfileLinks()">
+                            <i class="bi bi-whatsapp"></i> Alle Profil-Links senden
+                        </button>
+                        <a href="{{ url_for('pcl.register_player', team_token=team.captain_token) }}" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Spieler hinzufügen
+                        </a>
+                    </div>
+                </div>
+
+                {% if registrations %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Status</th>
+                                <th>Name</th>
+                                <th>Geschlecht</th>
+                                <th>Email</th>
+                                <th>Telefon</th>
+                                <th>Profil</th>
+                                <th>Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for reg in registrations %}
+                            <tr>
+                                <td>
+                                    {% if reg.status == 'complete' %}
+                                    <span class="player-status status-complete" title="Vollständig"></span>
+                                    {% else %}
+                                    <span class="player-status status-incomplete" title="Unvollständig"></span>
+                                    {% endif %}
+                                    
+                                    {% if reg.is_captain %}
+                                    <span class="badge bg-primary">Captain</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
+                                    {% if reg.shirt_name %}
+                                    <br><small class="text-muted">Trikot: {{ reg.shirt_name }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if reg.gender == 'male' %}
+                                    <i class="bi bi-gender-male text-primary"></i> Männlich
+                                    {% else %}
+                                    <i class="bi bi-gender-female text-danger"></i> Weiblich
+                                    {% endif %}
+                                </td>
+                                <td>{{ reg.email }}</td>
+                                <td>{{ reg.phone or '-' }}</td>
+                                <td>
+                                    {% if reg.status == 'complete' %}
+                                    <span class="badge bg-success">✓ Vollständig</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Unvollständig</span>
+                                    <br><small class="text-muted">
+                                        Fehlt: {{ reg.get_missing_fields()|join(', ') }}
+                                    </small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        {% if reg.player and reg.player.update_token %}
+                                        <button class="btn btn-outline-secondary" 
+                                                onclick="copyLink('{{ request.host_url }}player/update/{{ reg.player.update_token }}', this)"
+                                                title="Link kopieren">
+                                            <i class="bi bi-clipboard"></i>
+                                        </button>
+                                        
+                                        <form action="{{ url_for('pcl.send_player_profile_link', team_token=team.captain_token, registration_id=reg.id) }}" 
+                                              method="POST" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-success" title="WhatsApp senden">
+                                                <i class="bi bi-whatsapp"></i>
+                                            </button>
+                                        </form>
+                                        {% else %}
+                                        <span class="text-muted">Kein Link</span>
+                                        {% endif %}
+                                        
+                                        <a href="{{ url_for('pcl.edit_registration', team_token=team.captain_token, registration_id=reg.id) }}" 
+                                           class="btn btn-outline-primary" title="Bearbeiten">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Noch keine Spieler im Team. Füge Spieler hinzu, um zu starten!
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Instructions -->
+            <div class="p-4 bg-light">
+                <h5><i class="bi bi-question-circle"></i> Wie funktioniert es?</h5>
+                <ol>
+                    <li>Füge Spieler zu deinem Team hinzu (Name, Email, Geschlecht)</li>
+                    <li>Sende den Profil-Link per WhatsApp an jeden Spieler</li>
+                    <li>Spieler vervollständigen ihr Profil (Foto, Bio, Social Media, etc.)</li>
+                    <li>Sobald alle Profile vollständig sind, ist dein Team bereit!</li>
+                </ol>
+                
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-lock"></i> <strong>Wichtig:</strong> Teile diesen Link nicht! 
+                    Er ist nur für dich als Team-Captain.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+    function copyLink(url, button) {
+        navigator.clipboard.writeText(url).then(() => {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check"></i>';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-success');
+            
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-outline-secondary');
+            }, 2000);
+        });
+    }
+
+    function sendAllProfileLinks() {
+        if (!confirm('Profil-Links an alle Spieler per WhatsApp senden?')) {
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("pcl.send_all_profile_links", team_token=team.captain_token) }}';
+        document.body.appendChild(form);
+        form.submit();
+    }
+    </script>
+</body>
+</html>
