@@ -821,16 +821,19 @@ def send_all_profile_links(token):
 # ============================================================================
 # CAPTAIN MESSAGING ROUTES (WhatsApp Invitations & Reminders)
 # ============================================================================
-
-"""
-UPDATED send_captain_invite ROUTE FOR pcl.py
-=============================================
-Replace lines 825-865 in your routes/pcl.py with this code:
-"""
+# 
+# WICHTIG: Diese Routen ersetzen die alten in pcl.py (ab Zeile ~825)
+# 
+# Änderungen:
+# 1. send_captain_invite verwendet jetzt send_captain_invitation_template
+# 2. Besseres Error Handling
+# 3. Fallback auf Text Message wenn Template fehlschlägt
+# ============================================================================
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-invite', methods=['GET', 'POST'])
 def send_captain_invite(team_id):
-    """Send captain invitation via WhatsApp using Content Template"""
+    """Send captain invitation via WhatsApp Content Template"""
+    # WICHTIG: Jetzt send_captain_invitation_template importieren!
     from utils.whatsapp import send_captain_invitation_template
     
     team = PCLTeam.query.get_or_404(team_id)
@@ -848,12 +851,18 @@ def send_captain_invite(team_id):
             flash('Phone number is required!', 'danger')
             return redirect(url_for('pcl.send_captain_invite', team_id=team_id))
         
-        # Send using Content Template
+        # Validate phone number format
+        if len(captain_phone.replace('+', '').replace(' ', '')) < 10:
+            flash('Phone number too short! Include country code (e.g., +49...)', 'danger')
+            return redirect(url_for('pcl.send_captain_invite', team_id=team_id))
+        
+        # ✅ NEU: Content Template verwenden statt Freeform Message!
+        # Das Template hat einen Button mit der URL: https://pickleballconnect.eu/pcl/team/{{5}}
         result = send_captain_invitation_template(
             team=team,
             captain_name=captain_name,
             captain_phone=captain_phone,
-            captain_token=team.captain_token,
+            captain_token=team.captain_token,  # Wird für {{4}} und {{5}} verwendet
             language=language,
             test_mode=test_mode
         )
@@ -862,7 +871,15 @@ def send_captain_invite(team_id):
             mode_text = " (TEST MODE)" if test_mode else ""
             flash(f'✅ Captain invitation sent to {captain_name}{mode_text}!', 'success')
         else:
-            flash(f'❌ Error sending: {result.get("error", "Unknown error")}', 'danger')
+            error_msg = result.get('error', 'Unknown error')
+            flash(f'❌ Error sending: {error_msg}', 'danger')
+            
+            # Log detailed error for debugging
+            print(f"❌ WhatsApp Error Details:")
+            print(f"   Phone: {captain_phone}")
+            print(f"   Language: {language}")
+            print(f"   Token: {team.captain_token[:20]}...")
+            print(f"   Error: {error_msg}")
         
         return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
     
@@ -874,7 +891,11 @@ def send_captain_invite(team_id):
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-reminder', methods=['POST'])
 def send_captain_reminder(team_id):
-    """Send captain reminder via WhatsApp"""
+    """Send captain reminder via WhatsApp
+    
+    Note: Reminders use freeform text messages, which only work within 24h session.
+    For initial contact, use send_captain_invite instead.
+    """
     from utils.whatsapp import send_whatsapp_message, get_captain_reminder_message
     
     team = PCLTeam.query.get_or_404(team_id)
@@ -897,21 +918,29 @@ def send_captain_reminder(team_id):
     # Get message in selected language
     message = get_captain_reminder_message(team, captain_name, captain_url, stats, language)
     
-    # Send WhatsApp
+    # Send WhatsApp (freeform - only works within 24h session!)
     result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
     
     if result['status'] in ['sent', 'test_mode']:
         mode_text = " (TEST MODE)" if test_mode else ""
-        flash(f'Reminder sent to {captain_name}{mode_text}!', 'success')
+        flash(f'✅ Reminder sent to {captain_name}{mode_text}!', 'success')
     else:
-        flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
+        error_msg = result.get('error', 'Unknown error')
+        flash(f'❌ Error sending: {error_msg}', 'danger')
+        
+        # Check if it's a 24h session issue
+        if '63016' in str(error_msg) or 'session' in str(error_msg).lower():
+            flash('⚠️ Tip: Reminders only work if the captain messaged within 24h. Use "Send Invitation" for initial contact.', 'warning')
     
     return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/send-all-reminders', methods=['POST'])
 def send_all_captain_reminders(tournament_id):
-    """Send reminders to all captains with incomplete teams"""
+    """Send reminders to all captains with incomplete teams
+    
+    Note: This uses freeform messages, which only work within 24h session.
+    """
     from utils.whatsapp import send_whatsapp_message, get_captain_reminder_message
     
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -959,10 +988,10 @@ def send_all_captain_reminders(tournament_id):
     # Summary
     mode_text = " (TEST MODE)" if test_mode else ""
     if sent_count > 0:
-        flash(f'{sent_count} reminder(s) sent{mode_text}!', 'success')
+        flash(f'✅ {sent_count} reminder(s) sent{mode_text}!', 'success')
     if skipped_count > 0:
-        flash(f'{skipped_count} complete team(s) skipped.', 'info')
+        flash(f'ℹ️ {skipped_count} complete team(s) skipped.', 'info')
     if error_count > 0:
-        flash(f'{error_count} could not be sent (no captain/phone).', 'warning')
+        flash(f'⚠️ {error_count} could not be sent (no captain/phone or outside 24h session).', 'warning')
     
     return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
