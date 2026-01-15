@@ -19,6 +19,13 @@
                 <i class="bi bi-whatsapp"></i> Send Captain Invitation
             </h1>
             
+            <!-- Content Template Badge -->
+            <div class="alert alert-success mb-4">
+                <i class="bi bi-check-circle-fill"></i> 
+                <strong>Content Template aktiv!</strong> 
+                Nachrichten werden mit genehmigten WhatsApp Templates gesendet (mit klickbarem Button).
+            </div>
+            
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</h5>
@@ -56,8 +63,9 @@
                             <div class="col-md-6 mb-3">
                                 <label for="captain_name" class="form-label">Captain Name *</label>
                                 <input type="text" class="form-control" id="captain_name" name="captain_name" 
-                                       value="{% if captain_reg %}{{ captain_reg.first_name }} {{ captain_reg.last_name }}{% endif %}"
-                                       placeholder="Max Mustermann" required>
+                                       value="{% if captain_reg %}{{ captain_reg.first_name }}{% endif %}"
+                                       placeholder="Max" required>
+                                <small class="form-text text-muted">Nur Vorname (wird in der Begrüßung verwendet)</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="captain_phone" class="form-label">WhatsApp Number *</label>
@@ -70,7 +78,7 @@
 
                         <div class="mb-3">
                             <label for="language" class="form-label">Message Language *</label>
-                            <select class="form-select" id="language" name="language">
+                            <select class="form-select" id="language" name="language" onchange="updatePreview()">
                                 <option value="EN" {% if captain_reg and captain_reg.preferred_language == 'EN' %}selected{% endif %}>🇬🇧 English</option>
                                 <option value="DE" {% if captain_reg and captain_reg.preferred_language == 'DE' %}selected{% endif %}>🇩🇪 Deutsch</option>
                                 <option value="ES" {% if captain_reg and captain_reg.preferred_language == 'ES' %}selected{% endif %}>🇪🇸 Español</option>
@@ -89,30 +97,35 @@
 
                         <hr>
 
-                        <!-- Preview -->
+                        <!-- Preview - WhatsApp Style -->
                         <div class="mb-4">
-                            <h6><i class="bi bi-eye"></i> Message Preview</h6>
-                            <div class="border rounded p-3 bg-light" style="white-space: pre-line; font-size: 0.9rem;">
-🏆 PCL {{ team.tournament.name }} - Team Captain Invitation
-
-Hi [Captain Name]! 👋
-
-You have been selected as Captain for {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}!
-
-📋 Your responsibilities:
-• Register your team players
-• Ensure all profiles are complete
-• Coordinate with your team
-
-🔗 Your secret Captain Dashboard:
-[Captain URL]
-
-⚠️ Keep this link private - only you should have access!
-
-📅 Deadline: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M') }}
-
-Let's go! 🎾
-WPC Series Europe
+                            <h6><i class="bi bi-eye"></i> Message Preview (Content Template)</h6>
+                            
+                            <!-- WhatsApp-style preview container -->
+                            <div class="whatsapp-preview">
+                                <div class="whatsapp-message">
+                                    <div class="message-content" id="previewContent">
+                                        <strong>PCL {{ team.tournament.name }} - Team-Kapitän Einladung</strong>
+                                        <br><br>
+                                        Hallo <span class="preview-var">[Name]</span>!
+                                        <br><br>
+                                        Du wurdest als Kapitän für {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} ausgewählt!
+                                        <br><br>
+                                        <strong>Deine Aufgaben:</strong><br>
+                                        - Registriere deine Team-Spieler<br>
+                                        - Stelle sicher, dass alle Profile vollständig sind
+                                        <br><br>
+                                        Dein geheimes Kapitän-Dashboard:<br>
+                                        <span class="preview-var">[Dashboard Link]</span>
+                                        <br><br>
+                                        Anmeldeschluss: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
+                                        <br><br>
+                                        <small class="text-muted">Sergio Ruiz Caro<br>WPC Series & PCL Europe</small>
+                                    </div>
+                                    <div class="message-button">
+                                        <i class="bi bi-box-arrow-up-right"></i> Zum Captain Dashboard
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -148,6 +161,49 @@ WPC Series Europe
     </div>
 </div>
 
+<style>
+.whatsapp-preview {
+    background: #e5ddd5;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.whatsapp-message {
+    background: white;
+    border-radius: 8px;
+    max-width: 400px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.message-content {
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.message-button {
+    background: #f0f0f0;
+    padding: 12px;
+    text-align: center;
+    color: #00a884;
+    font-weight: 500;
+    border-top: 1px solid #e0e0e0;
+    cursor: pointer;
+}
+
+.message-button:hover {
+    background: #e8e8e8;
+}
+
+.preview-var {
+    background: #fff3cd;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-style: italic;
+}
+</style>
+
 <script>
 function copyUrl() {
     const input = document.getElementById('captainUrl');
@@ -165,6 +221,84 @@ function copyUrl() {
         btn.classList.remove('btn-success');
         btn.classList.add('btn-outline-secondary');
     }, 2000);
+}
+
+// Preview templates for different languages
+const templates = {
+    'DE': {
+        title: 'PCL {{ team.tournament.name }} - Team-Kapitän Einladung',
+        greeting: 'Hallo',
+        selected: 'Du wurdest als Kapitän für {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} ausgewählt!',
+        tasks: 'Deine Aufgaben:',
+        task1: 'Registriere deine Team-Spieler',
+        task2: 'Stelle sicher, dass alle Profile vollständig sind',
+        dashboard: 'Dein geheimes Kapitän-Dashboard:',
+        deadline: 'Anmeldeschluss:',
+        button: 'Zum Captain Dashboard'
+    },
+    'EN': {
+        title: 'PCL {{ team.tournament.name }} - Team Captain Invitation',
+        greeting: 'Hello',
+        selected: 'You have been selected as Captain for {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}!',
+        tasks: 'Your tasks:',
+        task1: 'Register your team players',
+        task2: 'Make sure all profiles are complete',
+        dashboard: 'Your secret Captain Dashboard:',
+        deadline: 'Registration deadline:',
+        button: 'Open Captain Dashboard'
+    },
+    'ES': {
+        title: 'PCL {{ team.tournament.name }} - Invitación Capitán de Equipo',
+        greeting: '¡Hola',
+        selected: '¡Has sido seleccionado como Capitán de {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}!',
+        tasks: 'Tus tareas:',
+        task1: 'Registrar a los jugadores de tu equipo',
+        task2: 'Asegurar que todos los perfiles estén completos',
+        dashboard: 'Tu panel secreto de Capitán:',
+        deadline: 'Fecha límite:',
+        button: 'Abrir Panel Capitán'
+    },
+    'FR': {
+        title: 'PCL {{ team.tournament.name }} - Invitation Capitaine',
+        greeting: 'Bonjour',
+        selected: 'Vous avez été sélectionné comme Capitaine de {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}!',
+        tasks: 'Vos tâches:',
+        task1: 'Inscrire les joueurs de votre équipe',
+        task2: 'Vérifier que tous les profils sont complets',
+        dashboard: 'Votre tableau de bord Capitaine:',
+        deadline: 'Date limite:',
+        button: 'Ouvrir Dashboard'
+    }
+};
+
+function updatePreview() {
+    const lang = document.getElementById('language').value;
+    const t = templates[lang];
+    const button = document.querySelector('.message-button');
+    
+    // Update button text
+    button.innerHTML = '<i class="bi bi-box-arrow-up-right"></i> ' + t.button;
+    
+    // Update content (simplified - in production would update all fields)
+    const content = document.getElementById('previewContent');
+    content.innerHTML = `
+        <strong>${t.title.replace('{{ team.tournament.name }}', '{{ team.tournament.name }}')}</strong>
+        <br><br>
+        ${t.greeting} <span class="preview-var">[Name]</span>!
+        <br><br>
+        ${t.selected.replace('{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}', '{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}')}
+        <br><br>
+        <strong>${t.tasks}</strong><br>
+        - ${t.task1}<br>
+        - ${t.task2}
+        <br><br>
+        ${t.dashboard}<br>
+        <span class="preview-var">[Dashboard Link]</span>
+        <br><br>
+        ${t.deadline} {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
+        <br><br>
+        <small class="text-muted">Sergio Ruiz Caro<br>WPC Series & PCL Europe</small>
+    `;
 }
 </script>
 {% endblock %}

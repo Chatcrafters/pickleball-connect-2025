@@ -1,454 +1,505 @@
-# -*- coding: utf-8 -*-
+"""
+WhatsApp Utility Module with Twilio Content Templates Support
+For Pickleball Connect - WPC Series Europe
+"""
+
 import os
 from twilio.rest import Client
 
-# Twilio configuration - loaded from environment variables
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
-TWILIO_WHATSAPP_NUMBER = os.environ.get('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886')
+# Twilio credentials from environment
+TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+TWILIO_WHATSAPP_NUMBER = os.getenv('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886')
+
+# Content Template SIDs - Add your actual SIDs here after creating templates
+CONTENT_TEMPLATES = {
+    'captain_invitation': {
+        'DE': os.getenv('TEMPLATE_CAPTAIN_INVITE_DE', 'HX52b9ea2e53c93cec8195d82972a665d4'),
+        'EN': os.getenv('TEMPLATE_CAPTAIN_INVITE_EN', ''),  # Add your EN template SID
+        'ES': os.getenv('TEMPLATE_CAPTAIN_INVITE_ES', ''),  # Add your ES template SID
+        'FR': os.getenv('TEMPLATE_CAPTAIN_INVITE_FR', ''),  # Add your FR template SID
+    },
+    'captain_reminder': {
+        'DE': os.getenv('TEMPLATE_CAPTAIN_REMINDER_DE', ''),
+        'EN': os.getenv('TEMPLATE_CAPTAIN_REMINDER_EN', ''),
+        'ES': os.getenv('TEMPLATE_CAPTAIN_REMINDER_ES', ''),
+        'FR': os.getenv('TEMPLATE_CAPTAIN_REMINDER_FR', ''),
+    }
+}
 
 
-def format_phone_number(phone):
-    """
-    Format phone number for WhatsApp - fixes 'Invalid From and To pair' error
-    """
-    if not phone:
+def get_twilio_client():
+    """Get Twilio client instance"""
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
+        print("⚠️ Twilio credentials not configured!")
         return None
-
-    # Remove any existing whatsapp: prefix
-    phone = phone.replace('whatsapp:', '')
-
-    # Remove spaces, dashes, parentheses
-    phone = ''.join(c for c in phone if c.isdigit() or c == '+')
-
-    # Ensure it starts with +
-    if not phone.startswith('+'):
-        if phone.startswith('00'):
-            phone = '+' + phone[2:]
-        else:
-            phone = '+' + phone
-
-    return f'whatsapp:{phone}'
+    return Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
 
-def send_whatsapp_message(to_number, message, test_mode=True):
+def send_whatsapp_message(to_number, message, test_mode=False):
     """
-    Send a WhatsApp message using Twilio
+    Send a simple WhatsApp message (free-form text)
+    
+    Args:
+        to_number: Phone number with country code (e.g., +491234567890)
+        message: Message text to send
+        test_mode: If True, only print to console without sending
+    
+    Returns:
+        dict with status and details
     """
-    if test_mode or not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
-        print(f"\n{'='*60}")
-        print(f"[TEST MODE] WhatsApp to {to_number}:")
-        print(f"{'='*60}")
-        print(message)
-        print(f"{'='*60}\n")
-        return {'status': 'test_mode', 'sid': 'test_message_id'}
-
+    # Clean phone number
+    to_number = to_number.strip()
+    if not to_number.startswith('+'):
+        to_number = '+' + to_number
+    
+    # Format for WhatsApp
+    whatsapp_to = f"whatsapp:{to_number}"
+    
+    if test_mode:
+        print(f"\n📱 [TEST MODE] WhatsApp Message:")
+        print(f"   To: {to_number}")
+        print(f"   Message: {message[:100]}...")
+        return {'status': 'test_mode', 'to': to_number}
+    
     try:
-        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
-
-        # Format phone number properly for WhatsApp
-        formatted_number = format_phone_number(to_number)
-        if not formatted_number:
-            print(f"Invalid phone number: {to_number}")
-            return {'status': 'error', 'error': 'Invalid phone number'}
-
-        twilio_message = client.messages.create(
+        client = get_twilio_client()
+        if not client:
+            return {'status': 'error', 'error': 'Twilio not configured'}
+        
+        msg = client.messages.create(
             body=message,
             from_=TWILIO_WHATSAPP_NUMBER,
-            to=formatted_number
+            to=whatsapp_to
         )
-
-        print(f"Message sent! SID: {twilio_message.sid}")
-        return {'status': 'sent', 'sid': twilio_message.sid}
-
+        
+        print(f"✅ Message sent to {to_number}: {msg.sid}")
+        return {'status': 'sent', 'sid': msg.sid, 'to': to_number}
+        
     except Exception as e:
-        print(f"Error sending message: {str(e)}")
-        return {'status': 'error', 'error': str(e)}
+        print(f"❌ Error sending to {to_number}: {str(e)}")
+        return {'status': 'error', 'error': str(e), 'to': to_number}
 
 
-def send_profile_completion_link(player, test_mode=True):
+def send_content_template(to_number, template_name, language, variables, test_mode=False):
     """
-    Send profile completion link to a player via WhatsApp
+    Send a WhatsApp message using a Content Template
+    
+    Args:
+        to_number: Phone number with country code
+        template_name: Name of the template (e.g., 'captain_invitation')
+        language: Language code (DE, EN, ES, FR)
+        variables: Dict with variable values (e.g., {'1': 'Malaga 2026', '2': 'Max', ...})
+        test_mode: If True, only print to console
+    
+    Returns:
+        dict with status and details
     """
-    from flask import url_for, current_app
+    # Clean phone number
+    to_number = to_number.strip()
+    if not to_number.startswith('+'):
+        to_number = '+' + to_number
+    
+    whatsapp_to = f"whatsapp:{to_number}"
+    
+    # Get template SID for language
+    template_sid = CONTENT_TEMPLATES.get(template_name, {}).get(language.upper())
+    
+    if not template_sid:
+        print(f"⚠️ No template found for {template_name} in {language}, falling back to EN")
+        template_sid = CONTENT_TEMPLATES.get(template_name, {}).get('EN')
+    
+    if not template_sid:
+        print(f"❌ No template SID configured for {template_name}")
+        return {'status': 'error', 'error': f'Template {template_name} not configured'}
+    
+    if test_mode:
+        print(f"\n📱 [TEST MODE] Content Template Message:")
+        print(f"   To: {to_number}")
+        print(f"   Template: {template_name} ({language})")
+        print(f"   Template SID: {template_sid}")
+        print(f"   Variables: {variables}")
+        return {'status': 'test_mode', 'to': to_number, 'template': template_name}
+    
+    try:
+        client = get_twilio_client()
+        if not client:
+            return {'status': 'error', 'error': 'Twilio not configured'}
+        
+        # Send using content template
+        msg = client.messages.create(
+            content_sid=template_sid,
+            content_variables=variables,
+            from_=TWILIO_WHATSAPP_NUMBER,
+            to=whatsapp_to
+        )
+        
+        print(f"✅ Template message sent to {to_number}: {msg.sid}")
+        return {'status': 'sent', 'sid': msg.sid, 'to': to_number, 'template': template_name}
+        
+    except Exception as e:
+        print(f"❌ Error sending template to {to_number}: {str(e)}")
+        return {'status': 'error', 'error': str(e), 'to': to_number}
 
-    # Build the update URL
-    with current_app.app_context():
-        update_url = url_for('players.update_profile', token=player.update_token, _external=True)
 
-    messages = {
-        'EN': f"""Welcome to WPC Series Europe!
-
-Hi {player.first_name}!
-
-Please complete your player profile to participate in our tournaments:
-
-{update_url}
-
-See you on the courts!
-WPC Series Europe""",
-
-        'DE': f"""Willkommen bei WPC Series Europe!
-
-Hallo {player.first_name}!
-
-Bitte vervollstaendige dein Spielerprofil, um an unseren Turnieren teilzunehmen:
-
-{update_url}
-
-Wir sehen uns auf dem Platz!
-WPC Series Europe""",
-
-        'ES': f"""Bienvenido a WPC Series Europe!
-
-Hola {player.first_name}!
-
-Por favor completa tu perfil de jugador para participar en nuestros torneos:
-
-{update_url}
-
-Nos vemos en las canchas!
-WPC Series Europe""",
-
-        'FR': f"""Bienvenue a WPC Series Europe!
-
-Bonjour {player.first_name}!
-
-Veuillez completer votre profil de joueur pour participer a nos tournois:
-
-{update_url}
-
-A bientot sur les courts!
-WPC Series Europe"""
+def send_captain_invitation_template(team, captain_name, captain_phone, captain_token, language='EN', test_mode=False):
+    """
+    Send captain invitation using Content Template
+    
+    Args:
+        team: PCLTeam object
+        captain_name: Captain's first name
+        captain_phone: Captain's phone number
+        captain_token: Team's captain token for URL
+        language: Language code (DE, EN, ES, FR)
+        test_mode: If True, only print to console
+    
+    Returns:
+        dict with status and details
+    """
+    # Format deadline
+    deadline = team.tournament.registration_deadline.strftime('%d.%m.%Y')
+    
+    # Team display name
+    team_display = f"{team.country_flag} {team.country_name} {team.age_category}"
+    
+    # Variables for template
+    # {{1}} = Tournament Name
+    # {{2}} = Captain Name
+    # {{3}} = Team Name
+    # {{4}} = Captain Token (for URL)
+    # {{5}} = Deadline
+    variables = {
+        "1": team.tournament.name,
+        "2": captain_name,
+        "3": team_display,
+        "4": captain_token,
+        "5": deadline
     }
+    
+    return send_content_template(
+        to_number=captain_phone,
+        template_name='captain_invitation',
+        language=language,
+        variables=variables,
+        test_mode=test_mode
+    )
 
-    message = messages.get(player.preferred_language, messages['EN'])
-    return send_whatsapp_message(player.phone, message, test_mode=test_mode)
 
+# ============================================================================
+# LEGACY FUNCTIONS (for backward compatibility)
+# ============================================================================
 
 def get_captain_invitation_message(team, captain_name, captain_url, language='EN'):
     """
-    Get captain invitation message in the specified language
+    Legacy function - Generate captain invitation message text
+    Used as fallback if Content Templates are not configured
     """
     messages = {
-        'EN': f"""PCL {team.tournament.name} - Team Captain Invitation
+        'EN': f"""🏆 PCL {team.tournament.name} - Team Captain Invitation
 
-Hi {captain_name}!
+Hello {captain_name}! 👋
 
 You have been selected as Captain for {team.country_flag} {team.country_name} {team.age_category}!
 
-Your responsibilities:
-- Register your team players
-- Ensure all profiles are complete
-- Coordinate with your team
+📋 Your tasks:
+• Register your team players
+• Make sure all profiles are complete
+• Coordinate with your team
 
-Your secret Captain Dashboard:
+🔗 Your secret Captain Dashboard:
 {captain_url}
 
-Keep this link private - only you should have access!
+⚠️ Keep this link private!
 
-Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Let's go!
-WPC Series Europe""",
+Let's go! 🎾
+Sergio Ruiz Caro
+WPC Series & PCL Europe""",
 
-        'DE': f"""PCL {team.tournament.name} - Team-Kapitaen Einladung
+        'DE': f"""🏆 PCL {team.tournament.name} - Team-Kapitän Einladung
 
-Hallo {captain_name}!
+Hallo {captain_name}! 👋
 
-Du wurdest als Kapitaen fuer {team.country_flag} {team.country_name} {team.age_category} ausgewaehlt!
+Du wurdest als Kapitän für {team.country_flag} {team.country_name} {team.age_category} ausgewählt!
 
-Deine Aufgaben:
-- Registriere deine Team-Spieler
-- Stelle sicher, dass alle Profile vollstaendig sind
-- Koordiniere dich mit deinem Team
+📋 Deine Aufgaben:
+• Registriere deine Team-Spieler
+• Stelle sicher, dass alle Profile vollständig sind
+• Koordiniere dich mit deinem Team
 
-Dein geheimes Kapitaen-Dashboard:
+🔗 Dein geheimes Kapitän-Dashboard:
 {captain_url}
 
-Halte diesen Link privat - nur du solltest Zugang haben!
+⚠️ Teile diesen Link nicht!
 
-Anmeldeschluss: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+📅 Anmeldeschluss: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Los geht's!
-WPC Series Europe""",
+Los geht's! 🎾
+Sergio Ruiz Caro
+WPC Series & PCL Europe""",
 
-        'ES': f"""PCL {team.tournament.name} - Invitacion de Capitan
+        'ES': f"""🏆 PCL {team.tournament.name} - Invitación Capitán de Equipo
 
-Hola {captain_name}!
+¡Hola {captain_name}! 👋
 
-Has sido seleccionado como Capitan de {team.country_flag} {team.country_name} {team.age_category}!
+¡Has sido seleccionado como Capitán de {team.country_flag} {team.country_name} {team.age_category}!
 
-Tus responsabilidades:
-- Registrar a los jugadores de tu equipo
-- Asegurar que todos los perfiles esten completos
-- Coordinar con tu equipo
+📋 Tus tareas:
+• Registrar a los jugadores de tu equipo
+• Asegurar que todos los perfiles estén completos
+• Coordinarte con tu equipo
 
-Tu Panel de Capitan secreto:
+🔗 Tu panel secreto de Capitán:
 {captain_url}
 
-Manten este enlace privado - solo tu debes tener acceso!
+⚠️ ¡No compartas este enlace!
 
-Fecha limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+📅 Fecha límite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Vamos!
-WPC Series Europe""",
+¡Vamos! 🎾
+Sergio Ruiz Caro
+WPC Series & PCL Europe""",
 
-        'FR': f"""PCL {team.tournament.name} - Invitation Capitaine
+        'FR': f"""🏆 PCL {team.tournament.name} - Invitation Capitaine d'Équipe
 
-Bonjour {captain_name}!
+Bonjour {captain_name}! 👋
 
-Vous avez ete selectionne comme Capitaine de {team.country_flag} {team.country_name} {team.age_category}!
+Vous avez été sélectionné comme Capitaine de {team.country_flag} {team.country_name} {team.age_category}!
 
-Vos responsabilites:
-- Inscrire les joueurs de votre equipe
-- S'assurer que tous les profils sont complets
-- Coordonner avec votre equipe
+📋 Vos tâches:
+• Inscrire les joueurs de votre équipe
+• Vérifier que tous les profils sont complets
+• Coordonner avec votre équipe
 
-Votre tableau de bord Capitaine secret:
+🔗 Votre tableau de bord Capitaine:
 {captain_url}
 
-Gardez ce lien prive - seul vous devez y avoir acces!
+⚠️ Ne partagez pas ce lien!
 
-Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+📅 Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-C'est parti!
-WPC Series Europe"""
+C'est parti! 🎾
+Sergio Ruiz Caro
+WPC Series & PCL Europe"""
     }
-
-    return messages.get(language, messages['EN'])
+    
+    return messages.get(language.upper(), messages['EN'])
 
 
 def get_captain_reminder_message(team, captain_name, captain_url, stats, language='EN'):
     """
-    Get captain reminder message in the specified language
+    Legacy function - Generate captain reminder message text
     """
-    from datetime import datetime
-    days_left = (team.tournament.registration_deadline - datetime.now()).days
-
+    days_left = (team.tournament.registration_deadline - __import__('datetime').datetime.now()).days
+    
     messages = {
-        'EN': f"""PCL Reminder - {team.country_flag} {team.country_name} {team.age_category}
+        'EN': f"""⏰ PCL {team.tournament.name} - Reminder!
 
 Hi {captain_name}!
 
-Your team registration is incomplete:
-Men: {stats['men']}/{team.min_men}-{team.max_men}
-Women: {stats['women']}/{team.min_women}-{team.max_women}
-Complete profiles: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+Your team {team.country_flag} {team.country_name} {team.age_category} is not complete yet!
 
-Only {days_left} days left!
+📊 Current status:
+• Men: {stats['men']}/{team.min_men}-{team.max_men}
+• Women: {stats['women']}/{team.min_women}-{team.max_women}
+• Complete profiles: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-Complete your team now:
+⚠️ Only {days_left} days left!
+
+🔗 Complete your team now:
 {captain_url}
 
-WPC Series Europe""",
+WPC Series & PCL Europe""",
 
-        'DE': f"""PCL Erinnerung - {team.country_flag} {team.country_name} {team.age_category}
+        'DE': f"""⏰ PCL {team.tournament.name} - Erinnerung!
 
 Hallo {captain_name}!
 
-Deine Team-Registrierung ist unvollstaendig:
-Maenner: {stats['men']}/{team.min_men}-{team.max_men}
-Frauen: {stats['women']}/{team.min_women}-{team.max_women}
-Vollstaendige Profile: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+Dein Team {team.country_flag} {team.country_name} {team.age_category} ist noch nicht vollständig!
 
-Nur noch {days_left} Tage!
+📊 Aktueller Status:
+• Männer: {stats['men']}/{team.min_men}-{team.max_men}
+• Frauen: {stats['women']}/{team.min_women}-{team.max_women}
+• Vollständige Profile: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-Vervollstaendige dein Team jetzt:
+⚠️ Nur noch {days_left} Tage!
+
+🔗 Vervollständige dein Team jetzt:
 {captain_url}
 
-WPC Series Europe""",
+WPC Series & PCL Europe""",
 
-        'ES': f"""Recordatorio PCL - {team.country_flag} {team.country_name} {team.age_category}
+        'ES': f"""⏰ PCL {team.tournament.name} - ¡Recordatorio!
 
-Hola {captain_name}!
+¡Hola {captain_name}!
 
-Tu registro de equipo esta incompleto:
-Hombres: {stats['men']}/{team.min_men}-{team.max_men}
-Mujeres: {stats['women']}/{team.min_women}-{team.max_women}
-Perfiles completos: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+Tu equipo {team.country_flag} {team.country_name} {team.age_category} aún no está completo!
 
-Solo quedan {days_left} dias!
+📊 Estado actual:
+• Hombres: {stats['men']}/{team.min_men}-{team.max_men}
+• Mujeres: {stats['women']}/{team.min_women}-{team.max_women}
+• Perfiles completos: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-Completa tu equipo ahora:
+⚠️ ¡Solo quedan {days_left} días!
+
+🔗 Completa tu equipo ahora:
 {captain_url}
 
-WPC Series Europe""",
+WPC Series & PCL Europe""",
 
-        'FR': f"""Rappel PCL - {team.country_flag} {team.country_name} {team.age_category}
+        'FR': f"""⏰ PCL {team.tournament.name} - Rappel!
 
 Bonjour {captain_name}!
 
-Votre inscription d'equipe est incomplete:
-Hommes: {stats['men']}/{team.min_men}-{team.max_men}
-Femmes: {stats['women']}/{team.min_women}-{team.max_women}
-Profils complets: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+Votre équipe {team.country_flag} {team.country_name} {team.age_category} n'est pas encore complète!
 
-Plus que {days_left} jours!
+📊 Statut actuel:
+• Hommes: {stats['men']}/{team.min_men}-{team.max_men}
+• Femmes: {stats['women']}/{team.min_women}-{team.max_women}
+• Profils complets: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-Completez votre equipe maintenant:
+⚠️ Plus que {days_left} jours!
+
+🔗 Complétez votre équipe maintenant:
 {captain_url}
 
-WPC Series Europe"""
+WPC Series & PCL Europe"""
     }
+    
+    return messages.get(language.upper(), messages['EN'])
 
-    return messages.get(language, messages['EN'])
 
-
-def get_message_template(message_type, language='EN', **kwargs):
+def get_message_template(message_type, language, **kwargs):
     """
-    Get a message template in the specified language
+    Legacy function - Get message template for events
     """
-    # Prepare end date line if end_date is provided
-    end_date_line = ""
-    if kwargs.get('end_date'):
-        date_labels = {'EN': 'End: ', 'DE': 'Ende: ', 'ES': 'Fin: ', 'FR': 'Fin: '}
-        end_date_line = date_labels.get(language, date_labels['EN']) + kwargs.get('end_date') + '\n'
-
     templates = {
         'invitation': {
-            'EN': f"""{kwargs.get('event_name', 'Event')}
+            'EN': """🎾 You're invited to {event_name}!
 
-Start: {kwargs.get('start_date', '')}
-{end_date_line}Location: {kwargs.get('location', '')}
+📅 Date: {start_date}
+📍 Location: {location}
 
-{kwargs.get('description', '')}
+{description}
 
-----------------------
-Please reply with:
-YES - I'm interested
-INFO - Send me more details
-NO - Not this time
-
-WPC Series Europe""",
-
-            'DE': f"""{kwargs.get('event_name', 'Event')}
-
-Start: {kwargs.get('start_date', '')}
-{end_date_line}Ort: {kwargs.get('location', '')}
-
-{kwargs.get('description', '')}
-
-----------------------
-Bitte antworte mit:
-JA - Ich bin interessiert
-INFO - Schick mir mehr Details
-NEIN - Diesmal nicht
+Reply:
+✅ YES - I'm interested!
+ℹ️ INFO - Tell me more
+❌ NO - Can't make it
 
 WPC Series Europe""",
 
-            'ES': f"""{kwargs.get('event_name', 'Event')}
+            'DE': """🎾 Du bist eingeladen zu {event_name}!
 
-Inicio: {kwargs.get('start_date', '')}
-{end_date_line}Lugar: {kwargs.get('location', '')}
+📅 Datum: {start_date}
+📍 Ort: {location}
 
-{kwargs.get('description', '')}
-
-----------------------
-Por favor responde con:
-SI - Estoy interesado
-INFO - Enviame mas detalles
-NO - Esta vez no
-
-WPC Series Europe""",
-
-            'FR': f"""{kwargs.get('event_name', 'Event')}
-
-Debut: {kwargs.get('start_date', '')}
-{end_date_line}Lieu: {kwargs.get('location', '')}
-
-{kwargs.get('description', '')}
-
-----------------------
-Veuillez repondre avec:
-OUI - Je suis interesse
-INFO - Envoyez-moi plus de details
-NON - Pas cette fois
-
-WPC Series Europe"""
-        },
-
-        'reminder': {
-            'EN': f"""Reminder: {kwargs.get('event_name', 'Event')}
-
-Start: {kwargs.get('start_date', '')}
-{end_date_line}Location: {kwargs.get('location', '')}
-
-Don't forget to confirm your participation!
-
-Reply with:
-YES - Confirmed
-NO - Cannot attend
-
-WPC Series Europe""",
-
-            'DE': f"""Erinnerung: {kwargs.get('event_name', 'Event')}
-
-Start: {kwargs.get('start_date', '')}
-{end_date_line}Ort: {kwargs.get('location', '')}
-
-Vergiss nicht, deine Teilnahme zu bestaetigen!
+{description}
 
 Antworte mit:
-JA - Bestaetigt
-NEIN - Kann nicht teilnehmen
+✅ JA - Ich bin dabei!
+ℹ️ INFO - Mehr erfahren
+❌ NEIN - Kann nicht
 
 WPC Series Europe""",
 
-            'ES': f"""Recordatorio: {kwargs.get('event_name', 'Event')}
+            'ES': """🎾 ¡Estás invitado a {event_name}!
 
-Inicio: {kwargs.get('start_date', '')}
-{end_date_line}Lugar: {kwargs.get('location', '')}
+📅 Fecha: {start_date}
+📍 Lugar: {location}
 
-No olvides confirmar tu participacion!
+{description}
 
-Responde con:
-SI - Confirmado
-NO - No puedo asistir
-
-WPC Series Europe""",
-
-            'FR': f"""Rappel: {kwargs.get('event_name', 'Event')}
-
-Debut: {kwargs.get('start_date', '')}
-{end_date_line}Lieu: {kwargs.get('location', '')}
-
-N'oubliez pas de confirmer votre participation!
-
-Repondez avec:
-OUI - Confirme
-NON - Ne peut pas assister
-
-WPC Series Europe"""
-        },
-
-        'update': {
-            'EN': f"""Update: {kwargs.get('event_name', 'Event')}
-
-{kwargs.get('description', 'Important update regarding the event.')}
+Responde:
+✅ SI - ¡Me interesa!
+ℹ️ INFO - Cuéntame más
+❌ NO - No puedo
 
 WPC Series Europe""",
 
-            'DE': f"""Update: {kwargs.get('event_name', 'Event')}
+            'FR': """🎾 Tu es invité à {event_name}!
 
-{kwargs.get('description', 'Wichtiges Update zum Event.')}
+📅 Date: {start_date}
+📍 Lieu: {location}
 
-WPC Series Europe""",
+{description}
 
-            'ES': f"""Actualizacion: {kwargs.get('event_name', 'Event')}
-
-{kwargs.get('description', 'Actualizacion importante sobre el evento.')}
-
-WPC Series Europe""",
-
-            'FR': f"""Mise a jour: {kwargs.get('event_name', 'Event')}
-
-{kwargs.get('description', 'Mise a jour importante concernant l evenement.')}
+Réponds:
+✅ OUI - Je suis intéressé!
+ℹ️ INFO - Plus d'infos
+❌ NON - Pas possible
 
 WPC Series Europe"""
         }
     }
+    
+    template = templates.get(message_type, templates['invitation'])
+    message = template.get(language.upper(), template['EN'])
+    
+    return message.format(**kwargs)
 
-    # Get template for message type and language
-    template_group = templates.get(message_type, templates['invitation'])
-    return template_group.get(language, template_group['EN'])
+
+def send_profile_completion_link(player, test_mode=False):
+    """
+    Send profile completion link to a player
+    """
+    from flask import url_for
+    
+    messages = {
+        'EN': f"""👋 Hi {player.first_name}!
+
+Please complete your player profile for WPC Series Europe.
+
+🔗 Click here to update your profile:
+{{profile_url}}
+
+This helps us provide you with personalized event invitations!
+
+WPC Series Europe""",
+
+        'DE': f"""👋 Hallo {player.first_name}!
+
+Bitte vervollständige dein Spielerprofil für die WPC Series Europe.
+
+🔗 Klicke hier um dein Profil zu aktualisieren:
+{{profile_url}}
+
+Das hilft uns, dir personalisierte Event-Einladungen zu senden!
+
+WPC Series Europe""",
+
+        'ES': f"""👋 ¡Hola {player.first_name}!
+
+Por favor completa tu perfil de jugador para WPC Series Europe.
+
+🔗 Haz clic aquí para actualizar tu perfil:
+{{profile_url}}
+
+¡Esto nos ayuda a enviarte invitaciones personalizadas!
+
+WPC Series Europe""",
+
+        'FR': f"""👋 Bonjour {player.first_name}!
+
+Veuillez compléter votre profil de joueur pour WPC Series Europe.
+
+🔗 Cliquez ici pour mettre à jour votre profil:
+{{profile_url}}
+
+Cela nous aide à vous envoyer des invitations personnalisées!
+
+WPC Series Europe"""
+    }
+    
+    # Build profile URL (this needs to be called within app context)
+    try:
+        profile_url = url_for('players.update_profile', token=player.update_token, _external=True)
+    except:
+        profile_url = f"https://pickleballconnect.eu/player/update/{player.update_token}"
+    
+    message = messages.get(player.preferred_language, messages['EN'])
+    message = message.format(profile_url=profile_url)
+    
+    return send_whatsapp_message(player.phone, message, test_mode=test_mode)
