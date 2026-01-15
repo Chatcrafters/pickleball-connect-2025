@@ -362,24 +362,45 @@
 <script>
 function copyCaptainLink() {
     const linkInput = document.getElementById('captainLink');
-    linkInput.select();
-    linkInput.setSelectionRange(0, 99999); // For mobile devices
+    const textToCopy = linkInput.value;
     
-    navigator.clipboard.writeText(linkInput.value).then(() => {
-        const btn = event.target;
-        const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
-        btn.classList.remove('btn-outline-secondary');
-        btn.classList.add('btn-success');
-        
-        setTimeout(() => {
-            btn.innerHTML = originalHTML;
-            btn.classList.remove('btn-success');
-            btn.classList.add('btn-outline-secondary');
-        }, 2000);
-    }).catch(err => {
-        alert('Failed to copy link');
-    });
+    // Try modern clipboard API first
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            showCopySuccess();
+        }).catch(() => {
+            fallbackCopy(linkInput);
+        });
+    } else {
+        fallbackCopy(linkInput);
+    }
+}
+
+function fallbackCopy(inputElement) {
+    // Fallback for older browsers or non-HTTPS
+    inputElement.select();
+    inputElement.setSelectionRange(0, 99999);
+    
+    try {
+        document.execCommand('copy');
+        showCopySuccess();
+    } catch (err) {
+        // Final fallback: show the link in a prompt
+        prompt('Link kopieren:', inputElement.value);
+    }
+}
+
+function showCopySuccess() {
+    const btn = document.querySelector('[onclick="copyCaptainLink()"]');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    btn.classList.remove('btn-outline-secondary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-secondary');
+    }, 2000);
 }
 </script>
-{% endblock %}
