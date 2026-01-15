@@ -5,9 +5,17 @@ Uses Twilio API with Content Templates for WhatsApp Business messaging.
 
 Content Templates:
 - captain_invitation_de/en/es/fr - Team captain invitations with call-to-action button
+
+Template Variables:
+- {{1}} = Tournament Name (e.g., "Malaga 2026")
+- {{2}} = Captain Name (e.g., "Max")
+- {{3}} = Team Name (e.g., "🇩🇪 Germany +50")
+- {{4}} = Captain Token (displayed in body)
+- {{5}} = Captain Token (used in URL button)
 """
 
 import os
+import json
 from twilio.rest import Client
 from flask import url_for
 
@@ -126,12 +134,12 @@ def send_captain_invitation_template(team, captain_name, captain_phone, captain_
     """
     Send captain invitation using WhatsApp Content Template with call-to-action button.
     
-    Template Variables:
+    Template Variables (IMPORTANT - both 4 and 5 need the token!):
     - {{1}} = Tournament Name (e.g., "Malaga 2026")
     - {{2}} = Captain Name (e.g., "Max")
     - {{3}} = Team Name (e.g., "🇩🇪 Germany +50")
-    - {{4}} = Captain Token (for URL button)
-    - {{5}} = Registration Deadline (e.g., "15.03.2026")
+    - {{4}} = Captain Token (displayed in body text)
+    - {{5}} = Captain Token (used in URL button - THIS IS THE FIX!)
     
     Args:
         team: PCLTeam object
@@ -164,15 +172,17 @@ def send_captain_invitation_template(team, captain_name, captain_phone, captain_
         return send_captain_invitation_fallback(team, captain_name, captain_phone, captain_token, language, test_mode)
     
     # Prepare template variables
+    # ⚠️ CRITICAL FIX: Both {{4}} and {{5}} need the captain_token!
+    # {{4}} = Token displayed in message body
+    # {{5}} = Token used in the button URL (https://pickleballconnect.eu/pcl/team/{{5}})
     team_name = f"{team.country_flag} {team.country_name} {team.age_category}"
-    deadline = team.tournament.registration_deadline.strftime('%d.%m.%Y')
     
     content_variables = {
         "1": team.tournament.name,      # Tournament Name
         "2": captain_name,               # Captain Name
         "3": team_name,                  # Team Name
-        "4": captain_token,              # Token for URL button
-        "5": deadline                    # Registration Deadline
+        "4": captain_token,              # Token (displayed in body)
+        "5": captain_token               # Token (used in button URL) ← THIS IS THE FIX!
     }
     
     print(f"\n{'='*60}")
@@ -181,7 +191,13 @@ def send_captain_invitation_template(team, captain_name, captain_phone, captain_
     print(f"📱 To: {formatted_phone}")
     print(f"📋 Template SID: {template_sid}")
     print(f"🌐 Language: {language}")
-    print(f"📝 Variables: {content_variables}")
+    print(f"📝 Variables:")
+    print(f"   {{1}} Tournament: {content_variables['1']}")
+    print(f"   {{2}} Captain: {content_variables['2']}")
+    print(f"   {{3}} Team: {content_variables['3']}")
+    print(f"   {{4}} Token (body): {content_variables['4'][:20]}...")
+    print(f"   {{5}} Token (URL): {content_variables['5'][:20]}...")
+    print(f"🔗 Resulting URL: https://pickleballconnect.eu/pcl/team/{captain_token}")
     print(f"🧪 Test Mode: {test_mode}")
     print(f"{'='*60}")
     
@@ -193,9 +209,6 @@ def send_captain_invitation_template(team, captain_name, captain_phone, captain_
         client = get_twilio_client()
         if not client:
             return {'status': 'error', 'error': 'Twilio client not configured'}
-        
-        # Convert variables to JSON string format
-        import json
         
         msg = client.messages.create(
             content_sid=template_sid,
