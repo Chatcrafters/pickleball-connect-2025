@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Send Captain Invitation - {{ team.country_flag }} {{ team.country_name }}{% endblock %}
+{% block title %}Send Captain Invite - {{ team.country_flag }} {{ team.country_name }}{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -9,20 +9,46 @@
             <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_dashboard') }}">PCL Admin</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=team.tournament_id) }}">{{ team.tournament.name }}</a></li>
             <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}">{{ team.country_name }} {{ team.age_category }}</a></li>
-            <li class="breadcrumb-item active">Send Invitation</li>
+            <li class="breadcrumb-item active">Send Captain Invite</li>
         </ol>
     </nav>
 
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <h1 class="mb-4">
-                <i class="bi bi-whatsapp text-success"></i> 
-                Send Captain Invitation
+                <i class="bi bi-whatsapp"></i> Send Captain Invitation
             </h1>
-
+            
             <div class="card mb-4">
                 <div class="card-header bg-primary text-white">
                     <h5 class="mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Tournament:</strong> {{ team.tournament.name }}</p>
+                    <p><strong>Deadline:</strong> {{ team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M') }}</p>
+                    
+                    {% if captain_reg %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> <strong>Captain found:</strong> 
+                        {{ captain_reg.first_name }} {{ captain_reg.last_name }}
+                        {% if captain_reg.phone %}
+                        ({{ captain_reg.phone }})
+                        {% else %}
+                        <span class="text-warning">- No phone number!</span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>No captain registered yet!</strong>
+                        Enter the captain details manually below.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-send"></i> Captain Details</h5>
                 </div>
                 <div class="card-body">
                     <form method="POST">
@@ -30,11 +56,13 @@
                             <div class="col-md-6 mb-3">
                                 <label for="captain_name" class="form-label">Captain Name *</label>
                                 <input type="text" class="form-control" id="captain_name" name="captain_name" 
+                                       value="{% if captain_reg %}{{ captain_reg.first_name }} {{ captain_reg.last_name }}{% endif %}"
                                        placeholder="Max Mustermann" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="captain_phone" class="form-label">WhatsApp Number *</label>
                                 <input type="tel" class="form-control" id="captain_phone" name="captain_phone" 
+                                       value="{% if captain_reg and captain_reg.phone %}{{ captain_reg.phone }}{% endif %}"
                                        placeholder="+49123456789" required>
                                 <small class="form-text text-muted">With country code (e.g., +49, +34)</small>
                             </div>
@@ -42,11 +70,11 @@
 
                         <div class="mb-3">
                             <label for="language" class="form-label">Message Language *</label>
-                            <select class="form-select" id="language" name="language" onchange="updatePreview()">
-                                <option value="EN">🇬🇧 English</option>
-                                <option value="DE">🇩🇪 Deutsch</option>
-                                <option value="ES">🇪🇸 Español</option>
-                                <option value="FR">🇫🇷 Français</option>
+                            <select class="form-select" id="language" name="language">
+                                <option value="EN" {% if captain_reg and captain_reg.preferred_language == 'EN' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="DE" {% if captain_reg and captain_reg.preferred_language == 'DE' %}selected{% endif %}>🇩🇪 Deutsch</option>
+                                <option value="ES" {% if captain_reg and captain_reg.preferred_language == 'ES' %}selected{% endif %}>🇪🇸 Español</option>
+                                <option value="FR" {% if captain_reg and captain_reg.preferred_language == 'FR' %}selected{% endif %}>🇫🇷 Français</option>
                             </select>
                         </div>
 
@@ -54,8 +82,37 @@
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="test_mode" name="test_mode">
                                 <label class="form-check-label" for="test_mode">
-                                    <strong>Test Mode</strong> (only show in console, don't send)
+                                    <strong>Test Mode</strong> (only show in console, don't actually send)
                                 </label>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <!-- Preview -->
+                        <div class="mb-4">
+                            <h6><i class="bi bi-eye"></i> Message Preview</h6>
+                            <div class="border rounded p-3 bg-light" style="white-space: pre-line; font-size: 0.9rem;">
+🏆 PCL {{ team.tournament.name }} - Team Captain Invitation
+
+Hi [Captain Name]! 👋
+
+You have been selected as Captain for {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}!
+
+📋 Your responsibilities:
+• Register your team players
+• Ensure all profiles are complete
+• Coordinate with your team
+
+🔗 Your secret Captain Dashboard:
+[Captain URL]
+
+⚠️ Keep this link private - only you should have access!
+
+📅 Deadline: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M') }}
+
+Let's go! 🎾
+WPC Series Europe
                             </div>
                         </div>
 
@@ -64,150 +121,24 @@
                                 <i class="bi bi-x-circle"></i> Cancel
                             </a>
                             <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-whatsapp"></i> Send Invitation
+                                <i class="bi bi-whatsapp"></i> Send Captain Invitation
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Message Preview -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-eye"></i> Message Preview</h5>
-                </div>
-                <div class="card-body">
-                    <div class="bg-light p-3 rounded" style="white-space: pre-line; font-family: monospace; font-size: 0.9rem;">
-                        <!-- English -->
-                        <div id="preview-EN" class="preview-text">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Team Captain Invitation
-
-Hello [NAME]! 👋
-
-You are the captain of Team {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} at the Pickleball Champions League!
-
-📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
-📍 {{ team.tournament.location }}
-
-🔗 Your Captain Dashboard:
-{{ request.host_url }}pcl/team/{{ team.captain_token }}
-
-➡️ What you need to do:
-1. Open the link above
-2. Register yourself (photo, bio, shirt size)
-3. Add your team members
-4. Make sure all profiles are complete
-
-👥 Team Requirements:
-• Minimum {{ team.min_men }} men + {{ team.min_women }} women
-• Everyone needs: Photo, Bio, Shirt Name & Size
-
-⏰ Deadline: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
-
-Questions? Just reach out!
-
-Good luck! 🎾
-WPC Series Europe</div>
-                        <!-- Deutsch -->
-                        <div id="preview-DE" class="preview-text" style="display: none;">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Team Captain Einladung
-
-Hallo [NAME]! 👋
-
-Du bist der Kapitän von Team {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} bei der Pickleball Champions League!
-
-📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
-📍 {{ team.tournament.location }}
-
-🔗 Dein Captain-Dashboard:
-{{ request.host_url }}pcl/team/{{ team.captain_token }}
-
-➡️ Was du tun musst:
-1. Öffne den Link oben
-2. Registriere dich selbst (Foto, Bio, Shirt-Größe)
-3. Füge deine Teammitglieder hinzu
-4. Stelle sicher, dass alle Profile vollständig sind
-
-👥 Team-Anforderungen:
-• Mindestens {{ team.min_men }} Männer + {{ team.min_women }} Frauen
-• Jeder braucht: Foto, Bio, Shirt-Name & Größe
-
-⏰ Deadline: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
-
-Bei Fragen melde dich einfach!
-
-Viel Erfolg! 🎾
-WPC Series Europe</div>
-                        <!-- Español -->
-                        <div id="preview-ES" class="preview-text" style="display: none;">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Invitación Capitán
-
-¡Hola [NAME]! 👋
-
-Eres el capitán del Equipo {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} en la Pickleball Champions League!
-
-📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
-📍 {{ team.tournament.location }}
-
-🔗 Tu Panel de Capitán:
-{{ request.host_url }}pcl/team/{{ team.captain_token }}
-
-➡️ Lo que debes hacer:
-1. Abre el enlace
-2. Regístrate (foto, bio, talla de camiseta)
-3. Añade a tus compañeros de equipo
-4. Asegúrate de que todos los perfiles estén completos
-
-👥 Requisitos del equipo:
-• Mínimo {{ team.min_men }} hombres + {{ team.min_women }} mujeres
-• Todos necesitan: Foto, Bio, Nombre y Talla de camiseta
-
-⏰ Fecha límite: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
-
-¿Preguntas? ¡Escríbeme!
-
-¡Buena suerte! 🎾
-WPC Series Europe</div>
-                        <!-- Français -->
-                        <div id="preview-FR" class="preview-text" style="display: none;">🏆 PCL {{ team.tournament.location }} {{ team.tournament.start_date.year }} - Invitation Capitaine
-
-Bonjour [NAME]! 👋
-
-Tu es le capitaine de l'équipe {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} à la Pickleball Champions League!
-
-📅 {{ team.tournament.start_date.strftime('%d.%m.') }} - {{ team.tournament.end_date.strftime('%d.%m.%Y') }}
-📍 {{ team.tournament.location }}
-
-🔗 Ton tableau de bord Capitaine:
-{{ request.host_url }}pcl/team/{{ team.captain_token }}
-
-➡️ Ce que tu dois faire:
-1. Ouvre le lien ci-dessus
-2. Inscris-toi (photo, bio, taille de maillot)
-3. Ajoute tes coéquipiers
-4. Assure-toi que tous les profils sont complets
-
-👥 Exigences de l'équipe:
-• Minimum {{ team.min_men }} hommes + {{ team.min_women }} femmes
-• Chacun a besoin de: Photo, Bio, Nom et Taille de maillot
-
-⏰ Date limite: {{ team.tournament.registration_deadline.strftime('%d.%m.%Y') }}
-
-Des questions? Contacte-moi!
-
-Bonne chance! 🎾
-WPC Series Europe</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Captain Link Info -->
-            <div class="card mt-4 border-info">
+            <!-- Captain Dashboard Link Info -->
+            <div class="card mt-4">
                 <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Link (for manual sharing)</h5>
+                    <h6 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Dashboard Link</h6>
                 </div>
                 <div class="card-body">
+                    <p class="mb-2">This link will be sent to the captain:</p>
                     <div class="input-group">
-                        <input type="text" class="form-control" id="captainLink" 
+                        <input type="text" class="form-control" id="captainUrl" 
                                value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" readonly>
-                        <button class="btn btn-outline-secondary" type="button" onclick="copyLink()">
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyUrl()">
                             <i class="bi bi-clipboard"></i> Copy
                         </button>
                     </div>
@@ -218,39 +149,22 @@ WPC Series Europe</div>
 </div>
 
 <script>
-function copyLink() {
-    const input = document.getElementById('captainLink');
+function copyUrl() {
+    const input = document.getElementById('captainUrl');
     input.select();
     document.execCommand('copy');
     
     const btn = event.target.closest('button');
-    const originalText = btn.innerHTML;
+    const originalHTML = btn.innerHTML;
     btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
     btn.classList.remove('btn-outline-secondary');
     btn.classList.add('btn-success');
     
     setTimeout(() => {
-        btn.innerHTML = originalText;
+        btn.innerHTML = originalHTML;
         btn.classList.remove('btn-success');
         btn.classList.add('btn-outline-secondary');
     }, 2000);
 }
-
-function updatePreview() {
-    const lang = document.getElementById('language').value;
-    
-    // Hide all previews
-    document.querySelectorAll('.preview-text').forEach(el => {
-        el.style.display = 'none';
-    });
-    
-    // Show selected language
-    document.getElementById('preview-' + lang).style.display = 'block';
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
-    updatePreview();
-});
 </script>
 {% endblock %}

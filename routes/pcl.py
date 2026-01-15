@@ -298,7 +298,7 @@ def add_team(tournament_id):
             tournament_id=tournament.id,
             country_code=country_code,
             country_name=request.form['country_name'],
-            country_flag=COUNTRY_FLAGS.get(country_code, '🏳️'),
+            country_flag=COUNTRY_FLAGS.get(country_code, 'Ã°Å¸ÂÂ³Ã¯Â¸Â'),
             age_category=request.form['age_category'],
             min_men=int(request.form.get('min_men', 2)),
             max_men=int(request.form.get('max_men', 4)),
@@ -460,10 +460,10 @@ def player_register(token):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     photo_url = result['url']
-                    print(f"✅ Photo uploaded to Supabase: {photo_url}")
+                    print(f"Ã¢Å“â€¦ Photo uploaded to Supabase: {photo_url}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
-                    print(f"❌ Photo upload failed: {result['error']}")
+                    print(f"Ã¢ÂÅ’ Photo upload failed: {result['error']}")
         
         # Create registration
         registration = PCLRegistration(
@@ -477,7 +477,7 @@ def player_register(token):
             is_captain=request.form.get('is_captain') == 'on',
             shirt_name=request.form['shirt_name'],
             shirt_size=request.form['shirt_size'],
-            photo_filename=photo_url,
+            photo_filename=photo_url,  # Now stores full Supabase URL
             bio=request.form.get('bio'),
             instagram=request.form.get('instagram'),
             tiktok=request.form.get('tiktok'),
@@ -493,7 +493,7 @@ def player_register(token):
         try:
             db.session.add(registration)
             db.session.commit()
-            print(f"✅ Registration saved: {registration.first_name} {registration.last_name}")
+            print(f"Ã¢Å“â€¦ Registration saved: {registration.first_name} {registration.last_name}")
             
             return redirect(url_for('pcl.registration_success', 
                                   registration_id=registration.id,
@@ -501,7 +501,7 @@ def player_register(token):
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
-            print(f"❌ Registration error: {str(e)}")
+            print(f"Ã¢ÂÅ’ Registration error: {str(e)}")
     
     return render_template('pcl/player_register.html',
                          team=team,
@@ -523,16 +523,11 @@ def registration_success(registration_id):
                          t=t)
 
 
-@pcl.route('/team/<team_token>/edit/<int:registration_id>', methods=['GET', 'POST'])
-def edit_registration(team_token, registration_id):
+@pcl.route('/register/edit/<int:registration_id>', methods=['GET', 'POST'])
+def edit_registration(registration_id):
     """Edit existing registration with Supabase photo upload"""
-    team = PCLTeam.query.filter_by(captain_token=team_token).first_or_404()
     registration = PCLRegistration.query.get_or_404(registration_id)
-    
-    # Security: Verify registration belongs to this team
-    if registration.team_id != team.id:
-        flash('Access denied!', 'danger')
-        return redirect(url_for('pcl.captain_dashboard', token=team_token))
+    team = registration.team
     
     lang = request.args.get('lang', registration.preferred_language).upper()
     t = get_translations(lang)
@@ -564,7 +559,7 @@ def edit_registration(team_token, registration_id):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     registration.photo_filename = result['url']
-                    print(f"✅ New photo uploaded: {result['url']}")
+                    print(f"Ã¢Å“â€¦ New photo uploaded: {result['url']}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
         
@@ -573,7 +568,9 @@ def edit_registration(team_token, registration_id):
         try:
             db.session.commit()
             flash(t['success_message'], 'success')
-            return redirect(url_for('pcl.captain_dashboard', token=team_token))
+            return redirect(url_for('pcl.registration_success', 
+                                  registration_id=registration.id,
+                                  lang=lang))
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
@@ -832,6 +829,9 @@ def send_captain_invite(team_id):
     
     team = PCLTeam.query.get_or_404(team_id)
     
+    # Try to find existing captain from registrations
+    captain_reg = team.registrations.filter_by(is_captain=True).first()
+    
     if request.method == 'POST':
         captain_name = request.form.get('captain_name', 'Captain')
         captain_phone = request.form.get('captain_phone', '')
@@ -859,8 +859,10 @@ def send_captain_invite(team_id):
         
         return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
     
-    # GET - show form
-    return render_template('pcl/send_captain_invite.html', team=team)
+    # GET - show form with pre-filled captain data
+    return render_template('pcl/send_captain_invite.html', 
+                         team=team,
+                         captain_reg=captain_reg)
 
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-reminder', methods=['POST'])

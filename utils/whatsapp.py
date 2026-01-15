@@ -6,6 +6,37 @@ TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
 TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_WHATSAPP_NUMBER = os.environ.get('TWILIO_WHATSAPP_NUMBER', 'whatsapp:+14155238886')
 
+def format_phone_number(phone):
+    """
+    Format phone number for WhatsApp - fixes 'Invalid From and To pair' error
+    
+    Args:
+        phone: Phone number in various formats
+    
+    Returns:
+        str: Properly formatted phone number with whatsapp: prefix
+    """
+    if not phone:
+        return None
+    
+    # Remove any existing whatsapp: prefix
+    phone = phone.replace('whatsapp:', '')
+    
+    # Remove spaces, dashes, parentheses
+    phone = ''.join(c for c in phone if c.isdigit() or c == '+')
+    
+    # Ensure it starts with +
+    if not phone.startswith('+'):
+        # If it starts with 00, replace with +
+        if phone.startswith('00'):
+            phone = '+' + phone[2:]
+        else:
+            # Assume it needs a + prefix
+            phone = '+' + phone
+    
+    return f'whatsapp:{phone}'
+
+
 def send_whatsapp_message(to_number, message, test_mode=True):
     """
     Send a WhatsApp message using Twilio
@@ -29,17 +60,29 @@ def send_whatsapp_message(to_number, message, test_mode=True):
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         
-        # Format phone number for WhatsApp
-        if not to_number.startswith('whatsapp:'):
-            to_number = f'whatsapp:{to_number}'
+        # Format phone number properly for WhatsApp
+        formatted_number = format_phone_number(to_number)
+        if not formatted_number:
+            print(f"❌ Invalid phone number: {to_number}")
+            return {
+                'status': 'failed',
+                'error': 'Invalid phone number'
+            }
+        
+        # Ensure from number is also properly formatted
+        from_number = TWILIO_WHATSAPP_NUMBER
+        if not from_number.startswith('whatsapp:'):
+            from_number = f'whatsapp:{from_number}'
+        
+        print(f"📤 Sending WhatsApp: FROM={from_number} TO={formatted_number}")
         
         message_obj = client.messages.create(
             body=message,
-            from_=TWILIO_WHATSAPP_NUMBER,
-            to=to_number
+            from_=from_number,
+            to=formatted_number
         )
         
-        print(f"âœ… Message sent to {to_number}! SID: {message_obj.sid}")
+        print(f"✅ Message sent to {formatted_number}! SID: {message_obj.sid}")
         
         return {
             'status': 'sent',
@@ -121,6 +164,7 @@ WPC Series Europe"""
     
     return send_whatsapp_message(player.phone, message, test_mode=test_mode)
 
+
 def get_captain_invitation_message(team, captain_name, captain_url, language='EN'):
     """
     Get captain invitation message in the specified language
@@ -128,129 +172,95 @@ def get_captain_invitation_message(team, captain_name, captain_url, language='EN
     Args:
         team: PCLTeam object
         captain_name: Name of the captain
-        captain_url: Full URL to captain dashboard
+        captain_url: URL to captain dashboard
         language: Language code (EN, DE, ES, FR)
     
     Returns:
-        str: Formatted message
+        str: Formatted invitation message
     """
-    tournament = team.tournament
-    
     messages = {
-        'EN': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Team Captain Invitation
+        'EN': f"""🏆 PCL {team.tournament.name} - Team Captain Invitation
 
-Hello {captain_name}! 👋
+Hi {captain_name}! 👋
 
-You are the captain of Team {team.country_flag} {team.country_name} {team.age_category} at the Pickleball Champions League!
+You have been selected as Captain for {team.country_flag} {team.country_name} {team.age_category}!
 
-📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
-📍 {tournament.location}
+📋 Your responsibilities:
+• Register your team players
+• Ensure all profiles are complete
+• Coordinate with your team
 
-🔗 Your Captain Dashboard:
+🔗 Your secret Captain Dashboard:
 {captain_url}
 
-➡️ What you need to do:
-1. Open the link above
-2. Register yourself (photo, bio, shirt size)
-3. Add your team members
-4. Make sure all profiles are complete
+⚠️ Keep this link private - only you should have access!
 
-👥 Team Requirements:
-• Minimum {team.min_men} men + {team.min_women} women
-• Everyone needs: Photo, Bio, Shirt Name & Size
+📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-Questions? Just reach out!
-
-Good luck! 🎾
+Let's go! 🎾
 WPC Series Europe""",
 
-        'DE': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Team Captain Einladung
+        'DE': f"""🏆 PCL {team.tournament.name} - Team-Kapitän Einladung
 
 Hallo {captain_name}! 👋
 
-Du bist der Kapitän von Team {team.country_flag} {team.country_name} {team.age_category} bei der Pickleball Champions League!
+Du wurdest als Kapitän für {team.country_flag} {team.country_name} {team.age_category} ausgewählt!
 
-📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
-📍 {tournament.location}
+📋 Deine Aufgaben:
+• Registriere deine Team-Spieler
+• Stelle sicher, dass alle Profile vollständig sind
+• Koordiniere dich mit deinem Team
 
-🔗 Dein Captain-Dashboard:
+🔗 Dein geheimes Kapitän-Dashboard:
 {captain_url}
 
-➡️ Was du tun musst:
-1. Öffne den Link oben
-2. Registriere dich selbst (Foto, Bio, Shirt-Größe)
-3. Füge deine Teammitglieder hinzu
-4. Stelle sicher, dass alle Profile vollständig sind
+⚠️ Halte diesen Link privat - nur du solltest Zugang haben!
 
-👥 Team-Anforderungen:
-• Mindestens {team.min_men} Männer + {team.min_women} Frauen
-• Jeder braucht: Foto, Bio, Shirt-Name & Größe
+📅 Anmeldeschluss: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-Bei Fragen melde dich einfach!
-
-Viel Erfolg! 🎾
+Los geht's! 🎾
 WPC Series Europe""",
 
-        'ES': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Invitación Capitán
+        'ES': f"""🏆 PCL {team.tournament.name} - Invitación de Capitán
 
 ¡Hola {captain_name}! 👋
 
-Eres el capitán del Equipo {team.country_flag} {team.country_name} {team.age_category} en la Pickleball Champions League!
+¡Has sido seleccionado como Capitán de {team.country_flag} {team.country_name} {team.age_category}!
 
-📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
-📍 {tournament.location}
+📋 Tus responsabilidades:
+• Registrar a los jugadores de tu equipo
+• Asegurar que todos los perfiles estén completos
+• Coordinar con tu equipo
 
-🔗 Tu Panel de Capitán:
+🔗 Tu Panel de Capitán secreto:
 {captain_url}
 
-➡️ Lo que debes hacer:
-1. Abre el enlace
-2. Regístrate (foto, bio, talla de camiseta)
-3. Añade a tus compañeros de equipo
-4. Asegúrate de que todos los perfiles estén completos
+⚠️ ¡Mantén este enlace privado - solo tú debes tener acceso!
 
-👥 Requisitos del equipo:
-• Mínimo {team.min_men} hombres + {team.min_women} mujeres
-• Todos necesitan: Foto, Bio, Nombre y Talla de camiseta
+📅 Fecha límite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-⏰ Fecha límite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-¿Preguntas? ¡Escríbeme!
-
-¡Buena suerte! 🎾
+¡Vamos! 🎾
 WPC Series Europe""",
 
-        'FR': f"""🏆 PCL {tournament.location} {tournament.start_date.year} - Invitation Capitaine
+        'FR': f"""🏆 PCL {team.tournament.name} - Invitation Capitaine
 
 Bonjour {captain_name}! 👋
 
-Tu es le capitaine de l'équipe {team.country_flag} {team.country_name} {team.age_category} à la Pickleball Champions League!
+Vous avez été sélectionné comme Capitaine de {team.country_flag} {team.country_name} {team.age_category}!
 
-📅 {tournament.start_date.strftime('%d.%m.')} - {tournament.end_date.strftime('%d.%m.%Y')}
-📍 {tournament.location}
+📋 Vos responsabilités:
+• Inscrire les joueurs de votre équipe
+• S'assurer que tous les profils sont complets
+• Coordonner avec votre équipe
 
-🔗 Ton tableau de bord Capitaine:
+🔗 Votre tableau de bord Capitaine secret:
 {captain_url}
 
-➡️ Ce que tu dois faire:
-1. Ouvre le lien ci-dessus
-2. Inscris-toi (photo, bio, taille de maillot)
-3. Ajoute tes coéquipiers
-4. Assure-toi que tous les profils sont complets
+⚠️ Gardez ce lien privé - seul vous devez y avoir accès!
 
-👥 Exigences de l'équipe:
-• Minimum {team.min_men} hommes + {team.min_women} femmes
-• Chacun a besoin de: Photo, Bio, Nom et Taille de maillot
+📅 Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-⏰ Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-Des questions? Contacte-moi!
-
-Bonne chance! 🎾
+C'est parti! 🎾
 WPC Series Europe"""
     }
     
@@ -264,94 +274,77 @@ def get_captain_reminder_message(team, captain_name, captain_url, stats, languag
     Args:
         team: PCLTeam object
         captain_name: Name of the captain
-        captain_url: Full URL to captain dashboard
+        captain_url: URL to captain dashboard
         stats: Team statistics dict
         language: Language code (EN, DE, ES, FR)
     
     Returns:
-        str: Formatted message
+        str: Formatted reminder message
     """
-    tournament = team.tournament
-    
-    # Calculate missing requirements
-    men_needed = max(0, team.min_men - stats['men'])
-    women_needed = max(0, team.min_women - stats['women'])
-    incomplete_profiles = stats['total'] - (stats['men_complete'] + stats['women_complete'])
+    days_left = (team.tournament.registration_deadline - __import__('datetime').datetime.now()).days
     
     messages = {
-        'EN': f"""⏰ Reminder: PCL {tournament.location} {tournament.start_date.year}
+        'EN': f"""⏰ PCL Reminder - {team.country_flag} {team.country_name} {team.age_category}
 
-Hello {captain_name}!
+Hi {captain_name}!
 
-Your Team {team.country_flag} {team.country_name} {team.age_category} status:
+Your team registration is incomplete:
+👨 Men: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Women: {stats['women']}/{team.min_women}-{team.max_women}
+✅ Complete profiles: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-{"✅ Men: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Still need " + str(men_needed) + " more men"}
-{"✅ Women: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Still need " + str(women_needed) + " more women"}
-{"⚠️ " + str(incomplete_profiles) + " profile(s) incomplete" if incomplete_profiles > 0 else "✅ All profiles complete"}
+⚠️ Only {days_left} days left!
 
-🔗 Your Dashboard:
+🔗 Complete your team now:
 {captain_url}
-
-⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-Please complete your team as soon as possible!
 
 WPC Series Europe""",
 
-        'DE': f"""⏰ Erinnerung: PCL {tournament.location} {tournament.start_date.year}
+        'DE': f"""⏰ PCL Erinnerung - {team.country_flag} {team.country_name} {team.age_category}
 
 Hallo {captain_name}!
 
-Dein Team {team.country_flag} {team.country_name} {team.age_category} Status:
+Deine Team-Registrierung ist unvollständig:
+👨 Männer: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Frauen: {stats['women']}/{team.min_women}-{team.max_women}
+✅ Vollständige Profile: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-{"✅ Männer: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Noch " + str(men_needed) + " Männer benötigt"}
-{"✅ Frauen: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Noch " + str(women_needed) + " Frauen benötigt"}
-{"⚠️ " + str(incomplete_profiles) + " Profil(e) unvollständig" if incomplete_profiles > 0 else "✅ Alle Profile vollständig"}
+⚠️ Nur noch {days_left} Tage!
 
-🔗 Dein Dashboard:
+🔗 Vervollständige dein Team jetzt:
 {captain_url}
-
-⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-Bitte vervollständige dein Team so schnell wie möglich!
 
 WPC Series Europe""",
 
-        'ES': f"""⏰ Recordatorio: PCL {tournament.location} {tournament.start_date.year}
+        'ES': f"""⏰ Recordatorio PCL - {team.country_flag} {team.country_name} {team.age_category}
 
 ¡Hola {captain_name}!
 
-Estado de tu Equipo {team.country_flag} {team.country_name} {team.age_category}:
+Tu registro de equipo está incompleto:
+👨 Hombres: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Mujeres: {stats['women']}/{team.min_women}-{team.max_women}
+✅ Perfiles completos: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-{"✅ Hombres: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Faltan " + str(men_needed) + " hombres"}
-{"✅ Mujeres: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Faltan " + str(women_needed) + " mujeres"}
-{"⚠️ " + str(incomplete_profiles) + " perfil(es) incompleto(s)" if incomplete_profiles > 0 else "✅ Todos los perfiles completos"}
+⚠️ ¡Solo quedan {days_left} días!
 
-🔗 Tu Dashboard:
+🔗 Completa tu equipo ahora:
 {captain_url}
-
-⏰ Fecha límite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-¡Por favor completa tu equipo lo antes posible!
 
 WPC Series Europe""",
 
-        'FR': f"""⏰ Rappel: PCL {tournament.location} {tournament.start_date.year}
+        'FR': f"""⏰ Rappel PCL - {team.country_flag} {team.country_name} {team.age_category}
 
 Bonjour {captain_name}!
 
-Statut de ton équipe {team.country_flag} {team.country_name} {team.age_category}:
+Votre inscription d'équipe est incomplète:
+👨 Hommes: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Femmes: {stats['women']}/{team.min_women}-{team.max_women}
+✅ Profils complets: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-{"✅ Hommes: " + str(stats['men']) + "/" + str(team.min_men) if stats['men'] >= team.min_men else "❌ Il manque encore " + str(men_needed) + " hommes"}
-{"✅ Femmes: " + str(stats['women']) + "/" + str(team.min_women) if stats['women'] >= team.min_women else "❌ Il manque encore " + str(women_needed) + " femmes"}
-{"⚠️ " + str(incomplete_profiles) + " profil(s) incomplet(s)" if incomplete_profiles > 0 else "✅ Tous les profils sont complets"}
+⚠️ Plus que {days_left} jours!
 
-🔗 Ton Dashboard:
+🔗 Complétez votre équipe maintenant:
 {captain_url}
-
-⏰ Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
-
-Complète ton équipe dès que possible!
 
 WPC Series Europe"""
     }
