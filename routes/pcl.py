@@ -77,48 +77,48 @@ TRANSLATIONS = {
     'DE': {
         'page_title': 'PCL Spieler-Registrierung',
         'team': 'Team',
-        'personal_info': 'PersÃ¶nliche Informationen',
+        'personal_info': 'PersÃƒÂ¶nliche Informationen',
         'first_name': 'Vorname',
         'last_name': 'Nachname',
         'email': 'E-Mail',
         'phone': 'Telefon (optional)',
         'gender': 'Geschlecht',
-        'male': 'MÃ¤nnlich',
+        'male': 'MÃƒÂ¤nnlich',
         'female': 'Weiblich',
         'birth_year': 'Geburtsjahr',
         'role': 'Rolle',
         'player': 'Spieler',
-        'captain': 'KapitÃ¤n',
+        'captain': 'KapitÃƒÂ¤n',
         'shirt_info': 'Shirt-Informationen',
         'shirt_name': 'Name auf dem Shirt',
         'shirt_name_help': 'So erscheint dein Name auf dem Trikot',
-        'shirt_size': 'Shirt-GrÃ¶ÃŸe',
+        'shirt_size': 'Shirt-GrÃƒÂ¶ÃƒÅ¸e',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
         'bio': 'Kurze Bio',
-        'bio_placeholder': 'ErzÃ¤hl uns von dir und deiner Pickleball-Reise...',
+        'bio_placeholder': 'ErzÃƒÂ¤hl uns von dir und deiner Pickleball-Reise...',
         'social_media': 'Social Media (optional)',
         'optional_info': 'Optionale Informationen',
         'video_url': 'Video-URL (Highlight-Video)',
         'dupr_rating': 'DUPR Rating',
         'language': 'Bevorzugte Sprache',
-        'privacy_accept': 'Ich stimme der Datenverarbeitung fÃ¼r die PCL-Registrierung zu',
+        'privacy_accept': 'Ich stimme der Datenverarbeitung fÃƒÂ¼r die PCL-Registrierung zu',
         'submit': 'Registrieren',
         'update': 'Registrierung aktualisieren',
         'required': 'Pflichtfeld',
         'success_title': 'Registrierung erfolgreich!',
-        'success_message': 'Danke fÃ¼r deine Registrierung zur PCL.',
-        'missing_fields': 'Bitte fÃ¼lle alle Pflichtfelder aus',
-        'captain_dashboard': 'KapitÃ¤n Dashboard',
+        'success_message': 'Danke fÃƒÂ¼r deine Registrierung zur PCL.',
+        'missing_fields': 'Bitte fÃƒÂ¼lle alle Pflichtfelder aus',
+        'captain_dashboard': 'KapitÃƒÂ¤n Dashboard',
         'team_status': 'Team-Status',
-        'registration_link': 'Registrierungslink fÃ¼r Spieler',
+        'registration_link': 'Registrierungslink fÃƒÂ¼r Spieler',
         'copy_link': 'Link kopieren',
         'players_registered': 'Registrierte Spieler',
-        'men': 'MÃ¤nner',
+        'men': 'MÃƒÂ¤nner',
         'women': 'Frauen',
-        'complete': 'VollstÃ¤ndig',
-        'incomplete': 'UnvollstÃ¤ndig',
+        'complete': 'VollstÃƒÂ¤ndig',
+        'incomplete': 'UnvollstÃƒÂ¤ndig',
         'photo_missing': 'Foto fehlt',
         'deadline': 'Anmeldeschluss',
         'days_left': 'Tage verbleibend',
@@ -128,29 +128,29 @@ TRANSLATIONS = {
     'ES': {
         'page_title': 'Registro de Jugadores PCL',
         'team': 'Equipo',
-        'personal_info': 'InformaciÃ³n Personal',
+        'personal_info': 'InformaciÃƒÂ³n Personal',
         'first_name': 'Nombre',
         'last_name': 'Apellido',
-        'email': 'Correo electrÃ³nico',
-        'phone': 'TelÃ©fono (opcional)',
-        'gender': 'GÃ©nero',
+        'email': 'Correo electrÃƒÂ³nico',
+        'phone': 'TelÃƒÂ©fono (opcional)',
+        'gender': 'GÃƒÂ©nero',
         'male': 'Masculino',
         'female': 'Femenino',
-        'birth_year': 'AÃ±o de nacimiento',
+        'birth_year': 'AÃƒÂ±o de nacimiento',
         'role': 'Rol',
         'player': 'Jugador',
-        'captain': 'CapitÃ¡n',
-        'shirt_info': 'InformaciÃ³n de la Camiseta',
+        'captain': 'CapitÃƒÂ¡n',
+        'shirt_info': 'InformaciÃƒÂ³n de la Camiseta',
         'shirt_name': 'Nombre en la camiseta',
-        'shirt_name_help': 'AsÃ­ aparecerÃ¡ tu nombre en la camiseta',
+        'shirt_name_help': 'AsÃƒÂ­ aparecerÃƒÂ¡ tu nombre en la camiseta',
         'shirt_size': 'Talla de camiseta',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
-        'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
-        'bio': 'BiografÃ­a breve',
-        'bio_placeholder': 'CuÃ©ntanos sobre ti y tu viaje en pickleball...',
+        'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
+        'bio': 'BiografÃƒÂ­a breve',
+        'bio_placeholder': 'CuÃƒÂ©ntanos sobre ti y tu viaje en pickleball...',
         'social_media': 'Redes Sociales (opcional)',
-        'optional_info': 'InformaciÃ³n Opcional',
+        'optional_info': 'InformaciÃƒÂ³n Opcional',
         'video_url': 'URL del Video (Highlights)',
         'dupr_rating': 'Rating DUPR',
         'language': 'Idioma preferido',
@@ -158,10 +158,10 @@ TRANSLATIONS = {
         'submit': 'Registrarse',
         'update': 'Actualizar registro',
         'required': 'Obligatorio',
-        'success_title': 'Â¡Registro completado!',
+        'success_title': 'Ã‚Â¡Registro completado!',
         'success_message': 'Gracias por registrarte en PCL.',
         'missing_fields': 'Por favor completa todos los campos obligatorios',
-        'captain_dashboard': 'Panel del CapitÃ¡n',
+        'captain_dashboard': 'Panel del CapitÃƒÂ¡n',
         'team_status': 'Estado del Equipo',
         'registration_link': 'Enlace de registro para jugadores',
         'copy_link': 'Copiar enlace',
@@ -171,49 +171,49 @@ TRANSLATIONS = {
         'complete': 'Completo',
         'incomplete': 'Incompleto',
         'photo_missing': 'Falta foto',
-        'deadline': 'Fecha lÃ­mite',
-        'days_left': 'dÃ­as restantes',
+        'deadline': 'Fecha lÃƒÂ­mite',
+        'days_left': 'dÃƒÂ­as restantes',
         'send_reminder': 'Enviar recordatorio',
         'export_data': 'Exportar datos del equipo',
     },
     'FR': {
         'page_title': 'Inscription Joueur PCL',
-        'team': 'Ã‰quipe',
+        'team': 'Ãƒâ€°quipe',
         'personal_info': 'Informations Personnelles',
-        'first_name': 'PrÃ©nom',
+        'first_name': 'PrÃƒÂ©nom',
         'last_name': 'Nom',
         'email': 'E-mail',
-        'phone': 'TÃ©lÃ©phone (optionnel)',
+        'phone': 'TÃƒÂ©lÃƒÂ©phone (optionnel)',
         'gender': 'Genre',
         'male': 'Homme',
         'female': 'Femme',
-        'birth_year': 'AnnÃ©e de naissance',
-        'role': 'RÃ´le',
+        'birth_year': 'AnnÃƒÂ©e de naissance',
+        'role': 'RÃƒÂ´le',
         'player': 'Joueur',
         'captain': 'Capitaine',
         'shirt_info': 'Informations Maillot',
         'shirt_name': 'Nom sur le maillot',
-        'shirt_name_help': 'Comment votre nom apparaÃ®tra sur le maillot',
+        'shirt_name_help': 'Comment votre nom apparaÃƒÂ®tra sur le maillot',
         'shirt_size': 'Taille du maillot',
         'profile': 'Profil',
         'photo': 'Photo de profil',
-        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
+        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃƒÂ© recommandÃƒÂ©.',
         'bio': 'Courte bio',
         'bio_placeholder': 'Parlez-nous de vous et de votre parcours pickleball...',
-        'social_media': 'RÃ©seaux Sociaux (optionnel)',
+        'social_media': 'RÃƒÂ©seaux Sociaux (optionnel)',
         'optional_info': 'Informations Optionnelles',
-        'video_url': 'URL VidÃ©o (Highlights)',
+        'video_url': 'URL VidÃƒÂ©o (Highlights)',
         'dupr_rating': 'Rating DUPR',
-        'language': 'Langue prÃ©fÃ©rÃ©e',
-        'privacy_accept': "J'accepte le traitement des donnÃ©es pour l'inscription PCL",
+        'language': 'Langue prÃƒÂ©fÃƒÂ©rÃƒÂ©e',
+        'privacy_accept': "J'accepte le traitement des donnÃƒÂ©es pour l'inscription PCL",
         'submit': "S'inscrire",
-        'update': "Mettre Ã  jour l'inscription",
+        'update': "Mettre ÃƒÂ  jour l'inscription",
         'required': 'Obligatoire',
-        'success_title': 'Inscription rÃ©ussie!',
-        'success_message': 'Merci pour votre inscription Ã  PCL.',
+        'success_title': 'Inscription rÃƒÂ©ussie!',
+        'success_message': 'Merci pour votre inscription ÃƒÂ  PCL.',
         'missing_fields': 'Veuillez remplir tous les champs obligatoires',
         'captain_dashboard': 'Tableau de bord Capitaine',
-        'team_status': "Statut de l'Ã©quipe",
+        'team_status': "Statut de l'ÃƒÂ©quipe",
         'registration_link': "Lien d'inscription pour les joueurs",
         'copy_link': 'Copier le lien',
         'players_registered': 'Joueurs inscrits',
@@ -225,7 +225,7 @@ TRANSLATIONS = {
         'deadline': "Date limite d'inscription",
         'days_left': 'jours restants',
         'send_reminder': 'Envoyer un rappel',
-        'export_data': "Exporter les donnÃ©es de l'Ã©quipe",
+        'export_data': "Exporter les donnÃƒÂ©es de l'ÃƒÂ©quipe",
     }
 }
 
@@ -298,7 +298,7 @@ def add_team(tournament_id):
             tournament_id=tournament.id,
             country_code=country_code,
             country_name=request.form['country_name'],
-            country_flag=COUNTRY_FLAGS.get(country_code, 'ðŸ³ï¸'),
+            country_flag=COUNTRY_FLAGS.get(country_code, '🏳️'),
             age_category=request.form['age_category'],
             min_men=int(request.form.get('min_men', 2)),
             max_men=int(request.form.get('max_men', 4)),
@@ -460,10 +460,10 @@ def player_register(token):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     photo_url = result['url']
-                    print(f"âœ… Photo uploaded to Supabase: {photo_url}")
+                    print(f"✅ Photo uploaded to Supabase: {photo_url}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
-                    print(f"âŒ Photo upload failed: {result['error']}")
+                    print(f"❌ Photo upload failed: {result['error']}")
         
         # Create registration
         registration = PCLRegistration(
@@ -477,7 +477,7 @@ def player_register(token):
             is_captain=request.form.get('is_captain') == 'on',
             shirt_name=request.form['shirt_name'],
             shirt_size=request.form['shirt_size'],
-            photo_filename=photo_url,  # Now stores full Supabase URL
+            photo_filename=photo_url,
             bio=request.form.get('bio'),
             instagram=request.form.get('instagram'),
             tiktok=request.form.get('tiktok'),
@@ -493,7 +493,7 @@ def player_register(token):
         try:
             db.session.add(registration)
             db.session.commit()
-            print(f"âœ… Registration saved: {registration.first_name} {registration.last_name}")
+            print(f"✅ Registration saved: {registration.first_name} {registration.last_name}")
             
             return redirect(url_for('pcl.registration_success', 
                                   registration_id=registration.id,
@@ -501,7 +501,7 @@ def player_register(token):
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
-            print(f"âŒ Registration error: {str(e)}")
+            print(f"❌ Registration error: {str(e)}")
     
     return render_template('pcl/player_register.html',
                          team=team,
@@ -523,11 +523,16 @@ def registration_success(registration_id):
                          t=t)
 
 
-@pcl.route('/register/edit/<int:registration_id>', methods=['GET', 'POST'])
-def edit_registration(registration_id):
+@pcl.route('/team/<team_token>/edit/<int:registration_id>', methods=['GET', 'POST'])
+def edit_registration(team_token, registration_id):
     """Edit existing registration with Supabase photo upload"""
+    team = PCLTeam.query.filter_by(captain_token=team_token).first_or_404()
     registration = PCLRegistration.query.get_or_404(registration_id)
-    team = registration.team
+    
+    # Security: Verify registration belongs to this team
+    if registration.team_id != team.id:
+        flash('Access denied!', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=team_token))
     
     lang = request.args.get('lang', registration.preferred_language).upper()
     t = get_translations(lang)
@@ -559,7 +564,7 @@ def edit_registration(registration_id):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     registration.photo_filename = result['url']
-                    print(f"âœ… New photo uploaded: {result['url']}")
+                    print(f"✅ New photo uploaded: {result['url']}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
         
@@ -568,9 +573,7 @@ def edit_registration(registration_id):
         try:
             db.session.commit()
             flash(t['success_message'], 'success')
-            return redirect(url_for('pcl.registration_success', 
-                                  registration_id=registration.id,
-                                  lang=lang))
+            return redirect(url_for('pcl.captain_dashboard', token=team_token))
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
@@ -628,7 +631,7 @@ def admin_edit_registration(registration_id):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     registration.photo_filename = result['url']
-                    print(f"✅ New photo uploaded: {result['url']}")
+                    print(f"âœ… New photo uploaded: {result['url']}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
         
@@ -812,9 +815,9 @@ def send_all_profile_links(token):
     
     # Show summary
     if sent_count > 0:
-        flash(f'âœ… {sent_count} profile link(s) successfully sent!', 'success')
+        flash(f'Ã¢Å“â€¦ {sent_count} profile link(s) successfully sent!', 'success')
     if error_count > 0:
-        flash(f'âš ï¸ {error_count} message(s) could not be sent.', 'warning')
+        flash(f'Ã¢Å¡Â Ã¯Â¸Â {error_count} message(s) could not be sent.', 'warning')
     
     return redirect(url_for('pcl.captain_dashboard', token=token))
 

@@ -7,10 +7,10 @@
     <!-- Language Switcher -->
     <div class="text-end mb-3">
         <div class="btn-group btn-group-sm">
-            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇬🇧 EN</a>
-            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇩🇪 DE</a>
-            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇪🇸 ES</a>
-            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇫🇷 FR</a>
+            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡¬ðŸ‡§ EN</a>
+            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡©ðŸ‡ª DE</a>
+            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡ªðŸ‡¸ ES</a>
+            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡«ðŸ‡· FR</a>
         </div>
     </div>
 
@@ -69,10 +69,10 @@
                                 <select class="form-select" name="gender" required>
                                     <option value="">-- Select --</option>
                                     <option value="male" {% if registration and registration.gender == 'male' %}selected{% endif %}>
-                                        👨 {{ t.male }}
+                                        ðŸ‘¨ {{ t.male }}
                                     </option>
                                     <option value="female" {% if registration and registration.gender == 'female' %}selected{% endif %}>
-                                        👩 {{ t.female }}
+                                        ðŸ‘© {{ t.female }}
                                     </option>
                                 </select>
                             </div>
@@ -89,7 +89,7 @@
                                 <input class="form-check-input" type="checkbox" name="is_captain" id="is_captain"
                                        {% if registration and registration.is_captain %}checked{% endif %}>
                                 <label class="form-check-label" for="is_captain">
-                                    🎖️ {{ t.captain }}
+                                    ðŸŽ–ï¸ {{ t.captain }}
                                 </label>
                             </div>
                         </div>
@@ -104,7 +104,7 @@
                                 <label class="form-label">{{ t.shirt_name }} <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" name="shirt_name" 
                                        value="{{ registration.shirt_name if registration else '' }}"
-                                       placeholder="MÜLLER" required>
+                                       placeholder="MÃœLLER" required>
                                 <small class="form-text text-muted">{{ t.shirt_name_help }}</small>
                             </div>
                             <div class="col-md-6 mb-3">
@@ -132,7 +132,7 @@
                             <div class="mb-2">
                                 <img src="{% if registration.photo_filename and registration.photo_filename.startswith('http') %}{{ registration.photo_filename }}{% elif registration.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + registration.photo_filename) }}{% else %}#{% endif %}"
                                      class="rounded" width="100" height="100" style="object-fit: cover;">
-                                <span class="text-success ms-2">✓ Photo uploaded</span>
+                                <span class="text-success ms-2">âœ“ Photo uploaded</span>
                             </div>
                             {% endif %}
                             <input type="file" class="form-control" name="photo" accept="image/*"
@@ -227,7 +227,7 @@
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-check-circle"></i> 
-                                {% if edit_mode %}{{ t.update }}{% else %}{{ t.submit }}{% endif %}
+                                {% if edit_mode %}{{ t['update'] }}{% else %}{{ t['submit'] }}{% endif %}
                             </button>
                         </div>
                     </form>
