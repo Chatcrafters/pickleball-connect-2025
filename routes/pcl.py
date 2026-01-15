@@ -822,10 +822,16 @@ def send_all_profile_links(token):
 # CAPTAIN MESSAGING ROUTES (WhatsApp Invitations & Reminders)
 # ============================================================================
 
+"""
+UPDATED send_captain_invite ROUTE FOR pcl.py
+=============================================
+Replace lines 825-865 in your routes/pcl.py with this code:
+"""
+
 @pcl.route('/admin/team/<int:team_id>/send-captain-invite', methods=['GET', 'POST'])
 def send_captain_invite(team_id):
-    """Send captain invitation via WhatsApp"""
-    from utils.whatsapp import send_whatsapp_message, get_captain_invitation_message
+    """Send captain invitation via WhatsApp using Content Template"""
+    from utils.whatsapp import send_captain_invitation_template
     
     team = PCLTeam.query.get_or_404(team_id)
     
@@ -842,20 +848,21 @@ def send_captain_invite(team_id):
             flash('Phone number is required!', 'danger')
             return redirect(url_for('pcl.send_captain_invite', team_id=team_id))
         
-        # Build captain URL
-        captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
-        
-        # Get message in selected language
-        message = get_captain_invitation_message(team, captain_name, captain_url, language)
-        
-        # Send WhatsApp
-        result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
+        # Send using Content Template
+        result = send_captain_invitation_template(
+            team=team,
+            captain_name=captain_name,
+            captain_phone=captain_phone,
+            captain_token=team.captain_token,
+            language=language,
+            test_mode=test_mode
+        )
         
         if result['status'] in ['sent', 'test_mode']:
             mode_text = " (TEST MODE)" if test_mode else ""
-            flash(f'Captain invitation sent to {captain_name}{mode_text}!', 'success')
+            flash(f'✅ Captain invitation sent to {captain_name}{mode_text}!', 'success')
         else:
-            flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
+            flash(f'❌ Error sending: {result.get("error", "Unknown error")}', 'danger')
         
         return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
     
