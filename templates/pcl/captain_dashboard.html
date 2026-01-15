@@ -173,33 +173,31 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="p-4 bg-light">
-                <h4 class="mb-3"><i class="bi bi-lightning"></i> {{ t.quick_actions if t.quick_actions else 'Schnellaktionen' }}</h4>
-                <div class="row">
-                    <div class="col-md-4 mb-3">
-                        <a href="{{ quick_add_url }}" class="btn btn-success quick-action-btn w-100">
-                            <i class="bi bi-person-plus-fill"></i><br>
-                            {{ t.quick_add_player if t.quick_add_player else 'Spieler hinzufügen' }}
-                        </a>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <form action="{{ url_for('pcl.send_all_profile_links', token=team.captain_token) }}" method="POST" class="d-inline w-100">
-                            <button type="submit" class="btn btn-primary quick-action-btn w-100" 
-                                    onclick="return confirm('{{ t.send_all_confirm if t.send_all_confirm else 'Links an alle unvollständigen Spieler senden?' }}')">
-                                <i class="bi bi-whatsapp"></i><br>
-                                {{ t.send_all_links if t.send_all_links else 'Alle Links senden' }}
-                            </button>
-                        </form>
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <button type="button" class="btn btn-outline-secondary quick-action-btn w-100" onclick="copyRegistrationLink()">
-                            <i class="bi bi-link-45deg"></i><br>
-                            {{ t.copy_link }}
-                        </button>
-                        <input type="hidden" id="registrationUrl" value="{{ registration_url }}">
-                    </div>
-                </div>
-            </div>
+<div class="p-4 bg-light">
+    <h4 class="mb-3"><i class="bi bi-lightning"></i> {{ t.quick_actions if t.quick_actions else 'Schnellaktionen' }}</h4>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <a href="{{ quick_add_url }}" class="btn btn-success quick-action-btn w-100">
+                <i class="bi bi-person-plus-fill"></i><br>
+                {{ t.quick_add_player if t.quick_add_player else 'Spieler hinzufügen' }}
+            </a>
+        <div class="col-md-4 mb-3">
+    <form action="{{ url_for('pcl.send_all_profile_links', token=team.captain_token) }}" method="POST" class="d-inline w-100" onsubmit="return confirm('Links an alle unvollständigen Spieler senden?');">
+        <button type="submit" class="btn btn-primary quick-action-btn w-100">
+            <i class="bi bi-whatsapp"></i><br>
+            {{ t.send_all_links if t.send_all_links else 'Alle Links senden' }}
+        </button>
+    </form>
+</div>
+        <div class="col-md-4 mb-3">
+            <button type="button" class="btn btn-outline-secondary quick-action-btn w-100" onclick="copyRegistrationLink()">
+                <i class="bi bi-link-45deg"></i><br>
+                {{ t.copy_link }}
+            </button>
+            <input type="hidden" id="registrationUrl" value="{{ registration_url }}">
+        </div>
+    </div>
+</div>
 
             <!-- Players Lists -->
             <div class="p-4">
