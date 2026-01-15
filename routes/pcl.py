@@ -919,6 +919,40 @@ def send_all_profile_links(token):
 
 
 # ============================================================================
+# DELETE PLAYER
+# ============================================================================
+
+@pcl.route('/team/<token>/delete-player/<int:registration_id>', methods=['POST'])
+def delete_player(token, registration_id):
+    """Delete a player from the team (captain only)"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    registration = PCLRegistration.query.get_or_404(registration_id)
+    
+    # Verify registration belongs to this team
+    if registration.team_id != team.id:
+        flash('Invalid request!', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token))
+    
+    # Don't allow deleting captain
+    if registration.is_captain:
+        flash('Cannot delete the captain!', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token))
+    
+    lang = request.args.get('lang', 'EN')
+    player_name = f"{registration.first_name} {registration.last_name}"
+    
+    try:
+        db.session.delete(registration)
+        db.session.commit()
+        flash(f'{player_name} wurde gelöscht.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    
+    return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+
+# ============================================================================
 # PLAYER REGISTRATION (Original Full Form)
 # ============================================================================
 
