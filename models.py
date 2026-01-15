@@ -5,7 +5,7 @@ import secrets
 db = SQLAlchemy()
 
 # ============================================================================
-# EXISTING MODELS (keeping for reference)
+# EXISTING MODELS
 # ============================================================================
 
 # Enhanced association table for many-to-many relationship between Events and Players
@@ -31,14 +31,14 @@ class Player(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Coaching fields
-    coaching_notes = db.Column(db.Text, nullable=True)  # Private notes (only admin)
+    coaching_notes = db.Column(db.Text, nullable=True)
     last_coaching_contact = db.Column(db.DateTime, nullable=True)
     
-    # Weakness tracking (comma-separated or JSON)
-    weaknesses = db.Column(db.Text, nullable=True)  # e.g., "dink_control,footwork"
-    strengths = db.Column(db.Text, nullable=True)   # e.g., "serve,net_play"
+    # Weakness tracking
+    weaknesses = db.Column(db.Text, nullable=True)
+    strengths = db.Column(db.Text, nullable=True)
     
-    # NEW: Profile update token
+    # Profile update token
     update_token = db.Column(db.String(64), unique=True, nullable=True)
     
     # Relationships
@@ -48,13 +48,12 @@ class Player(db.Model):
     def __repr__(self):
         return f'<Player {self.first_name} {self.last_name}>'
     
-    # NEW: Profile update methods
     def generate_update_token(self):
         """Generate a unique token for profile updates"""
         self.update_token = secrets.token_urlsafe(32)
         return self.update_token
     
-    def get_update_url(self, base_url='https://pickleball-connect-2025.vercel.app'):
+    def get_update_url(self, base_url='https://pickleballconnect.eu'):
         """Get the update URL for this player"""
         if not self.update_token:
             self.generate_update_token()
@@ -101,7 +100,7 @@ class Event(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Event type
-    event_type = db.Column(db.String(50), default='tournament')  # tournament, workshop, clinic, invitational
+    event_type = db.Column(db.String(50), default='tournament')
     
     # Relationships
     invited_players = db.relationship('Player', secondary=event_players, back_populates='invited_events')
@@ -182,7 +181,7 @@ class PlayerResponse(db.Model):
 
 
 # ============================================================================
-# NEW PCL MODELS
+# PCL MODELS
 # ============================================================================
 
 class PCLTournament(db.Model):
@@ -190,7 +189,7 @@ class PCLTournament(db.Model):
     __tablename__ = 'pcl_tournament'
     
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)  # "PCL Malaga 2026"
+    name = db.Column(db.String(200), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
     location = db.Column(db.String(200), nullable=False)
@@ -200,7 +199,7 @@ class PCLTournament(db.Model):
     registration_deadline = db.Column(db.DateTime, nullable=False)
     
     # Status
-    status = db.Column(db.String(20), default='open')  # open, closed, completed
+    status = db.Column(db.String(20), default='open')
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -234,12 +233,12 @@ class PCLTeam(db.Model):
     tournament_id = db.Column(db.Integer, db.ForeignKey('pcl_tournament.id'), nullable=False)
     
     # Team info
-    country_code = db.Column(db.String(3), nullable=False)  # GER, ESP, ITA, etc.
-    country_name = db.Column(db.String(100), nullable=False)  # Germany, Spain, etc.
-    country_flag = db.Column(db.String(10), nullable=True)  # 🇩🇪, 🇪🇸, etc.
+    country_code = db.Column(db.String(3), nullable=False)
+    country_name = db.Column(db.String(100), nullable=False)
+    country_flag = db.Column(db.String(10), nullable=True)
     
     # Age category
-    age_category = db.Column(db.String(10), nullable=False)  # +19, +50
+    age_category = db.Column(db.String(10), nullable=False)
     
     # Team limits
     min_men = db.Column(db.Integer, default=2)
@@ -251,7 +250,7 @@ class PCLTeam(db.Model):
     captain_token = db.Column(db.String(64), unique=True, nullable=False)
     
     # Status
-    status = db.Column(db.String(20), default='incomplete')  # incomplete, complete, confirmed
+    status = db.Column(db.String(20), default='incomplete')
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -309,28 +308,28 @@ class PCLRegistration(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     team_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False)
-    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)  # Link to base player (optional)
+    player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
     
     # Personal info (required)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(120), nullable=False)
+    email = db.Column(db.String(120), nullable=True)  # Made optional for quick add
     phone = db.Column(db.String(20), nullable=True)
     
     # Demographics
-    gender = db.Column(db.String(10), nullable=False)  # male, female
+    gender = db.Column(db.String(10), nullable=False)
     birth_year = db.Column(db.Integer, nullable=True)
     
     # Role
     is_captain = db.Column(db.Boolean, default=False)
     
-    # Shirt info (required)
-    shirt_name = db.Column(db.String(50), nullable=False)  # Name on shirt
-    shirt_size = db.Column(db.String(10), nullable=False)  # XS, S, M, L, XL, XXL
+    # Shirt info (can be filled later)
+    shirt_name = db.Column(db.String(50), nullable=True)
+    shirt_size = db.Column(db.String(10), nullable=True)
     
-    # Profile (required)
-    photo_filename = db.Column(db.String(255), nullable=True)  # Uploaded photo
-    bio = db.Column(db.Text, nullable=True)  # Short bio
+    # Profile (can be filled later)
+    photo_filename = db.Column(db.String(255), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
     
     # Social Media (optional)
     instagram = db.Column(db.String(100), nullable=True)
@@ -339,17 +338,20 @@ class PCLRegistration(db.Model):
     twitter = db.Column(db.String(100), nullable=True)
     
     # Optional extras
-    video_url = db.Column(db.String(500), nullable=True)  # Highlight video
+    video_url = db.Column(db.String(500), nullable=True)
     dupr_rating = db.Column(db.String(10), nullable=True)
     
     # Registration status
-    status = db.Column(db.String(20), default='incomplete')  # incomplete, complete, confirmed
+    status = db.Column(db.String(20), default='incomplete')
+    
+    # ========== NEW: Profile completion token ==========
+    profile_token = db.Column(db.String(64), unique=True, nullable=True)
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Language preference (for emails/notifications)
+    # Language preference
     preferred_language = db.Column(db.String(10), default='EN')
     
     # Relationships
@@ -359,12 +361,23 @@ class PCLRegistration(db.Model):
     def __repr__(self):
         return f'<PCLRegistration {self.first_name} {self.last_name}>'
     
+    # ========== NEW: Token methods ==========
+    def generate_profile_token(self):
+        """Generate a unique token for profile completion"""
+        self.profile_token = secrets.token_urlsafe(32)
+        return self.profile_token
+    
+    def get_profile_url(self, base_url='https://pickleballconnect.eu'):
+        """Get the profile completion URL"""
+        if not self.profile_token:
+            self.generate_profile_token()
+        return f"{base_url}/pcl/complete/{self.profile_token}"
+    
     def check_completeness(self):
         """Check if registration is complete and update status"""
         required_fields = [
             self.first_name,
             self.last_name,
-            self.email,
             self.gender,
             self.shirt_name,
             self.shirt_size,
@@ -392,6 +405,17 @@ class PCLRegistration(db.Model):
             missing.append('shirt_size')
         return missing
     
+    def get_missing_fields_translated(self, lang='EN'):
+        """Get translated list of missing fields"""
+        translations = {
+            'EN': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Shirt Name', 'shirt_size': 'Shirt Size'},
+            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Shirt-Name', 'shirt_size': 'Shirt-Größe'},
+            'ES': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Nombre camiseta', 'shirt_size': 'Talla'},
+            'FR': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Nom maillot', 'shirt_size': 'Taille'}
+        }
+        t = translations.get(lang, translations['EN'])
+        return [t.get(f, f) for f in self.get_missing_fields()]
+    
     def get_display_name(self):
         """Get formatted display name"""
         return f"{self.first_name} {self.last_name}"
@@ -414,7 +438,7 @@ class PCLRegistration(db.Model):
 
 
 # ============================================================================
-# COACHING MODELS (for future use)
+# COACHING MODELS
 # ============================================================================
 
 class Workshop(db.Model):
@@ -423,8 +447,8 @@ class Workshop(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    workshop_type = db.Column(db.String(50), default='workshop')  # workshop, clinic
-    topic = db.Column(db.String(200), nullable=True)  # e.g., "Dink & Kitchen Play"
+    workshop_type = db.Column(db.String(50), default='workshop')
+    topic = db.Column(db.String(200), nullable=True)
     
     date = db.Column(db.Date, nullable=False)
     location = db.Column(db.String(200), nullable=False)
@@ -447,7 +471,6 @@ class WorkshopParticipant(db.Model):
     workshop_id = db.Column(db.Integer, db.ForeignKey('workshop.id'), nullable=False)
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=False)
     
-    # Coaching notes for this specific workshop
     notes = db.Column(db.Text, nullable=True)
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -468,12 +491,10 @@ class VideoLibrary(db.Model):
     title = db.Column(db.String(200), nullable=False)
     youtube_url = db.Column(db.String(500), nullable=False)
     
-    # Category matches weakness categories
-    category = db.Column(db.String(50), nullable=False)  # dink_control, serve, footwork, etc.
+    category = db.Column(db.String(50), nullable=False)
     
     description = db.Column(db.Text, nullable=True)
     
-    # Multi-language support
     language = db.Column(db.String(10), default='EN')
     
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -482,7 +503,10 @@ class VideoLibrary(db.Model):
         return f'<Video {self.title}>'
 
 
-# Weakness categories as constant
+# ============================================================================
+# CONSTANTS
+# ============================================================================
+
 WEAKNESS_CATEGORIES = [
     ('dink_control', 'Dink Control'),
     ('third_shot_drop', 'Third Shot Drop'),

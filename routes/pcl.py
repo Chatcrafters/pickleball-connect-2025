@@ -3,13 +3,14 @@ from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SI
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
+from utils.whatsapp import send_whatsapp_message
 import os
 import csv
 import io
 
 pcl = Blueprint('pcl', __name__)
 
-# Configuration for file uploads (kept for fallback)
+# Configuration for file uploads
 UPLOAD_FOLDER = 'static/uploads/pcl'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
@@ -19,7 +20,7 @@ def allowed_file(filename):
 
 
 # ============================================================================
-# TRANSLATIONS
+# TRANSLATIONS (Fixed UTF-8 + Quick Add Extensions)
 # ============================================================================
 
 TRANSLATIONS = {
@@ -30,7 +31,8 @@ TRANSLATIONS = {
         'first_name': 'First Name',
         'last_name': 'Last Name',
         'email': 'Email',
-        'phone': 'Phone (optional)',
+        'phone': 'Phone',
+        'phone_help': 'With country code (+49, +34, etc.)',
         'gender': 'Gender',
         'male': 'Male',
         'female': 'Female',
@@ -40,14 +42,16 @@ TRANSLATIONS = {
         'captain': 'Captain',
         'shirt_info': 'Shirt Information',
         'shirt_name': 'Name on Shirt',
-        'shirt_name_help': 'How your name appears on the jersey',
+        'shirt_name_help': 'How your name appears on the jersey (max 15 chars)',
         'shirt_size': 'Shirt Size',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
+        'upload_photo': 'Upload Photo',
         'bio': 'Short Bio',
         'bio_placeholder': 'Tell us about yourself, your pickleball journey...',
-        'social_media': 'Social Media (optional)',
+        'bio_help': 'Tell us about yourself (50-500 characters)',
+        'social_media': 'Social Media',
         'optional_info': 'Optional Information',
         'video_url': 'Video URL (Highlight Reel)',
         'dupr_rating': 'DUPR Rating',
@@ -56,6 +60,8 @@ TRANSLATIONS = {
         'submit': 'Register',
         'update': 'Update Registration',
         'required': 'Required',
+        'optional': 'Optional',
+        'select': 'Select',
         'success_title': 'Registration Complete!',
         'success_message': 'Thank you for registering for PCL.',
         'missing_fields': 'Please complete all required fields',
@@ -63,94 +69,164 @@ TRANSLATIONS = {
         'team_status': 'Team Status',
         'registration_link': 'Registration Link for Players',
         'copy_link': 'Copy Link',
-        'players_registered': 'Players Registered',
+        'link_copied': 'Link copied!',
+        'players_registered': 'Players',
         'men': 'Men',
         'women': 'Women',
         'complete': 'Complete',
         'incomplete': 'Incomplete',
         'photo_missing': 'Photo missing',
-        'deadline': 'Registration Deadline',
+        'deadline': 'Deadline',
         'days_left': 'days left',
         'send_reminder': 'Send Reminder',
         'export_data': 'Export Team Data',
+        'missing': 'Missing',
+        'no_players': 'No players yet',
+        'requirements': 'Requirements',
+        'team_size': 'Team Size',
+        'required_per_player': 'Required per Player',
+        'captain_link_warning': 'This link is only for you as captain. Do not share!',
+        # Quick Add specific
+        'quick_add_title': 'Quick Add Player',
+        'quick_add_player': 'Add Player',
+        'quick_add_info': 'The player will complete their profile via WhatsApp link',
+        'add_player': 'Add Player',
+        'back_to_dashboard': 'Back to Dashboard',
+        'send_link_now': 'Send WhatsApp link immediately',
+        'send_link_help': 'Player receives a link to complete their profile',
+        'phone_invalid': 'Please enter a valid phone number with country code',
+        'quick_actions': 'Quick Actions',
+        'send_all_links': 'Send All Links',
+        'send_all_confirm': 'Send links to all incomplete players?',
+        'player_added': 'Player added successfully!',
+        'player_added_whatsapp': 'Player added and WhatsApp sent!',
+        'whatsapp_sent': 'WhatsApp sent!',
+        'whatsapp_failed': 'WhatsApp could not be sent',
+        # Complete Profile specific
+        'complete_profile_title': 'Complete Your Profile',
+        'hello': 'Hello',
+        'profile_progress': 'Profile Progress',
+        'save_profile': 'Save Profile',
+        'profile_saved': 'Profile saved successfully!',
+        'data_protection': 'Your data is securely stored',
+        'contact': 'Contact',
     },
     'DE': {
         'page_title': 'PCL Spieler-Registrierung',
         'team': 'Team',
-        'personal_info': 'PersÃƒÂ¶nliche Informationen',
+        'personal_info': 'Persönliche Informationen',
         'first_name': 'Vorname',
         'last_name': 'Nachname',
         'email': 'E-Mail',
-        'phone': 'Telefon (optional)',
+        'phone': 'Telefon',
+        'phone_help': 'Mit Ländervorwahl (+49, +34, etc.)',
         'gender': 'Geschlecht',
-        'male': 'MÃƒÂ¤nnlich',
+        'male': 'Männlich',
         'female': 'Weiblich',
         'birth_year': 'Geburtsjahr',
         'role': 'Rolle',
         'player': 'Spieler',
-        'captain': 'KapitÃƒÂ¤n',
+        'captain': 'Kapitän',
         'shirt_info': 'Shirt-Informationen',
         'shirt_name': 'Name auf dem Shirt',
-        'shirt_name_help': 'So erscheint dein Name auf dem Trikot',
-        'shirt_size': 'Shirt-GrÃƒÂ¶ÃƒÅ¸e',
+        'shirt_name_help': 'So erscheint dein Name auf dem Trikot (max 15 Zeichen)',
+        'shirt_size': 'Shirt-Größe',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
+        'upload_photo': 'Foto hochladen',
         'bio': 'Kurze Bio',
-        'bio_placeholder': 'ErzÃƒÂ¤hl uns von dir und deiner Pickleball-Reise...',
-        'social_media': 'Social Media (optional)',
+        'bio_placeholder': 'Erzähl uns von dir und deiner Pickleball-Reise...',
+        'bio_help': 'Erzähl uns von dir (50-500 Zeichen)',
+        'social_media': 'Social Media',
         'optional_info': 'Optionale Informationen',
         'video_url': 'Video-URL (Highlight-Video)',
         'dupr_rating': 'DUPR Rating',
         'language': 'Bevorzugte Sprache',
-        'privacy_accept': 'Ich stimme der Datenverarbeitung fÃƒÂ¼r die PCL-Registrierung zu',
+        'privacy_accept': 'Ich stimme der Datenverarbeitung für die PCL-Registrierung zu',
         'submit': 'Registrieren',
         'update': 'Registrierung aktualisieren',
-        'required': 'Pflichtfeld',
+        'required': 'Pflicht',
+        'optional': 'Optional',
+        'select': 'Auswählen',
         'success_title': 'Registrierung erfolgreich!',
-        'success_message': 'Danke fÃƒÂ¼r deine Registrierung zur PCL.',
-        'missing_fields': 'Bitte fÃƒÂ¼lle alle Pflichtfelder aus',
-        'captain_dashboard': 'KapitÃƒÂ¤n Dashboard',
+        'success_message': 'Danke für deine Registrierung zur PCL.',
+        'missing_fields': 'Bitte fülle alle Pflichtfelder aus',
+        'captain_dashboard': 'Kapitän Dashboard',
         'team_status': 'Team-Status',
-        'registration_link': 'Registrierungslink fÃƒÂ¼r Spieler',
+        'registration_link': 'Registrierungslink für Spieler',
         'copy_link': 'Link kopieren',
-        'players_registered': 'Registrierte Spieler',
-        'men': 'MÃƒÂ¤nner',
+        'link_copied': 'Link kopiert!',
+        'players_registered': 'Spieler',
+        'men': 'Männer',
         'women': 'Frauen',
-        'complete': 'VollstÃƒÂ¤ndig',
-        'incomplete': 'UnvollstÃƒÂ¤ndig',
+        'complete': 'Vollständig',
+        'incomplete': 'Unvollständig',
         'photo_missing': 'Foto fehlt',
-        'deadline': 'Anmeldeschluss',
-        'days_left': 'Tage verbleibend',
+        'deadline': 'Deadline',
+        'days_left': 'Tage übrig',
         'send_reminder': 'Erinnerung senden',
         'export_data': 'Team-Daten exportieren',
+        'missing': 'Fehlt',
+        'no_players': 'Noch keine Spieler',
+        'requirements': 'Anforderungen',
+        'team_size': 'Teamgröße',
+        'required_per_player': 'Pro Spieler erforderlich',
+        'captain_link_warning': 'Dieser Link ist nur für dich als Kapitän. Nicht teilen!',
+        # Quick Add specific
+        'quick_add_title': 'Spieler schnell hinzufügen',
+        'quick_add_player': 'Spieler hinzufügen',
+        'quick_add_info': 'Der Spieler vervollständigt sein Profil über den WhatsApp-Link',
+        'add_player': 'Spieler hinzufügen',
+        'back_to_dashboard': 'Zurück zum Dashboard',
+        'send_link_now': 'WhatsApp-Link sofort senden',
+        'send_link_help': 'Spieler erhält Link zur Profil-Vervollständigung',
+        'phone_invalid': 'Bitte gültige Telefonnummer mit Ländervorwahl eingeben',
+        'quick_actions': 'Schnellaktionen',
+        'send_all_links': 'Alle Links senden',
+        'send_all_confirm': 'Links an alle unvollständigen Spieler senden?',
+        'player_added': 'Spieler erfolgreich hinzugefügt!',
+        'player_added_whatsapp': 'Spieler hinzugefügt und WhatsApp gesendet!',
+        'whatsapp_sent': 'WhatsApp gesendet!',
+        'whatsapp_failed': 'WhatsApp konnte nicht gesendet werden',
+        # Complete Profile specific
+        'complete_profile_title': 'Profil vervollständigen',
+        'hello': 'Hallo',
+        'profile_progress': 'Profil-Fortschritt',
+        'save_profile': 'Profil speichern',
+        'profile_saved': 'Profil erfolgreich gespeichert!',
+        'data_protection': 'Deine Daten werden sicher gespeichert',
+        'contact': 'Kontakt',
     },
     'ES': {
         'page_title': 'Registro de Jugadores PCL',
         'team': 'Equipo',
-        'personal_info': 'InformaciÃƒÂ³n Personal',
+        'personal_info': 'Información Personal',
         'first_name': 'Nombre',
         'last_name': 'Apellido',
-        'email': 'Correo electrÃƒÂ³nico',
-        'phone': 'TelÃƒÂ©fono (opcional)',
-        'gender': 'GÃƒÂ©nero',
+        'email': 'Correo electrónico',
+        'phone': 'Teléfono',
+        'phone_help': 'Con código de país (+34, +49, etc.)',
+        'gender': 'Género',
         'male': 'Masculino',
         'female': 'Femenino',
-        'birth_year': 'AÃƒÂ±o de nacimiento',
+        'birth_year': 'Año de nacimiento',
         'role': 'Rol',
         'player': 'Jugador',
-        'captain': 'CapitÃƒÂ¡n',
-        'shirt_info': 'InformaciÃƒÂ³n de la Camiseta',
+        'captain': 'Capitán',
+        'shirt_info': 'Información de la Camiseta',
         'shirt_name': 'Nombre en la camiseta',
-        'shirt_name_help': 'AsÃƒÂ­ aparecerÃƒÂ¡ tu nombre en la camiseta',
+        'shirt_name_help': 'Así aparecerá tu nombre (máx 15 caracteres)',
         'shirt_size': 'Talla de camiseta',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
-        'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
-        'bio': 'BiografÃƒÂ­a breve',
-        'bio_placeholder': 'CuÃƒÂ©ntanos sobre ti y tu viaje en pickleball...',
-        'social_media': 'Redes Sociales (opcional)',
-        'optional_info': 'InformaciÃƒÂ³n Opcional',
+        'photo_help': 'Obligatorio. JPG, PNG, máx 5MB. Formato cuadrado recomendado.',
+        'upload_photo': 'Subir foto',
+        'bio': 'Biografía breve',
+        'bio_placeholder': 'Cuéntanos sobre ti y tu viaje en pickleball...',
+        'bio_help': 'Cuéntanos sobre ti (50-500 caracteres)',
+        'social_media': 'Redes Sociales',
+        'optional_info': 'Información Opcional',
         'video_url': 'URL del Video (Highlights)',
         'dupr_rating': 'Rating DUPR',
         'language': 'Idioma preferido',
@@ -158,80 +234,248 @@ TRANSLATIONS = {
         'submit': 'Registrarse',
         'update': 'Actualizar registro',
         'required': 'Obligatorio',
-        'success_title': 'Ã‚Â¡Registro completado!',
+        'optional': 'Opcional',
+        'select': 'Seleccionar',
+        'success_title': '¡Registro completado!',
         'success_message': 'Gracias por registrarte en PCL.',
         'missing_fields': 'Por favor completa todos los campos obligatorios',
-        'captain_dashboard': 'Panel del CapitÃƒÂ¡n',
+        'captain_dashboard': 'Panel del Capitán',
         'team_status': 'Estado del Equipo',
         'registration_link': 'Enlace de registro para jugadores',
         'copy_link': 'Copiar enlace',
-        'players_registered': 'Jugadores registrados',
+        'link_copied': '¡Enlace copiado!',
+        'players_registered': 'Jugadores',
         'men': 'Hombres',
         'women': 'Mujeres',
         'complete': 'Completo',
         'incomplete': 'Incompleto',
         'photo_missing': 'Falta foto',
-        'deadline': 'Fecha lÃƒÂ­mite',
-        'days_left': 'dÃƒÂ­as restantes',
+        'deadline': 'Fecha límite',
+        'days_left': 'días restantes',
         'send_reminder': 'Enviar recordatorio',
         'export_data': 'Exportar datos del equipo',
+        'missing': 'Falta',
+        'no_players': 'Sin jugadores todavía',
+        'requirements': 'Requisitos',
+        'team_size': 'Tamaño del equipo',
+        'required_per_player': 'Requerido por jugador',
+        'captain_link_warning': '¡Este enlace es solo para ti como capitán. No compartir!',
+        # Quick Add specific
+        'quick_add_title': 'Añadir jugador rápido',
+        'quick_add_player': 'Añadir jugador',
+        'quick_add_info': 'El jugador completará su perfil a través del enlace de WhatsApp',
+        'add_player': 'Añadir jugador',
+        'back_to_dashboard': 'Volver al panel',
+        'send_link_now': 'Enviar enlace WhatsApp ahora',
+        'send_link_help': 'El jugador recibirá un enlace para completar su perfil',
+        'phone_invalid': 'Por favor ingresa un número válido con código de país',
+        'quick_actions': 'Acciones rápidas',
+        'send_all_links': 'Enviar todos los enlaces',
+        'send_all_confirm': '¿Enviar enlaces a todos los jugadores incompletos?',
+        'player_added': '¡Jugador añadido exitosamente!',
+        'player_added_whatsapp': '¡Jugador añadido y WhatsApp enviado!',
+        'whatsapp_sent': '¡WhatsApp enviado!',
+        'whatsapp_failed': 'No se pudo enviar WhatsApp',
+        # Complete Profile specific
+        'complete_profile_title': 'Completa tu perfil',
+        'hello': 'Hola',
+        'profile_progress': 'Progreso del perfil',
+        'save_profile': 'Guardar perfil',
+        'profile_saved': '¡Perfil guardado exitosamente!',
+        'data_protection': 'Tus datos están almacenados de forma segura',
+        'contact': 'Contacto',
     },
     'FR': {
         'page_title': 'Inscription Joueur PCL',
-        'team': 'Ãƒâ€°quipe',
+        'team': 'Équipe',
         'personal_info': 'Informations Personnelles',
-        'first_name': 'PrÃƒÂ©nom',
+        'first_name': 'Prénom',
         'last_name': 'Nom',
         'email': 'E-mail',
-        'phone': 'TÃƒÂ©lÃƒÂ©phone (optionnel)',
+        'phone': 'Téléphone',
+        'phone_help': 'Avec indicatif pays (+33, +49, etc.)',
         'gender': 'Genre',
         'male': 'Homme',
         'female': 'Femme',
-        'birth_year': 'AnnÃƒÂ©e de naissance',
-        'role': 'RÃƒÂ´le',
+        'birth_year': 'Année de naissance',
+        'role': 'Rôle',
         'player': 'Joueur',
         'captain': 'Capitaine',
         'shirt_info': 'Informations Maillot',
         'shirt_name': 'Nom sur le maillot',
-        'shirt_name_help': 'Comment votre nom apparaÃƒÂ®tra sur le maillot',
+        'shirt_name_help': 'Comment votre nom apparaîtra (max 15 caractères)',
         'shirt_size': 'Taille du maillot',
         'profile': 'Profil',
         'photo': 'Photo de profil',
-        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃƒÂ© recommandÃƒÂ©.',
+        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carré recommandé.',
+        'upload_photo': 'Télécharger photo',
         'bio': 'Courte bio',
         'bio_placeholder': 'Parlez-nous de vous et de votre parcours pickleball...',
-        'social_media': 'RÃƒÂ©seaux Sociaux (optionnel)',
+        'bio_help': 'Parlez-nous de vous (50-500 caractères)',
+        'social_media': 'Réseaux Sociaux',
         'optional_info': 'Informations Optionnelles',
-        'video_url': 'URL VidÃƒÂ©o (Highlights)',
+        'video_url': 'URL Vidéo (Highlights)',
         'dupr_rating': 'Rating DUPR',
-        'language': 'Langue prÃƒÂ©fÃƒÂ©rÃƒÂ©e',
-        'privacy_accept': "J'accepte le traitement des donnÃƒÂ©es pour l'inscription PCL",
+        'language': 'Langue préférée',
+        'privacy_accept': "J'accepte le traitement des données pour l'inscription PCL",
         'submit': "S'inscrire",
-        'update': "Mettre ÃƒÂ  jour l'inscription",
+        'update': "Mettre à jour l'inscription",
         'required': 'Obligatoire',
-        'success_title': 'Inscription rÃƒÂ©ussie!',
-        'success_message': 'Merci pour votre inscription ÃƒÂ  PCL.',
+        'optional': 'Optionnel',
+        'select': 'Sélectionner',
+        'success_title': 'Inscription réussie!',
+        'success_message': 'Merci pour votre inscription à PCL.',
         'missing_fields': 'Veuillez remplir tous les champs obligatoires',
         'captain_dashboard': 'Tableau de bord Capitaine',
-        'team_status': "Statut de l'ÃƒÂ©quipe",
+        'team_status': "Statut de l'équipe",
         'registration_link': "Lien d'inscription pour les joueurs",
         'copy_link': 'Copier le lien',
-        'players_registered': 'Joueurs inscrits',
+        'link_copied': 'Lien copié!',
+        'players_registered': 'Joueurs',
         'men': 'Hommes',
         'women': 'Femmes',
         'complete': 'Complet',
         'incomplete': 'Incomplet',
         'photo_missing': 'Photo manquante',
-        'deadline': "Date limite d'inscription",
+        'deadline': 'Date limite',
         'days_left': 'jours restants',
         'send_reminder': 'Envoyer un rappel',
-        'export_data': "Exporter les donnÃƒÂ©es de l'ÃƒÂ©quipe",
+        'export_data': "Exporter les données de l'équipe",
+        'missing': 'Manquant',
+        'no_players': 'Pas encore de joueurs',
+        'requirements': 'Exigences',
+        'team_size': "Taille de l'équipe",
+        'required_per_player': 'Requis par joueur',
+        'captain_link_warning': 'Ce lien est uniquement pour vous en tant que capitaine. Ne pas partager!',
+        # Quick Add specific
+        'quick_add_title': 'Ajouter un joueur rapidement',
+        'quick_add_player': 'Ajouter un joueur',
+        'quick_add_info': 'Le joueur complétera son profil via le lien WhatsApp',
+        'add_player': 'Ajouter joueur',
+        'back_to_dashboard': 'Retour au tableau de bord',
+        'send_link_now': 'Envoyer le lien WhatsApp maintenant',
+        'send_link_help': 'Le joueur recevra un lien pour compléter son profil',
+        'phone_invalid': 'Veuillez entrer un numéro valide avec indicatif pays',
+        'quick_actions': 'Actions rapides',
+        'send_all_links': 'Envoyer tous les liens',
+        'send_all_confirm': 'Envoyer les liens à tous les joueurs incomplets?',
+        'player_added': 'Joueur ajouté avec succès!',
+        'player_added_whatsapp': 'Joueur ajouté et WhatsApp envoyé!',
+        'whatsapp_sent': 'WhatsApp envoyé!',
+        'whatsapp_failed': "Impossible d'envoyer WhatsApp",
+        # Complete Profile specific
+        'complete_profile_title': 'Complétez votre profil',
+        'hello': 'Bonjour',
+        'profile_progress': 'Progression du profil',
+        'save_profile': 'Enregistrer le profil',
+        'profile_saved': 'Profil enregistré avec succès!',
+        'data_protection': 'Vos données sont stockées en toute sécurité',
+        'contact': 'Contact',
     }
 }
 
 def get_translations(lang='EN'):
     """Get translations for a language, fallback to EN"""
     return TRANSLATIONS.get(lang, TRANSLATIONS['EN'])
+
+
+# ============================================================================
+# WHATSAPP MESSAGE TEMPLATES FOR PROFILE COMPLETION
+# ============================================================================
+
+def get_profile_completion_message(registration, profile_url, lang='EN'):
+    """Get WhatsApp message for profile completion in the specified language"""
+    
+    team = registration.team
+    tournament = team.tournament
+    
+    messages = {
+        'EN': f"""🏓 PCL {tournament.name}
+
+Hi {registration.first_name}! 👋
+
+You've been added to Team {team.country_flag} {team.country_name} ({team.age_category}).
+
+Please complete your profile:
+👉 {profile_url}
+
+Required:
+✓ Profile photo
+✓ Shirt name & size
+✓ Short bio
+
+⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Questions? Contact your team captain.
+
+See you on the court! 🎾
+WPC Series Europe""",
+
+        'DE': f"""🏓 PCL {tournament.name}
+
+Hallo {registration.first_name}! 👋
+
+Du wurdest zu Team {team.country_flag} {team.country_name} ({team.age_category}) hinzugefügt.
+
+Bitte vervollständige dein Profil:
+👉 {profile_url}
+
+Erforderlich:
+✓ Profilbild
+✓ Shirt-Name & Größe
+✓ Kurze Bio
+
+⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Fragen? Kontaktiere deinen Team-Kapitän.
+
+Bis bald auf dem Court! 🎾
+WPC Series Europe""",
+
+        'ES': f"""🏓 PCL {tournament.name}
+
+¡Hola {registration.first_name}! 👋
+
+Has sido añadido al equipo {team.country_flag} {team.country_name} ({team.age_category}).
+
+Por favor completa tu perfil:
+👉 {profile_url}
+
+Requerido:
+✓ Foto de perfil
+✓ Nombre y talla de camiseta
+✓ Breve biografía
+
+⏰ Fecha límite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+¿Preguntas? Contacta a tu capitán.
+
+¡Nos vemos en la cancha! 🎾
+WPC Series Europe""",
+
+        'FR': f"""🏓 PCL {tournament.name}
+
+Bonjour {registration.first_name}! 👋
+
+Vous avez été ajouté à l'équipe {team.country_flag} {team.country_name} ({team.age_category}).
+
+Veuillez compléter votre profil:
+👉 {profile_url}
+
+Requis:
+✓ Photo de profil
+✓ Nom et taille du maillot
+✓ Courte bio
+
+⏰ Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+
+Questions? Contactez votre capitaine.
+
+À bientôt sur le court! 🎾
+WPC Series Europe"""
+    }
+    
+    return messages.get(lang, messages['EN'])
 
 
 # ============================================================================
@@ -275,7 +519,6 @@ def admin_tournament_detail(tournament_id):
     """Admin view of a tournament with all teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
     
-    # Group teams by age category
     teams_19 = tournament.teams.filter_by(age_category='+19').order_by(PCLTeam.country_name).all()
     teams_50 = tournament.teams.filter_by(age_category='+50').order_by(PCLTeam.country_name).all()
     
@@ -298,7 +541,7 @@ def add_team(tournament_id):
             tournament_id=tournament.id,
             country_code=country_code,
             country_name=request.form['country_name'],
-            country_flag=COUNTRY_FLAGS.get(country_code, 'Ã°Å¸ÂÂ³Ã¯Â¸Â'),
+            country_flag=COUNTRY_FLAGS.get(country_code, '🏳️'),
             age_category=request.form['age_category'],
             min_men=int(request.form.get('min_men', 2)),
             max_men=int(request.form.get('max_men', 4)),
@@ -351,8 +594,8 @@ def export_team_data(team_id):
     
     for reg in team.registrations.all():
         writer.writerow([
-            reg.first_name, reg.last_name, reg.email, reg.phone or '', reg.gender, reg.birth_year or '',
-            'Yes' if reg.is_captain else 'No', reg.shirt_name, reg.shirt_size, reg.bio or '',
+            reg.first_name, reg.last_name, reg.email or '', reg.phone or '', reg.gender, reg.birth_year or '',
+            'Yes' if reg.is_captain else 'No', reg.shirt_name or '', reg.shirt_size or '', reg.bio or '',
             reg.instagram or '', reg.tiktok or '', reg.youtube or '', reg.twitter or '',
             reg.dupr_rating or '', reg.status, reg.photo_filename or ''
         ])
@@ -382,8 +625,8 @@ def export_shirt_list(tournament_id):
             writer.writerow([
                 f"{team.country_flag} {team.country_name}",
                 team.age_category,
-                reg.shirt_name,
-                reg.shirt_size,
+                reg.shirt_name or '',
+                reg.shirt_size or '',
                 f"{reg.first_name} {reg.last_name}"
             ])
     
@@ -419,6 +662,7 @@ def captain_dashboard(token):
     days_left = (team.tournament.registration_deadline - datetime.now()).days
     
     registration_url = request.host_url.rstrip('/') + url_for('pcl.player_register', token=token)
+    quick_add_url = request.host_url.rstrip('/') + url_for('pcl.quick_add_player', token=token)
     
     return render_template('pcl/captain_dashboard.html',
                          team=team,
@@ -427,12 +671,255 @@ def captain_dashboard(token):
                          women=women,
                          days_left=days_left,
                          registration_url=registration_url,
+                         quick_add_url=quick_add_url,
                          t=t,
                          current_lang=lang)
 
 
 # ============================================================================
-# PLAYER REGISTRATION ROUTES (with Supabase Storage)
+# QUICK ADD PLAYER (NEW!)
+# ============================================================================
+
+@pcl.route('/team/<token>/quick-add', methods=['GET', 'POST'])
+def quick_add_player(token):
+    """Quick add player - minimal form for captains"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    
+    lang = request.args.get('lang', request.form.get('preferred_language', 'EN')).upper()
+    if lang not in TRANSLATIONS:
+        lang = 'EN'
+    
+    t = get_translations(lang)
+    stats = team.get_stats()
+    
+    # Check deadline
+    if datetime.now() > team.tournament.registration_deadline:
+        flash('Registration is closed.', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+    
+    if request.method == 'POST':
+        first_name = request.form.get('first_name', '').strip()
+        last_name = request.form.get('last_name', '').strip()
+        phone = request.form.get('phone', '').strip()
+        gender = request.form.get('gender')
+        preferred_language = request.form.get('preferred_language', lang)
+        send_whatsapp = request.form.get('send_whatsapp') == 'on'
+        
+        # Validate
+        if not first_name or not last_name or not phone or not gender:
+            flash(t['missing_fields'], 'danger')
+            return redirect(url_for('pcl.quick_add_player', token=token, lang=lang))
+        
+        # Normalize phone number
+        phone = phone.replace(' ', '').replace('-', '')
+        if not phone.startswith('+'):
+            phone = '+' + phone
+        
+        # Create registration with minimal data
+        registration = PCLRegistration(
+            team_id=team.id,
+            first_name=first_name,
+            last_name=last_name,
+            phone=phone,
+            gender=gender,
+            preferred_language=preferred_language,
+            status='incomplete'
+        )
+        
+        # Generate profile token
+        registration.generate_profile_token()
+        
+        try:
+            db.session.add(registration)
+            db.session.commit()
+            
+            # Send WhatsApp if requested
+            if send_whatsapp and phone:
+                profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
+                message = get_profile_completion_message(registration, profile_url, preferred_language)
+                
+                result = send_whatsapp_message(phone, message, test_mode=False)
+                
+                if result.get('status') in ['sent', 'queued']:
+                    flash(t['player_added_whatsapp'], 'success')
+                else:
+                    flash(f"{t['player_added']} ({t['whatsapp_failed']})", 'warning')
+            else:
+                flash(t['player_added'], 'success')
+            
+            return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+    
+    return render_template('pcl/quick_add_player.html',
+                         team=team,
+                         stats=stats,
+                         t=t,
+                         current_lang=lang)
+
+
+# ============================================================================
+# COMPLETE PROFILE (PUBLIC - via profile_token)
+# ============================================================================
+
+@pcl.route('/complete/<profile_token>', methods=['GET', 'POST'])
+def complete_profile(profile_token):
+    """Public profile completion page - accessed via WhatsApp link"""
+    registration = PCLRegistration.query.filter_by(profile_token=profile_token).first_or_404()
+    team = registration.team
+    
+    lang = request.args.get('lang', registration.preferred_language or 'EN').upper()
+    if lang not in TRANSLATIONS:
+        lang = 'EN'
+    
+    t = get_translations(lang)
+    
+    # Calculate completion percentage
+    missing_fields = registration.get_missing_fields()
+    total_required = 4  # photo, shirt_name, shirt_size, bio
+    completed = total_required - len(missing_fields)
+    completion_percent = int((completed / total_required) * 100)
+    
+    if request.method == 'POST':
+        # Handle photo upload
+        if 'photo' in request.files:
+            file = request.files['photo']
+            if file and file.filename and allowed_file(file.filename):
+                result = upload_photo_to_supabase(file, folder='players')
+                if result['success']:
+                    registration.photo_filename = result['url']
+                else:
+                    flash(f'Photo upload failed: {result["error"]}', 'warning')
+        
+        # Update fields
+        registration.shirt_name = request.form.get('shirt_name', '').strip().upper()[:15] or registration.shirt_name
+        registration.shirt_size = request.form.get('shirt_size') or registration.shirt_size
+        registration.bio = request.form.get('bio', '').strip() or registration.bio
+        registration.email = request.form.get('email', '').strip() or registration.email
+        registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else registration.birth_year
+        registration.instagram = request.form.get('instagram', '').strip().replace('@', '') or registration.instagram
+        registration.tiktok = request.form.get('tiktok', '').strip().replace('@', '') or registration.tiktok
+        registration.youtube = request.form.get('youtube', '').strip() or registration.youtube
+        registration.twitter = request.form.get('twitter', '').strip().replace('@', '') or registration.twitter
+        registration.dupr_rating = request.form.get('dupr_rating', '').strip() or registration.dupr_rating
+        registration.video_url = request.form.get('video_url', '').strip() or registration.video_url
+        
+        # Check completeness
+        registration.check_completeness()
+        
+        try:
+            db.session.commit()
+            flash(t['profile_saved'], 'success')
+            return redirect(url_for('pcl.complete_profile', profile_token=profile_token, lang=lang))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+    
+    return render_template('pcl/complete_profile.html',
+                         registration=registration,
+                         team=team,
+                         shirt_sizes=SHIRT_SIZES,
+                         missing_fields=missing_fields,
+                         completion_percent=completion_percent,
+                         t=t,
+                         current_lang=lang)
+
+
+# ============================================================================
+# SEND PROFILE LINKS (WhatsApp)
+# ============================================================================
+
+@pcl.route('/team/<token>/send-link/<int:registration_id>', methods=['POST'])
+def send_single_profile_link(token, registration_id):
+    """Send profile completion link to a single player"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    registration = PCLRegistration.query.get_or_404(registration_id)
+    
+    # Verify registration belongs to this team
+    if registration.team_id != team.id:
+        flash('Invalid request!', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token))
+    
+    lang = request.args.get('lang', registration.preferred_language or 'EN')
+    t = get_translations(lang)
+    
+    if not registration.phone:
+        flash(f'{registration.first_name}: No phone number!', 'warning')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+    
+    # Generate token if not exists
+    if not registration.profile_token:
+        registration.generate_profile_token()
+        db.session.commit()
+    
+    # Build URL and send
+    profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
+    message = get_profile_completion_message(registration, profile_url, registration.preferred_language or 'EN')
+    
+    result = send_whatsapp_message(registration.phone, message, test_mode=False)
+    
+    if result.get('status') in ['sent', 'queued']:
+        flash(f'{registration.first_name}: {t["whatsapp_sent"]}', 'success')
+    else:
+        flash(f'{registration.first_name}: {t["whatsapp_failed"]}', 'danger')
+    
+    return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+
+@pcl.route('/team/<token>/send-all-links', methods=['POST'])
+def send_all_profile_links(token):
+    """Send profile completion links to all incomplete players"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    
+    lang = request.args.get('lang', 'EN')
+    t = get_translations(lang)
+    
+    sent_count = 0
+    error_count = 0
+    
+    # Get all incomplete registrations with phone numbers
+    incomplete = team.registrations.filter(
+        PCLRegistration.status != 'complete',
+        PCLRegistration.phone.isnot(None),
+        PCLRegistration.phone != ''
+    ).all()
+    
+    for registration in incomplete:
+        # Generate token if not exists
+        if not registration.profile_token:
+            registration.generate_profile_token()
+        
+        profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
+        message = get_profile_completion_message(registration, profile_url, registration.preferred_language or 'EN')
+        
+        result = send_whatsapp_message(registration.phone, message, test_mode=False)
+        
+        if result.get('status') in ['sent', 'queued']:
+            sent_count += 1
+        else:
+            error_count += 1
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error saving: {str(e)}', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+    
+    if sent_count > 0:
+        flash(f'✅ {sent_count} {t["whatsapp_sent"]}', 'success')
+    if error_count > 0:
+        flash(f'⚠️ {error_count} {t["whatsapp_failed"]}', 'warning')
+    if sent_count == 0 and error_count == 0:
+        flash('No incomplete players with phone numbers found.', 'info')
+    
+    return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+
+# ============================================================================
+# PLAYER REGISTRATION (Original Full Form)
 # ============================================================================
 
 @pcl.route('/register/<token>', methods=['GET', 'POST'])
@@ -460,40 +947,38 @@ def player_register(token):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     photo_url = result['url']
-                    print(f"Ã¢Å“â€¦ Photo uploaded to Supabase: {photo_url}")
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
-                    print(f"Ã¢ÂÅ’ Photo upload failed: {result['error']}")
         
         # Create registration
         registration = PCLRegistration(
             team_id=team.id,
             first_name=request.form['first_name'],
             last_name=request.form['last_name'],
-            email=request.form['email'],
+            email=request.form.get('email'),
             phone=request.form.get('phone'),
             gender=request.form['gender'],
             birth_year=int(request.form['birth_year']) if request.form.get('birth_year') else None,
             is_captain=request.form.get('is_captain') == 'on',
-            shirt_name=request.form['shirt_name'],
-            shirt_size=request.form['shirt_size'],
-            photo_filename=photo_url,  # Now stores full Supabase URL
+            shirt_name=request.form.get('shirt_name', '').upper()[:15],
+            shirt_size=request.form.get('shirt_size'),
+            photo_filename=photo_url,
             bio=request.form.get('bio'),
-            instagram=request.form.get('instagram'),
-            tiktok=request.form.get('tiktok'),
+            instagram=request.form.get('instagram', '').replace('@', ''),
+            tiktok=request.form.get('tiktok', '').replace('@', ''),
             youtube=request.form.get('youtube'),
-            twitter=request.form.get('twitter'),
+            twitter=request.form.get('twitter', '').replace('@', ''),
             video_url=request.form.get('video_url'),
             dupr_rating=request.form.get('dupr_rating'),
             preferred_language=lang
         )
         
+        registration.generate_profile_token()
         registration.check_completeness()
         
         try:
             db.session.add(registration)
             db.session.commit()
-            print(f"Ã¢Å“â€¦ Registration saved: {registration.first_name} {registration.last_name}")
             
             return redirect(url_for('pcl.registration_success', 
                                   registration_id=registration.id,
@@ -501,7 +986,6 @@ def player_register(token):
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
-            print(f"Ã¢ÂÅ’ Registration error: {str(e)}")
     
     return render_template('pcl/player_register.html',
                          team=team,
@@ -525,7 +1009,7 @@ def registration_success(registration_id):
 
 @pcl.route('/register/edit/<int:registration_id>', methods=['GET', 'POST'])
 def edit_registration(registration_id):
-    """Edit existing registration with Supabase photo upload"""
+    """Edit existing registration"""
     registration = PCLRegistration.query.get_or_404(registration_id)
     team = registration.team
     
@@ -533,35 +1017,31 @@ def edit_registration(registration_id):
     t = get_translations(lang)
     
     if request.method == 'POST':
-        # Update fields
         registration.first_name = request.form['first_name']
         registration.last_name = request.form['last_name']
-        registration.email = request.form['email']
+        registration.email = request.form.get('email')
         registration.phone = request.form.get('phone')
         registration.gender = request.form['gender']
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
         registration.is_captain = request.form.get('is_captain') == 'on'
-        registration.shirt_name = request.form['shirt_name']
-        registration.shirt_size = request.form['shirt_size']
+        registration.shirt_name = request.form.get('shirt_name', '').upper()[:15]
+        registration.shirt_size = request.form.get('shirt_size')
         registration.bio = request.form.get('bio')
-        registration.instagram = request.form.get('instagram')
-        registration.tiktok = request.form.get('tiktok')
+        registration.instagram = request.form.get('instagram', '').replace('@', '')
+        registration.tiktok = request.form.get('tiktok', '').replace('@', '')
         registration.youtube = request.form.get('youtube')
-        registration.twitter = request.form.get('twitter')
+        registration.twitter = request.form.get('twitter', '').replace('@', '')
         registration.video_url = request.form.get('video_url')
         registration.dupr_rating = request.form.get('dupr_rating')
         registration.preferred_language = lang
         
-        # Handle new photo upload to Supabase
+        # Handle new photo upload
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename and allowed_file(file.filename):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     registration.photo_filename = result['url']
-                    print(f"Ã¢Å“â€¦ New photo uploaded: {result['url']}")
-                else:
-                    flash(f'Photo upload failed: {result["error"]}', 'warning')
         
         registration.check_completeness()
         
@@ -584,53 +1064,47 @@ def edit_registration(registration_id):
                          edit_mode=True)
 
 
-
 # ============================================================================
 # ADMIN REGISTRATION EDIT
 # ============================================================================
 
 @pcl.route('/admin/registration/<int:registration_id>/edit', methods=['GET', 'POST'])
 def admin_edit_registration(registration_id):
-    """Admin edit registration - allows editing player data including photo upload"""
+    """Admin edit registration"""
     registration = PCLRegistration.query.get_or_404(registration_id)
     team = registration.team
     
     if request.method == 'POST':
-        # Update fields
         registration.first_name = request.form['first_name']
         registration.last_name = request.form['last_name']
-        registration.email = request.form['email']
+        registration.email = request.form.get('email')
         registration.phone = request.form.get('phone')
         registration.gender = request.form['gender']
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
         registration.is_captain = request.form.get('is_captain') == 'on'
-        registration.shirt_name = request.form['shirt_name']
-        registration.shirt_size = request.form['shirt_size']
+        registration.shirt_name = request.form.get('shirt_name', '').upper()[:15]
+        registration.shirt_size = request.form.get('shirt_size')
         registration.bio = request.form.get('bio')
-        registration.instagram = request.form.get('instagram')
-        registration.tiktok = request.form.get('tiktok')
+        registration.instagram = request.form.get('instagram', '').replace('@', '')
+        registration.tiktok = request.form.get('tiktok', '').replace('@', '')
         registration.youtube = request.form.get('youtube')
-        registration.twitter = request.form.get('twitter')
+        registration.twitter = request.form.get('twitter', '').replace('@', '')
         registration.video_url = request.form.get('video_url')
         registration.dupr_rating = request.form.get('dupr_rating')
         registration.preferred_language = request.form.get('preferred_language', 'EN')
         registration.status = request.form.get('status', registration.status)
         
-        # Handle photo URL (direct input) or file upload
+        # Handle photo URL or file upload
         photo_url = request.form.get('photo_filename')
         if photo_url:
             registration.photo_filename = photo_url
         
-        # Handle new photo upload to Supabase
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename and allowed_file(file.filename):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     registration.photo_filename = result['url']
-                    print(f"âœ… New photo uploaded: {result['url']}")
-                else:
-                    flash(f'Photo upload failed: {result["error"]}', 'warning')
         
         registration.check_completeness()
         
@@ -648,25 +1122,7 @@ def admin_edit_registration(registration_id):
 
 
 # ============================================================================
-# API ENDPOINTS
-# ============================================================================
-
-@pcl.route('/api/team/<token>/status')
-def api_team_status(token):
-    """API endpoint for team status (for AJAX updates)"""
-    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
-    stats = team.get_stats()
-    
-    return jsonify({
-        'team': f"{team.country_flag} {team.country_name} {team.age_category}",
-        'stats': stats,
-        'deadline': team.tournament.registration_deadline.isoformat(),
-        'is_complete': stats['is_complete']
-    })
-
-
-# ============================================================================
-# DELETE TEAM
+# DELETE ROUTES
 # ============================================================================
 
 @pcl.route('/admin/team/<int:team_id>/delete', methods=['POST'])
@@ -707,138 +1163,187 @@ def delete_registration(registration_id):
 
 
 # ============================================================================
-# PROFILE LINK MANAGEMENT (NEW - Added for Player Profile Completion)
+# CAPTAIN MESSAGING (WhatsApp Invitations & Reminders)
 # ============================================================================
 
-@pcl.route('/team/<token>/send-profile-link/<int:registration_id>', methods=['POST'])
-def send_player_profile_link(token, registration_id):
-    """Send profile completion link to a single player"""
-    from utils.whatsapp import send_profile_completion_link
-    
-    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
-    registration = PCLRegistration.query.get_or_404(registration_id)
-    
-    # Verify registration belongs to this team
-    if registration.team_id != team.id:
-        flash('Invalid request!', 'danger')
-        return redirect(url_for('pcl.captain_dashboard', token=token))
-    
-    # Check if player exists and has update_token
-    if not registration.player:
-        # Create player if doesn't exist
-        player = Player(
-            first_name=registration.first_name,
-            last_name=registration.last_name,
-            phone=registration.phone or '',
-            email=registration.email,
-            preferred_language=registration.preferred_language
-        )
-        player.generate_update_token()
-        db.session.add(player)
+def get_captain_invitation_message(team, captain_name, captain_url, language='EN'):
+    """Get captain invitation message in specified language"""
+    messages = {
+        'EN': f"""🏆 PCL {team.tournament.name} - Team Captain Invitation
+
+Hi {captain_name}! 👋
+
+You have been selected as Captain for {team.country_flag} {team.country_name} {team.age_category}!
+
+📋 Your responsibilities:
+• Register your team players
+• Ensure all profiles are complete
+• Coordinate with your team
+
+🔗 Your secret Captain Dashboard:
+{captain_url}
+
+⚠️ Keep this link private - only you should have access!
+
+📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+Let's go! 🎾
+WPC Series Europe""",
         
-        # Link to registration
-        registration.player = player
-        db.session.commit()
+        'DE': f"""🏆 PCL {team.tournament.name} - Team-Kapitän Einladung
+
+Hallo {captain_name}! 👋
+
+Du wurdest als Kapitän für {team.country_flag} {team.country_name} {team.age_category} ausgewählt!
+
+📋 Deine Aufgaben:
+• Team-Spieler registrieren
+• Alle Profile vervollständigen
+• Mit deinem Team koordinieren
+
+🔗 Dein geheimes Kapitän-Dashboard:
+{captain_url}
+
+⚠️ Behalte diesen Link privat - nur du solltest Zugriff haben!
+
+📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+Los geht's! 🎾
+WPC Series Europe""",
+        
+        'ES': f"""🏆 PCL {team.tournament.name} - Invitación Capitán
+
+¡Hola {captain_name}! 👋
+
+Has sido seleccionado como Capitán de {team.country_flag} {team.country_name} {team.age_category}!
+
+📋 Tus responsabilidades:
+• Registrar los jugadores del equipo
+• Asegurar que todos los perfiles estén completos
+• Coordinar con tu equipo
+
+🔗 Tu Panel de Capitán secreto:
+{captain_url}
+
+⚠️ ¡Mantén este enlace privado!
+
+📅 Fecha límite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+¡Vamos! 🎾
+WPC Series Europe""",
+        
+        'FR': f"""🏆 PCL {team.tournament.name} - Invitation Capitaine
+
+Bonjour {captain_name}! 👋
+
+Vous avez été sélectionné comme Capitaine de {team.country_flag} {team.country_name} {team.age_category}!
+
+📋 Vos responsabilités:
+• Inscrire les joueurs de l'équipe
+• S'assurer que tous les profils sont complets
+• Coordonner avec votre équipe
+
+🔗 Votre Tableau de bord Capitaine secret:
+{captain_url}
+
+⚠️ Gardez ce lien privé!
+
+📅 Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+C'est parti! 🎾
+WPC Series Europe"""
+    }
     
-    player = registration.player
-    
-    # Generate token if not exists
-    if not player.update_token:
-        player.generate_update_token()
-        db.session.commit()
-    
-    # Send WhatsApp message
-    result = send_profile_completion_link(player, test_mode=False)
-    
-    if result['status'] == 'sent':
-        flash(f'Profile link successfully sent to {player.first_name} {player.last_name}!', 'success')
-    else:
-        flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
-    
-    return redirect(url_for('pcl.captain_dashboard', token=token))
+    return messages.get(language, messages['EN'])
 
 
-@pcl.route('/team/<token>/send-all-profile-links', methods=['POST'])
-def send_all_profile_links(token):
-    """Send profile completion links to all team players"""
-    from utils.whatsapp import send_profile_completion_link
-    
-    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
-    registrations = team.registrations.all()
-    
-    sent_count = 0
-    error_count = 0
-    
-    for registration in registrations:
-        # Skip if no phone number
-        if not registration.phone:
-            error_count += 1
-            continue
-        
-        # Create player if doesn't exist
-        if not registration.player:
-            player = Player(
-                first_name=registration.first_name,
-                last_name=registration.last_name,
-                phone=registration.phone,
-                email=registration.email,
-                preferred_language=registration.preferred_language
-            )
-            player.generate_update_token()
-            db.session.add(player)
-            registration.player = player
-        
-        player = registration.player
-        
-        # Generate token if not exists
-        if not player.update_token:
-            player.generate_update_token()
-        
-        # Send WhatsApp message
-        result = send_profile_completion_link(player, test_mode=False)
-        
-        if result['status'] == 'sent':
-            sent_count += 1
-        else:
-            error_count += 1
-    
-    # Commit all changes
-    try:
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error saving: {str(e)}', 'danger')
-        return redirect(url_for('pcl.captain_dashboard', token=token))
-    
-    # Show summary
-    if sent_count > 0:
-        flash(f'Ã¢Å“â€¦ {sent_count} profile link(s) successfully sent!', 'success')
-    if error_count > 0:
-        flash(f'Ã¢Å¡Â Ã¯Â¸Â {error_count} message(s) could not be sent.', 'warning')
-    
-    return redirect(url_for('pcl.captain_dashboard', token=token))
+def get_captain_reminder_message(team, captain_name, captain_url, stats, language='EN'):
+    """Get captain reminder message in specified language"""
+    messages = {
+        'EN': f"""⏰ PCL {team.tournament.name} - Reminder!
 
-# ============================================================================
-# CAPTAIN MESSAGING ROUTES (WhatsApp Invitations & Reminders)
-# ============================================================================
-# 
-# WICHTIG: Diese Routen ersetzen die alten in pcl.py (ab Zeile ~825)
-# 
-# Änderungen:
-# 1. send_captain_invite verwendet jetzt send_captain_invitation_template
-# 2. Besseres Error Handling
-# 3. Fallback auf Text Message wenn Template fehlschlägt
-# ============================================================================
+Hi {captain_name}!
+
+Your team {team.country_flag} {team.country_name} {team.age_category} is not yet complete.
+
+📊 Current status:
+👨 Men: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Women: {stats['women']}/{team.min_women}-{team.max_women}
+✓ Complete profiles: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+
+🔗 Captain Dashboard:
+{captain_url}
+
+📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+Please complete your team! 🎾
+WPC Series Europe""",
+        
+        'DE': f"""⏰ PCL {team.tournament.name} - Erinnerung!
+
+Hallo {captain_name}!
+
+Dein Team {team.country_flag} {team.country_name} {team.age_category} ist noch nicht vollständig.
+
+📊 Aktueller Status:
+👨 Männer: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Frauen: {stats['women']}/{team.min_women}-{team.max_women}
+✓ Vollständige Profile: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+
+🔗 Kapitän-Dashboard:
+{captain_url}
+
+📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+Bitte vervollständige dein Team! 🎾
+WPC Series Europe""",
+        
+        'ES': f"""⏰ PCL {team.tournament.name} - ¡Recordatorio!
+
+¡Hola {captain_name}!
+
+Tu equipo {team.country_flag} {team.country_name} {team.age_category} aún no está completo.
+
+📊 Estado actual:
+👨 Hombres: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Mujeres: {stats['women']}/{team.min_women}-{team.max_women}
+✓ Perfiles completos: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+
+🔗 Panel de Capitán:
+{captain_url}
+
+📅 Fecha límite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+¡Por favor completa tu equipo! 🎾
+WPC Series Europe""",
+        
+        'FR': f"""⏰ PCL {team.tournament.name} - Rappel!
+
+Bonjour {captain_name}!
+
+Votre équipe {team.country_flag} {team.country_name} {team.age_category} n'est pas encore complète.
+
+📊 Statut actuel:
+👨 Hommes: {stats['men']}/{team.min_men}-{team.max_men}
+👩 Femmes: {stats['women']}/{team.min_women}-{team.max_women}
+✓ Profils complets: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+
+🔗 Tableau de bord Capitaine:
+{captain_url}
+
+📅 Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+
+Veuillez compléter votre équipe! 🎾
+WPC Series Europe"""
+    }
+    
+    return messages.get(language, messages['EN'])
+
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-invite', methods=['GET', 'POST'])
 def send_captain_invite(team_id):
-    """Send captain invitation via WhatsApp Content Template"""
-    # WICHTIG: Jetzt send_captain_invitation_template importieren!
-    from utils.whatsapp import send_captain_invitation_template
-    
+    """Send captain invitation via WhatsApp"""
     team = PCLTeam.query.get_or_404(team_id)
-    
-    # Try to find existing captain from registrations
     captain_reg = team.registrations.filter_by(is_captain=True).first()
     
     if request.method == 'POST':
@@ -851,39 +1356,19 @@ def send_captain_invite(team_id):
             flash('Phone number is required!', 'danger')
             return redirect(url_for('pcl.send_captain_invite', team_id=team_id))
         
-        # Validate phone number format
-        if len(captain_phone.replace('+', '').replace(' ', '')) < 10:
-            flash('Phone number too short! Include country code (e.g., +49...)', 'danger')
-            return redirect(url_for('pcl.send_captain_invite', team_id=team_id))
+        captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+        message = get_captain_invitation_message(team, captain_name, captain_url, language)
         
-        # ✅ NEU: Content Template verwenden statt Freeform Message!
-        # Das Template hat einen Button mit der URL: https://pickleballconnect.eu/pcl/team/{{5}}
-        result = send_captain_invitation_template(
-            team=team,
-            captain_name=captain_name,
-            captain_phone=captain_phone,
-            captain_token=team.captain_token,  # Wird für {{4}} und {{5}} verwendet
-            language=language,
-            test_mode=test_mode
-        )
+        result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
         
-        if result['status'] in ['sent', 'test_mode']:
+        if result.get('status') in ['sent', 'queued', 'test_mode']:
             mode_text = " (TEST MODE)" if test_mode else ""
-            flash(f'✅ Captain invitation sent to {captain_name}{mode_text}!', 'success')
+            flash(f'Captain invitation sent to {captain_name}{mode_text}!', 'success')
         else:
-            error_msg = result.get('error', 'Unknown error')
-            flash(f'❌ Error sending: {error_msg}', 'danger')
-            
-            # Log detailed error for debugging
-            print(f"❌ WhatsApp Error Details:")
-            print(f"   Phone: {captain_phone}")
-            print(f"   Language: {language}")
-            print(f"   Token: {team.captain_token[:20]}...")
-            print(f"   Error: {error_msg}")
+            flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
         
         return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
     
-    # GET - show form with pre-filled captain data
     return render_template('pcl/send_captain_invite.html', 
                          team=team,
                          captain_reg=captain_reg)
@@ -891,13 +1376,7 @@ def send_captain_invite(team_id):
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-reminder', methods=['POST'])
 def send_captain_reminder(team_id):
-    """Send captain reminder via WhatsApp
-    
-    Note: Reminders use freeform text messages, which only work within 24h session.
-    For initial contact, use send_captain_invite instead.
-    """
-    from utils.whatsapp import send_whatsapp_message, get_captain_reminder_message
-    
+    """Send captain reminder via WhatsApp"""
     team = PCLTeam.query.get_or_404(team_id)
     
     captain_name = request.form.get('captain_name', 'Captain')
@@ -909,40 +1388,24 @@ def send_captain_reminder(team_id):
         flash('Phone number is required!', 'danger')
         return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
     
-    # Build captain URL
     captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
-    
-    # Get team stats
     stats = team.get_stats()
-    
-    # Get message in selected language
     message = get_captain_reminder_message(team, captain_name, captain_url, stats, language)
     
-    # Send WhatsApp (freeform - only works within 24h session!)
     result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
     
-    if result['status'] in ['sent', 'test_mode']:
+    if result.get('status') in ['sent', 'queued', 'test_mode']:
         mode_text = " (TEST MODE)" if test_mode else ""
-        flash(f'✅ Reminder sent to {captain_name}{mode_text}!', 'success')
+        flash(f'Reminder sent to {captain_name}{mode_text}!', 'success')
     else:
-        error_msg = result.get('error', 'Unknown error')
-        flash(f'❌ Error sending: {error_msg}', 'danger')
-        
-        # Check if it's a 24h session issue
-        if '63016' in str(error_msg) or 'session' in str(error_msg).lower():
-            flash('⚠️ Tip: Reminders only work if the captain messaged within 24h. Use "Send Invitation" for initial contact.', 'warning')
+        flash(f'Error sending: {result.get("error", "Unknown error")}', 'danger')
     
     return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/send-all-reminders', methods=['POST'])
 def send_all_captain_reminders(tournament_id):
-    """Send reminders to all captains with incomplete teams
-    
-    Note: This uses freeform messages, which only work within 24h session.
-    """
-    from utils.whatsapp import send_whatsapp_message, get_captain_reminder_message
-    
+    """Send reminders to all captains with incomplete teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
     test_mode = request.form.get('test_mode') == 'on'
     
@@ -953,45 +1416,82 @@ def send_all_captain_reminders(tournament_id):
     for team in tournament.teams.all():
         stats = team.get_stats()
         
-        # Skip complete teams
         if stats['is_complete']:
             skipped_count += 1
             continue
         
-        # Find captain registration
         captain_reg = team.registrations.filter_by(is_captain=True).first()
         
         if not captain_reg or not captain_reg.phone:
             error_count += 1
             continue
         
-        # Build captain URL
         captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
-        
-        # Get message
         message = get_captain_reminder_message(
             team, 
             captain_reg.first_name, 
             captain_url, 
             stats, 
-            captain_reg.preferred_language
+            captain_reg.preferred_language or 'EN'
         )
         
-        # Send WhatsApp
         result = send_whatsapp_message(captain_reg.phone, message, test_mode=test_mode)
         
-        if result['status'] in ['sent', 'test_mode']:
+        if result.get('status') in ['sent', 'queued', 'test_mode']:
             sent_count += 1
         else:
             error_count += 1
     
-    # Summary
     mode_text = " (TEST MODE)" if test_mode else ""
     if sent_count > 0:
-        flash(f'✅ {sent_count} reminder(s) sent{mode_text}!', 'success')
+        flash(f'{sent_count} reminder(s) sent{mode_text}!', 'success')
     if skipped_count > 0:
-        flash(f'ℹ️ {skipped_count} complete team(s) skipped.', 'info')
+        flash(f'{skipped_count} complete team(s) skipped.', 'info')
     if error_count > 0:
-        flash(f'⚠️ {error_count} could not be sent (no captain/phone or outside 24h session).', 'warning')
+        flash(f'{error_count} could not be sent (no captain/phone).', 'warning')
     
     return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
+
+
+# ============================================================================
+# API ENDPOINTS
+# ============================================================================
+
+@pcl.route('/api/team/<token>/status')
+def api_team_status(token):
+    """API endpoint for team status (for AJAX updates)"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    stats = team.get_stats()
+    
+    return jsonify({
+        'team': f"{team.country_flag} {team.country_name} {team.age_category}",
+        'stats': stats,
+        'deadline': team.tournament.registration_deadline.isoformat(),
+        'is_complete': stats['is_complete']
+    })
+
+
+@pcl.route('/api/team/<token>/players')
+def api_team_players(token):
+    """API endpoint for team players list"""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    
+    players = []
+    for reg in team.registrations.all():
+        players.append({
+            'id': reg.id,
+            'name': f"{reg.first_name} {reg.last_name}",
+            'gender': reg.gender,
+            'status': reg.status,
+            'has_photo': bool(reg.photo_filename),
+            'has_bio': bool(reg.bio),
+            'shirt_name': reg.shirt_name,
+            'shirt_size': reg.shirt_size,
+            'missing_fields': reg.get_missing_fields()
+        })
+    
+    return jsonify({
+        'team': f"{team.country_flag} {team.country_name} {team.age_category}",
+        'players': players,
+        'stats': team.get_stats()
+    })

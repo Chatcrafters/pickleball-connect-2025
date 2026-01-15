@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang.lower() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.complete_profile_title }} - {{ registration.team.country_flag }} {{ registration.team.country_name }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .profile-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .profile-header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .team-badge {
+            font-size: 3rem;
+        }
+        .section-header {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            margin: 0 -1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #2ecc71;
+        }
+        .photo-preview {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #2ecc71;
+        }
+        .photo-placeholder {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 4px dashed #dee2e6;
+        }
+        .required-badge {
+            background: #dc3545;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        .optional-badge {
+            background: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+        }
+        .btn-save:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(46, 204, 113, 0.4);
+        }
+        .progress-indicator {
+            height: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Language Switcher -->
+        <div class="text-end mb-3">
+            <div class="btn-group btn-group-sm">
+                <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-light{% else %}btn-outline-light{% endif %}">🇬🇧 EN</a>
+                <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-light{% else %}btn-outline-light{% endif %}">🇩🇪 DE</a>
+                <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-light{% else %}btn-outline-light{% endif %}">🇪🇸 ES</a>
+                <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-light{% else %}btn-outline-light{% endif %}">🇫🇷 FR</a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="profile-card">
+                    <!-- Header -->
+                    <div class="profile-header">
+                        <div class="team-badge">{{ registration.team.country_flag }}</div>
+                        <h2 class="mt-2">
+                            {{ t.hello if t.hello else 'Hallo' }} {{ registration.first_name }}! 👋
+                        </h2>
+                        <p class="mb-1">{{ registration.team.country_name }} {{ registration.team.age_category }}</p>
+                        <p class="mb-0 opacity-75">{{ registration.team.tournament.name }}</p>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div class="p-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">{{ t.profile_progress if t.profile_progress else 'Profil-Fortschritt' }}</span>
+                            <span class="badge {% if completion_percent == 100 %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ completion_percent }}%
+                            </span>
+                        </div>
+                        <div class="progress progress-indicator">
+                            <div class="progress-bar {% if completion_percent == 100 %}bg-success{% else %}bg-warning{% endif %}" 
+                                 style="width: {{ completion_percent }}%"></div>
+                        </div>
+                        {% if missing_fields %}
+                        <small class="text-danger mt-2 d-block">
+                            <i class="bi bi-exclamation-circle"></i>
+                            {{ t.missing if t.missing else 'Fehlt' }}: {{ missing_fields|join(', ') }}
+                        </small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="p-3">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Form -->
+                    <form method="POST" enctype="multipart/form-data" class="p-4">
+                        
+                        <!-- SECTION: Photo -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-camera"></i> {{ t.photo }}
+                                <span class="required-badge">{{ t.required }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="text-center mb-4">
+                            {% if registration.photo_filename %}
+                            <img src="{{ registration.photo_filename }}" alt="Profile" class="photo-preview mb-3" id="photoPreview">
+                            {% else %}
+                            <div class="photo-placeholder mx-auto mb-3" id="photoPlaceholder">
+                                <i class="bi bi-person-fill text-muted" style="font-size: 4rem;"></i>
+                            </div>
+                            <img src="" alt="Preview" class="photo-preview mb-3 d-none" id="photoPreview">
+                            {% endif %}
+                            
+                            <div>
+                                <label for="photo" class="btn btn-outline-primary">
+                                    <i class="bi bi-upload"></i>
+                                    {{ t.upload_photo if t.upload_photo else 'Foto hochladen' }}
+                                </label>
+                                <input type="file" class="d-none" id="photo" name="photo" accept="image/*" onchange="previewPhoto(this)">
+                            </div>
+                            <small class="text-muted d-block mt-2">{{ t.photo_help }}</small>
+                        </div>
+
+                        <!-- SECTION: Shirt Info -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-award"></i> {{ t.shirt_info }}
+                                <span class="required-badge">{{ t.required }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="shirt_name" class="form-label fw-bold">
+                                    {{ t.shirt_name }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       id="shirt_name" name="shirt_name" 
+                                       value="{{ registration.shirt_name or '' }}"
+                                       placeholder="MÜLLER" required maxlength="15">
+                                <small class="text-muted">{{ t.shirt_name_help }}</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="shirt_size" class="form-label fw-bold">
+                                    {{ t.shirt_size }} <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select form-select-lg" id="shirt_size" name="shirt_size" required>
+                                    <option value="">-- {{ t.select if t.select else 'Auswählen' }} --</option>
+                                    {% for size in shirt_sizes %}
+                                    <option value="{{ size }}" {% if registration.shirt_size == size %}selected{% endif %}>
+                                        {{ size }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: Bio -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-lines-fill"></i> {{ t.bio }}
+                                <span class="required-badge">{{ t.required }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <textarea class="form-control" id="bio" name="bio" rows="4" 
+                                      placeholder="{{ t.bio_placeholder }}" required
+                                      minlength="50" maxlength="500">{{ registration.bio or '' }}</textarea>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">{{ t.bio_help if t.bio_help else 'Erzähl uns etwas über dich (50-500 Zeichen)' }}</small>
+                                <small class="text-muted"><span id="bioCount">{{ (registration.bio or '')|length }}</span>/500</small>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: Contact (Optional) -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-envelope"></i> {{ t.contact if t.contact else 'Kontakt' }}
+                                <span class="optional-badge">{{ t.optional if t.optional else 'Optional' }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="email" class="form-label">{{ t.email }}</label>
+                                <input type="email" class="form-control" id="email" name="email" 
+                                       value="{{ registration.email or '' }}"
+                                       placeholder="max@beispiel.de">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="birth_year" class="form-label">{{ t.birth_year }}</label>
+                                <input type="number" class="form-control" id="birth_year" name="birth_year" 
+                                       value="{{ registration.birth_year or '' }}"
+                                       min="1940" max="2010" placeholder="1985">
+                            </div>
+                        </div>
+
+                        <!-- SECTION: Social Media (Optional) -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-share"></i> {{ t.social_media }}
+                                <span class="optional-badge">{{ t.optional if t.optional else 'Optional' }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="instagram" class="form-label">
+                                    <i class="bi bi-instagram text-danger"></i> Instagram
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="instagram" name="instagram" 
+                                           value="{{ registration.instagram or '' }}"
+                                           placeholder="username">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="tiktok" class="form-label">
+                                    <i class="bi bi-tiktok"></i> TikTok
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="tiktok" name="tiktok" 
+                                           value="{{ registration.tiktok or '' }}"
+                                           placeholder="username">
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="youtube" class="form-label">
+                                    <i class="bi bi-youtube text-danger"></i> YouTube
+                                </label>
+                                <input type="url" class="form-control" id="youtube" name="youtube" 
+                                       value="{{ registration.youtube or '' }}"
+                                       placeholder="https://youtube.com/@channel">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="twitter" class="form-label">
+                                    <i class="bi bi-twitter-x"></i> X (Twitter)
+                                </label>
+                                <div class="input-group">
+                                    <span class="input-group-text">@</span>
+                                    <input type="text" class="form-control" id="twitter" name="twitter" 
+                                           value="{{ registration.twitter or '' }}"
+                                           placeholder="username">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECTION: Extras (Optional) -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-stars"></i> {{ t.optional_info }}
+                                <span class="optional-badge">{{ t.optional if t.optional else 'Optional' }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label for="dupr_rating" class="form-label">{{ t.dupr_rating }}</label>
+                                <input type="text" class="form-control" id="dupr_rating" name="dupr_rating" 
+                                       value="{{ registration.dupr_rating or '' }}"
+                                       placeholder="4.25">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="video_url" class="form-label">{{ t.video_url }}</label>
+                                <input type="url" class="form-control" id="video_url" name="video_url" 
+                                       value="{{ registration.video_url or '' }}"
+                                       placeholder="https://youtube.com/watch?v=...">
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="d-grid gap-2 mt-4">
+                            <button type="submit" class="btn btn-success btn-save">
+                                <i class="bi bi-check-circle"></i>
+                                {{ t.save_profile if t.save_profile else 'Profil speichern' }}
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Footer -->
+                    <div class="text-center p-3 bg-light">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-check"></i>
+                            {{ t.data_protection if t.data_protection else 'Deine Daten werden sicher gespeichert' }}
+                            | PCL {{ registration.team.tournament.name }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Photo preview
+        function previewPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('photoPreview');
+                    const placeholder = document.getElementById('photoPlaceholder');
+                    
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                    
+                    if (placeholder) {
+                        placeholder.classList.add('d-none');
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Bio character counter
+        document.getElementById('bio').addEventListener('input', function() {
+            document.getElementById('bioCount').textContent = this.value.length;
+        });
+
+        // Shirt name uppercase
+        document.getElementById('shirt_name').addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    </script>
+</body>
+</html>

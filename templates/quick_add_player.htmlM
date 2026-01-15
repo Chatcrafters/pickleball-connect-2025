@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang.lower() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.quick_add_title }} - {{ team.country_flag }} {{ team.country_name }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .form-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .form-header {
+            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        .gender-btn {
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .gender-btn:hover {
+            transform: scale(1.05);
+        }
+        .gender-btn.active {
+            box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.5);
+        }
+        .btn-submit {
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 10px;
+        }
+        .team-badge {
+            font-size: 2.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Language Switcher -->
+        <div class="text-end mb-3">
+            <div class="btn-group btn-group-sm">
+                <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-light{% else %}btn-outline-light{% endif %}">🇬🇧 EN</a>
+                <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-light{% else %}btn-outline-light{% endif %}">🇩🇪 DE</a>
+                <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-light{% else %}btn-outline-light{% endif %}">🇪🇸 ES</a>
+                <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-light{% else %}btn-outline-light{% endif %}">🇫🇷 FR</a>
+            </div>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="form-card">
+                    <!-- Header -->
+                    <div class="form-header">
+                        <div class="team-badge">{{ team.country_flag }}</div>
+                        <h2 class="mt-2 mb-1">{{ team.country_name }} {{ team.age_category }}</h2>
+                        <p class="mb-0 opacity-75">{{ team.tournament.name }}</p>
+                    </div>
+
+                    <!-- Flash Messages -->
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            <div class="p-3">
+                                {% for category, message in messages %}
+                                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <!-- Form -->
+                    <div class="p-4">
+                        <h4 class="mb-4 text-center">
+                            <i class="bi bi-person-plus-fill text-success"></i>
+                            {{ t.quick_add_title }}
+                        </h4>
+
+                        <form method="POST" id="quickAddForm">
+                            <!-- First Name -->
+                            <div class="mb-3">
+                                <label for="first_name" class="form-label fw-bold">
+                                    {{ t.first_name }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       id="first_name" name="first_name" required
+                                       placeholder="Max">
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="mb-3">
+                                <label for="last_name" class="form-label fw-bold">
+                                    {{ t.last_name }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control form-control-lg" 
+                                       id="last_name" name="last_name" required
+                                       placeholder="Mustermann">
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="mb-3">
+                                <label for="phone" class="form-label fw-bold">
+                                    <i class="bi bi-whatsapp text-success"></i>
+                                    {{ t.phone }} <span class="text-danger">*</span>
+                                </label>
+                                <input type="tel" class="form-control form-control-lg" 
+                                       id="phone" name="phone" required
+                                       placeholder="+49 170 1234567">
+                                <small class="form-text text-muted">
+                                    {{ t.phone_help if t.phone_help else 'Mit Ländervorwahl (+49, +34, etc.)' }}
+                                </small>
+                            </div>
+
+                            <!-- Gender -->
+                            <div class="mb-4">
+                                <label class="form-label fw-bold d-block">
+                                    {{ t.gender }} <span class="text-danger">*</span>
+                                </label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="gender" id="genderMale" value="male" required>
+                                    <label class="btn btn-outline-primary gender-btn" for="genderMale">
+                                        👨 {{ t.male }}
+                                    </label>
+                                    
+                                    <input type="radio" class="btn-check" name="gender" id="genderFemale" value="female">
+                                    <label class="btn btn-outline-danger gender-btn" for="genderFemale">
+                                        👩 {{ t.female }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Language Preference -->
+                            <div class="mb-4">
+                                <label for="preferred_language" class="form-label fw-bold">
+                                    {{ t.language }}
+                                </label>
+                                <select class="form-select form-select-lg" id="preferred_language" name="preferred_language">
+                                    <option value="EN" {% if current_lang == 'EN' %}selected{% endif %}>🇬🇧 English</option>
+                                    <option value="DE" {% if current_lang == 'DE' %}selected{% endif %}>🇩🇪 Deutsch</option>
+                                    <option value="ES" {% if current_lang == 'ES' %}selected{% endif %}>🇪🇸 Español</option>
+                                    <option value="FR" {% if current_lang == 'FR' %}selected{% endif %}>🇫🇷 Français</option>
+                                </select>
+                            </div>
+
+                            <!-- Send WhatsApp Option -->
+                            <div class="mb-4">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="send_whatsapp" name="send_whatsapp" checked style="transform: scale(1.3);">
+                                    <label class="form-check-label fw-bold ms-2" for="send_whatsapp">
+                                        <i class="bi bi-whatsapp text-success"></i>
+                                        {{ t.send_link_now if t.send_link_now else 'WhatsApp-Link sofort senden' }}
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    {{ t.send_link_help if t.send_link_help else 'Der Spieler erhält einen Link zur Profil-Vervollständigung' }}
+                                </small>
+                            </div>
+
+                            <!-- Divider -->
+                            <hr class="my-4">
+
+                            <!-- Submit Buttons -->
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-success btn-submit">
+                                    <i class="bi bi-person-plus"></i>
+                                    {{ t.add_player if t.add_player else 'Spieler hinzufügen' }}
+                                </button>
+                                
+                                <a href="{{ url_for('pcl.captain_dashboard', token=team.captain_token, lang=current_lang) }}" 
+                                   class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i>
+                                    {{ t.back_to_dashboard if t.back_to_dashboard else 'Zurück zum Dashboard' }}
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Info Footer -->
+                    <div class="bg-light p-3 text-center">
+                        <small class="text-muted">
+                            <i class="bi bi-info-circle"></i>
+                            {{ t.quick_add_info if t.quick_add_info else 'Der Spieler vervollständigt sein Profil selbst über den WhatsApp-Link' }}
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Team Status Summary -->
+                <div class="card mt-4 bg-white bg-opacity-90">
+                    <div class="card-body">
+                        <h6 class="card-title">
+                            <i class="bi bi-people"></i> {{ t.team_status }}
+                        </h6>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <span class="badge bg-primary fs-6">👨 {{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</span>
+                                <br><small>{{ t.men }}</small>
+                            </div>
+                            <div class="col-6">
+                                <span class="badge bg-danger fs-6">👩 {{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</span>
+                                <br><small>{{ t.women }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Phone number formatting helper
+        document.getElementById('phone').addEventListener('input', function(e) {
+            let value = e.target.value;
+            // Ensure starts with +
+            if (value.length > 0 && !value.startsWith('+')) {
+                e.target.value = '+' + value;
+            }
+        });
+
+        // Form validation
+        document.getElementById('quickAddForm').addEventListener('submit', function(e) {
+            const phone = document.getElementById('phone').value;
+            if (!phone.startsWith('+') || phone.length < 10) {
+                e.preventDefault();
+                alert('{{ t.phone_invalid if t.phone_invalid else "Bitte gültige Telefonnummer mit Ländervorwahl eingeben" }}');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>
