@@ -572,10 +572,18 @@ def admin_team_detail(team_id):
     men = team.registrations.filter_by(gender='male').all()
     women = team.registrations.filter_by(gender='female').all()
     
+    # Find captain
+    captain = team.registrations.filter_by(is_captain=True).first()
+    
+    # Get stats
+    stats = team.get_stats()
+    
     return render_template('pcl/admin_team_detail.html', 
                          team=team,
                          men=men,
-                         women=women)
+                         women=women,
+                         captain=captain,
+                         stats=stats)
 
 
 @pcl.route('/admin/team/<int:team_id>/export')

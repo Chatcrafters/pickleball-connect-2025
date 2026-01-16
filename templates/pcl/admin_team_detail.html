@@ -21,7 +21,7 @@
         </div>
         <div class="col-md-4 text-end">
             <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
-                <i class="bi bi-download"></i> Export CSV
+                <i class="bi bi-download"></i> Export
             </a>
             <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this team? All registrations will be removed!');">
                 <button type="submit" class="btn btn-outline-danger">
@@ -85,21 +85,21 @@
                         <div class="mb-3">
                             <label class="form-label">Captain Name *</label>
                             <input type="text" class="form-control" name="captain_name" required
-                                   value="{% for reg in (men + women) if reg.is_captain %}{{ reg.first_name }}{% endfor %}">
+                                   value="{{ captain.first_name if captain else '' }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">WhatsApp Number *</label>
                             <input type="tel" class="form-control" name="captain_phone" required
                                    placeholder="+49123456789"
-                                   value="{% for reg in (men + women) if reg.is_captain %}{{ reg.phone or '' }}{% endfor %}">
+                                   value="{{ captain.phone if captain and captain.phone else '' }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Language</label>
                             <select class="form-select" name="language">
-                                <option value="EN">🇬🇧 English</option>
-                                <option value="DE">🇩🇪 Deutsch</option>
-                                <option value="ES">🇪🇸 Español</option>
-                                <option value="FR">🇫🇷 Français</option>
+                                <option value="EN" {% if captain and captain.preferred_language == 'EN' %}selected{% endif %}>🇬🇧 English</option>
+                                <option value="DE" {% if captain and captain.preferred_language == 'DE' %}selected{% endif %}>🇩🇪 Deutsch</option>
+                                <option value="ES" {% if captain and captain.preferred_language == 'ES' %}selected{% endif %}>🇪🇸 Español</option>
+                                <option value="FR" {% if captain and captain.preferred_language == 'FR' %}selected{% endif %}>🇫🇷 Français</option>
                             </select>
                         </div>
                         <div class="form-check">
@@ -121,49 +121,49 @@
     </div>
 
     <!-- Team Statistics -->
-    {% set stats = team.get_stats() %}
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card text-center">
-                <div class="card-body">
-                    <h3>{{ stats.total }}</h3>
-                    <p class="mb-0">Total Players</p>
+        <div class="col-md-3 col-6 mb-2">
+            <div class="card text-center h-100">
+                <div class="card-body py-3">
+                    <h3 class="mb-0">{{ stats.total }}</h3>
+                    <small>Total Players</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center {% if stats.men >= team.min_men %}border-success border-3{% else %}border-warning border-3{% endif %}">
-                <div class="card-body">
-                    <h3>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
-                    <p class="mb-0">👨 Men</p>
-                    <small class="text-muted">{% if stats.men >= team.min_men %}✅ OK{% else %}⚠️ Need {{ team.min_men - stats.men }}{% endif %}</small>
+        <div class="col-md-3 col-6 mb-2">
+            <div class="card text-center h-100 {% if stats.men >= team.min_men %}border-success border-3{% else %}border-warning border-3{% endif %}">
+                <div class="card-body py-3">
+                    <h3 class="mb-0">{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
+                    <small>👨 Men</small>
+                    <br><small class="text-muted">{% if stats.men >= team.min_men %}✅ OK{% else %}⚠️ Need {{ team.min_men - stats.men }}{% endif %}</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center {% if stats.women >= team.min_women %}border-success border-3{% else %}border-warning border-3{% endif %}">
-                <div class="card-body">
-                    <h3>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
-                    <p class="mb-0">👩 Women</p>
-                    <small class="text-muted">{% if stats.women >= team.min_women %}✅ OK{% else %}⚠️ Need {{ team.min_women - stats.women }}{% endif %}</small>
+        <div class="col-md-3 col-6 mb-2">
+            <div class="card text-center h-100 {% if stats.women >= team.min_women %}border-success border-3{% else %}border-warning border-3{% endif %}">
+                <div class="card-body py-3">
+                    <h3 class="mb-0">{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
+                    <small>👩 Women</small>
+                    <br><small class="text-muted">{% if stats.women >= team.min_women %}✅ OK{% else %}⚠️ Need {{ team.min_women - stats.women }}{% endif %}</small>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card text-center {% if stats.is_complete %}bg-success text-white{% else %}bg-warning{% endif %}">
-                <div class="card-body">
-                    <h3>{% if stats.is_complete %}✓{% else %}✗{% endif %}</h3>
-                    <p class="mb-0">{% if stats.is_complete %}Complete{% else %}Incomplete{% endif %}</p>
+        <div class="col-md-3 col-6 mb-2">
+            <div class="card text-center h-100 {% if stats.is_complete %}bg-success text-white{% else %}bg-warning{% endif %}">
+                <div class="card-body py-3">
+                    <h3 class="mb-0">{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h3>
+                    <small>{% if stats.is_complete %}✓ Complete{% else %}Incomplete{% endif %}</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Men Players Section -->
+    <!-- Players Lists -->
     <div class="row">
+        <!-- Men Players Section -->
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">👨 Men ({{ stats.men }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.men_complete }} Complete</span>
                 </div>
@@ -196,14 +196,14 @@
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
                                                 {% if reg.is_captain %}<span class="badge bg-warning">👑 Captain</span>{% endif %}
                                                 <br>
-                                                <small class="text-muted">{{ reg.email }}</small>
+                                                <small class="text-muted">{{ reg.email or reg.phone or '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <strong>{{ reg.shirt_name }}</strong>
+                                        <strong>{{ reg.shirt_name or '-' }}</strong>
                                         <br>
-                                        <small class="text-muted">Size {{ reg.shirt_size }}</small>
+                                        <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
@@ -277,14 +277,14 @@
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
                                                 {% if reg.is_captain %}<span class="badge bg-warning">👑 Captain</span>{% endif %}
                                                 <br>
-                                                <small class="text-muted">{{ reg.email }}</small>
+                                                <small class="text-muted">{{ reg.email or reg.phone or '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <strong>{{ reg.shirt_name }}</strong>
+                                        <strong>{{ reg.shirt_name or '-' }}</strong>
                                         <br>
-                                        <small class="text-muted">Size {{ reg.shirt_size }}</small>
+                                        <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
@@ -404,3 +404,4 @@ function showCopySuccess() {
     }, 2000);
 }
 </script>
+{% endblock %}
