@@ -8,6 +8,7 @@ from utils.whatsapp import send_whatsapp_message
 import os
 import csv
 import io
+import json
 
 pcl = Blueprint('pcl', __name__)
 
@@ -838,7 +839,6 @@ def quick_add_player(token):
 # ============================================================================
 # COMPLETE PROFILE (PUBLIC - via profile_token)
 # ============================================================================
-
 @pcl.route('/complete/<profile_token>', methods=['GET', 'POST'])
 def complete_profile(profile_token):
     """Public profile completion page - accessed via WhatsApp link"""
@@ -857,8 +857,16 @@ def complete_profile(profile_token):
     completed = total_required - len(missing_fields)
     completion_percent = int((completed / total_required) * 100)
     
+    # Parse existing additional photos
+    additional_photos_list = []
+    if registration.additional_photos:
+        try:
+            additional_photos_list = json.loads(registration.additional_photos)
+        except:
+            additional_photos_list = []
+    
     if request.method == 'POST':
-        # Handle photo upload
+        # Handle profile photo upload
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename and allowed_file(file.filename):
@@ -868,7 +876,27 @@ def complete_profile(profile_token):
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
         
-        # Update fields
+        # Handle photos to delete
+        photos_to_delete = request.form.get('photos_to_delete', '')
+        if photos_to_delete:
+            urls_to_delete = photos_to_delete.split('|||')
+            additional_photos_list = [url for url in additional_photos_list if url not in urls_to_delete]
+        
+        # Handle additional photos upload
+        if 'additional_photos' in request.files:
+            files = request.files.getlist('additional_photos')
+            for file in files:
+                if file and file.filename and allowed_file(file.filename):
+                    if len(additional_photos_list) >= 5:
+                        break  # Max 5 photos
+                    result = upload_photo_to_supabase(file, folder='players/social')
+                    if result['success']:
+                        additional_photos_list.append(result['url'])
+        
+        # Save additional photos as JSON
+        registration.additional_photos = json.dumps(additional_photos_list) if additional_photos_list else None
+        
+        # Update other fields
         registration.shirt_name = request.form.get('shirt_name', '').strip().upper()[:15] or registration.shirt_name
         registration.shirt_size = request.form.get('shirt_size') or registration.shirt_size
         registration.bio = request.form.get('bio', '').strip() or registration.bio
@@ -898,6 +926,7 @@ def complete_profile(profile_token):
                          shirt_sizes=SHIRT_SIZES,
                          missing_fields=missing_fields,
                          completion_percent=completion_percent,
+                         additional_photos_list=additional_photos_list,
                          t=t,
                          current_lang=lang)
 

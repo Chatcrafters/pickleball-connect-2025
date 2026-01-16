@@ -347,6 +347,9 @@ class PCLRegistration(db.Model):
     # WhatsApp Tracking
     whatsapp_sent_at = db.Column(db.DateTime, nullable=True)
     
+    # Additional photos for social media (JSON array of URLs)
+    additional_photos = db.Column(db.Text, nullable=True)
+    
     # ========== NEW: Profile completion token ==========
     profile_token = db.Column(db.String(64), unique=True, nullable=True)
     

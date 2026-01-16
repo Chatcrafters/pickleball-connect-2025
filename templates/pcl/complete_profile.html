@@ -85,6 +85,66 @@
             height: 8px;
             border-radius: 4px;
         }
+        /* Additional Photos Grid */
+        .additional-photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+        }
+        .additional-photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8f9fa;
+        }
+        .additional-photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .additional-photo-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .add-photo-btn {
+            aspect-ratio: 1;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+            min-height: 100px;
+        }
+        .add-photo-btn:hover {
+            border-color: #2ecc71;
+            background: #e8f5e9;
+        }
+        .add-photo-btn i {
+            font-size: 1.5rem;
+            color: #6c757d;
+        }
+        .add-photo-btn span {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -149,63 +209,104 @@
                     <!-- Form -->
                     <form method="POST" enctype="multipart/form-data" class="p-4">
                         
-                        <!-- SECTION: Photo -->
+                        <!-- SECTION: Profile Photo -->
                         <div class="section-header">
                             <h5 class="mb-0">
-                                <i class="bi bi-camera"></i> {{ t.photo }}
-                                <span class="required-badge">{{ t.required }}</span>
+                                <i class="bi bi-camera"></i> {{ t.photo if t.photo else 'Profilbild' }}
+                                <span class="required-badge">{{ t.required if t.required else 'Pflicht' }}</span>
                             </h5>
                         </div>
                         
                         <div class="text-center mb-4">
                             {% if registration.photo_filename %}
-                            <img src="{{ registration.photo_filename }}" alt="Profile" class="photo-preview mb-3" id="photoPreview">
+                            <img src="{{ registration.photo_filename }}" 
+                                 class="photo-preview mb-3" id="photoPreview" alt="Profile">
                             {% else %}
                             <div class="photo-placeholder mx-auto mb-3" id="photoPlaceholder">
-                                <i class="bi bi-person-fill text-muted" style="font-size: 4rem;"></i>
+                                <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
                             </div>
-                            <img src="" alt="Preview" class="photo-preview mb-3 d-none" id="photoPreview">
+                            <img src="#" class="photo-preview mb-3 d-none" id="photoPreview" alt="Preview">
                             {% endif %}
                             
                             <div>
-                                <label for="photo" class="btn btn-outline-primary">
-                                    <i class="bi bi-upload"></i>
+                                <label for="photo" class="btn btn-outline-success">
+                                    <i class="bi bi-upload"></i> 
                                     {{ t.upload_photo if t.upload_photo else 'Foto hochladen' }}
                                 </label>
-                                <input type="file" class="d-none" id="photo" name="photo" accept="image/*" onchange="previewPhoto(this)">
+                                <input type="file" id="photo" name="photo" accept="image/*" 
+                                       class="d-none" onchange="previewPhoto(this)">
                             </div>
-                            <small class="text-muted d-block mt-2">{{ t.photo_help }}</small>
+                            <small class="text-muted d-block mt-2">
+                                {{ t.photo_help if t.photo_help else 'JPG, PNG, max 5MB' }}
+                            </small>
+                        </div>
+
+                        <!-- SECTION: Additional Photos for Social Media -->
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-images"></i> {{ t.social_media_photos if t.social_media_photos else 'Social Media Fotos' }}
+                                <span class="optional-badge">{{ t.optional if t.optional else 'Optional' }}</span>
+                            </h5>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <p class="text-muted small mb-3">
+                                <i class="bi bi-info-circle"></i>
+                                {{ t.social_media_photos_help if t.social_media_photos_help else 'Lade bis zu 5 Fotos hoch, die wir für Social Media Posts verwenden dürfen (Action Shots, Spielfotos, etc.)' }}
+                            </p>
+                            
+                            <div class="additional-photos-grid" id="additionalPhotosGrid">
+                                <!-- Existing photos -->
+                                {% if additional_photos_list %}
+                                    {% for photo_url in additional_photos_list %}
+                                    <div class="additional-photo-item" data-photo-url="{{ photo_url }}">
+                                        <img src="{{ photo_url }}" alt="Social Media Photo">
+                                        <button type="button" class="delete-btn" onclick="markPhotoForDeletion(this, '{{ photo_url }}')">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <!-- Add photo button -->
+                                <label class="add-photo-btn" id="addPhotoBtn" {% if additional_photos_list and additional_photos_list|length >= 5 %}style="display:none"{% endif %}>
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span>{{ t.add_photo if t.add_photo else 'Hinzufügen' }}</span>
+                                    <input type="file" name="additional_photos" accept="image/*" multiple 
+                                           class="d-none" onchange="handleAdditionalPhotos(this)">
+                                </label>
+                            </div>
+                            
+                            <!-- Hidden input for photos to delete -->
+                            <input type="hidden" name="photos_to_delete" id="photosToDelete" value="">
+                            
+                            <small class="text-muted d-block mt-2">
+                                📷 <span id="photoCount">{{ additional_photos_list|length if additional_photos_list else 0 }}</span>/5 {{ t.photos if t.photos else 'Fotos' }}
+                            </small>
                         </div>
 
                         <!-- SECTION: Shirt Info -->
                         <div class="section-header">
                             <h5 class="mb-0">
-                                <i class="bi bi-award"></i> {{ t.shirt_info }}
-                                <span class="required-badge">{{ t.required }}</span>
+                                <i class="bi bi-award"></i> {{ t.shirt_info if t.shirt_info else 'Shirt-Informationen' }}
+                                <span class="required-badge">{{ t.required if t.required else 'Pflicht' }}</span>
                             </h5>
                         </div>
                         
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
-                                <label for="shirt_name" class="form-label fw-bold">
-                                    {{ t.shirt_name }} <span class="text-danger">*</span>
-                                </label>
-                                <input type="text" class="form-control form-control-lg" 
-                                       id="shirt_name" name="shirt_name" 
-                                       value="{{ registration.shirt_name or '' }}"
-                                       placeholder="MÜLLER" required maxlength="15">
-                                <small class="text-muted">{{ t.shirt_name_help }}</small>
+                                <label for="shirt_name" class="form-label">{{ t.shirt_name if t.shirt_name else 'Name auf dem Shirt' }} *</label>
+                                <input type="text" class="form-control form-control-lg" id="shirt_name" name="shirt_name" 
+                                       value="{{ registration.shirt_name or '' }}" required
+                                       maxlength="15" placeholder="NACHNAME" style="text-transform: uppercase;">
+                                <small class="text-muted">{{ t.shirt_name_help if t.shirt_name_help else 'Max 15 Zeichen' }}</small>
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="shirt_size" class="form-label fw-bold">
-                                    {{ t.shirt_size }} <span class="text-danger">*</span>
-                                </label>
+                                <label for="shirt_size" class="form-label">{{ t.shirt_size if t.shirt_size else 'Shirt-Größe' }} *</label>
                                 <select class="form-select form-select-lg" id="shirt_size" name="shirt_size" required>
-                                    <option value="">-- {{ t.select if t.select else 'Auswählen' }} --</option>
+                                    <option value="">{{ t.select if t.select else 'Auswählen' }}...</option>
                                     {% for size in shirt_sizes %}
-                                    <option value="{{ size }}" {% if registration.shirt_size == size %}selected{% endif %}>
-                                        {{ size }}
-                                    </option>
+                                    <option value="{{ size }}" {% if registration.shirt_size == size %}selected{% endif %}>{{ size }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -214,15 +315,15 @@
                         <!-- SECTION: Bio -->
                         <div class="section-header">
                             <h5 class="mb-0">
-                                <i class="bi bi-person-lines-fill"></i> {{ t.bio }}
-                                <span class="required-badge">{{ t.required }}</span>
+                                <i class="bi bi-person-lines-fill"></i> {{ t.bio if t.bio else 'Kurze Bio' }}
+                                <span class="required-badge">{{ t.required if t.required else 'Pflicht' }}</span>
                             </h5>
                         </div>
                         
                         <div class="mb-4">
                             <textarea class="form-control" id="bio" name="bio" rows="4" 
-                                      placeholder="{{ t.bio_placeholder }}" required
-                                      minlength="50" maxlength="500">{{ registration.bio or '' }}</textarea>
+                                      maxlength="500" required
+                                      placeholder="{{ t.bio_placeholder if t.bio_placeholder else 'Erzähl uns etwas über dich und deine Pickleball-Erfahrung...' }}">{{ registration.bio or '' }}</textarea>
                             <div class="d-flex justify-content-between mt-1">
                                 <small class="text-muted">{{ t.bio_help if t.bio_help else 'Erzähl uns etwas über dich (50-500 Zeichen)' }}</small>
                                 <small class="text-muted"><span id="bioCount">{{ (registration.bio or '')|length }}</span>/500</small>
@@ -239,13 +340,13 @@
                         
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
-                                <label for="email" class="form-label">{{ t.email }}</label>
+                                <label for="email" class="form-label">{{ t.email if t.email else 'E-Mail' }}</label>
                                 <input type="email" class="form-control" id="email" name="email" 
                                        value="{{ registration.email or '' }}"
                                        placeholder="max@beispiel.de">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="birth_year" class="form-label">{{ t.birth_year }}</label>
+                                <label for="birth_year" class="form-label">{{ t.birth_year if t.birth_year else 'Geburtsjahr' }}</label>
                                 <input type="number" class="form-control" id="birth_year" name="birth_year" 
                                        value="{{ registration.birth_year or '' }}"
                                        min="1940" max="2010" placeholder="1985">
@@ -255,7 +356,7 @@
                         <!-- SECTION: Social Media (Optional) -->
                         <div class="section-header">
                             <h5 class="mb-0">
-                                <i class="bi bi-share"></i> {{ t.social_media }}
+                                <i class="bi bi-share"></i> {{ t.social_media if t.social_media else 'Social Media' }}
                                 <span class="optional-badge">{{ t.optional if t.optional else 'Optional' }}</span>
                             </h5>
                         </div>
@@ -307,20 +408,20 @@
                         <!-- SECTION: Extras (Optional) -->
                         <div class="section-header">
                             <h5 class="mb-0">
-                                <i class="bi bi-stars"></i> {{ t.optional_info }}
+                                <i class="bi bi-stars"></i> {{ t.optional_info if t.optional_info else 'Zusätzliche Infos' }}
                                 <span class="optional-badge">{{ t.optional if t.optional else 'Optional' }}</span>
                             </h5>
                         </div>
                         
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
-                                <label for="dupr_rating" class="form-label">{{ t.dupr_rating }}</label>
+                                <label for="dupr_rating" class="form-label">{{ t.dupr_rating if t.dupr_rating else 'DUPR Rating' }}</label>
                                 <input type="text" class="form-control" id="dupr_rating" name="dupr_rating" 
                                        value="{{ registration.dupr_rating or '' }}"
                                        placeholder="4.25">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="video_url" class="form-label">{{ t.video_url }}</label>
+                                <label for="video_url" class="form-label">{{ t.video_url if t.video_url else 'Video URL' }}</label>
                                 <input type="url" class="form-control" id="video_url" name="video_url" 
                                        value="{{ registration.video_url or '' }}"
                                        placeholder="https://youtube.com/watch?v=...">
@@ -353,7 +454,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Photo preview
+        // Track photos to delete
+        let photosToDelete = [];
+        
+        // Photo preview for profile photo
         function previewPhoto(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
@@ -369,6 +473,66 @@
                     }
                 }
                 reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Handle additional photos selection
+        function handleAdditionalPhotos(input) {
+            const grid = document.getElementById('additionalPhotosGrid');
+            const addBtn = document.getElementById('addPhotoBtn');
+            const currentCount = grid.querySelectorAll('.additional-photo-item').length;
+            const maxPhotos = 5;
+            
+            if (input.files) {
+                const filesToAdd = Math.min(input.files.length, maxPhotos - currentCount);
+                
+                for (let i = 0; i < filesToAdd; i++) {
+                    const file = input.files[i];
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = 'additional-photo-item';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" alt="New Photo">
+                            <button type="button" class="delete-btn" onclick="removeNewPhoto(this)">
+                                <i class="bi bi-x"></i>
+                            </button>
+                        `;
+                        grid.insertBefore(div, addBtn);
+                        updatePhotoCount();
+                    }
+                    reader.readAsDataURL(file);
+                }
+            }
+        }
+
+        // Mark existing photo for deletion
+        function markPhotoForDeletion(btn, photoUrl) {
+            const item = btn.closest('.additional-photo-item');
+            photosToDelete.push(photoUrl);
+            document.getElementById('photosToDelete').value = photosToDelete.join('|||');
+            item.remove();
+            updatePhotoCount();
+        }
+
+        // Remove newly added photo (before submit)
+        function removeNewPhoto(btn) {
+            const item = btn.closest('.additional-photo-item');
+            item.remove();
+            updatePhotoCount();
+        }
+
+        // Update photo count display
+        function updatePhotoCount() {
+            const count = document.querySelectorAll('.additional-photo-item').length;
+            document.getElementById('photoCount').textContent = count;
+            
+            const addBtn = document.getElementById('addPhotoBtn');
+            if (count >= 5) {
+                addBtn.style.display = 'none';
+            } else {
+                addBtn.style.display = 'flex';
             }
         }
 
