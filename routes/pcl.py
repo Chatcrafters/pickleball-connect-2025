@@ -1,4 +1,3 @@
-from urllib.parse import quote
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS
 from datetime import datetime, date
@@ -17,8 +16,53 @@ UPLOAD_FOLDER = 'static/uploads/pcl'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
+# Content Template SIDs for Captain Invitations (approved by Meta)
+CAPTAIN_INVITATION_TEMPLATES = {
+    'EN': 'HX60bacc71dac06f81eff2227151389f6d',
+    'DE': 'HX52b9ea2e53c93cec8195d82972a665d4',
+    'ES': 'HX97d1eb9aabb2a2c968a47399d5c1689e',
+    'FR': 'HX4de0671a9f29e7fa02e3cb3e94839809'
+}
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def send_captain_invitation_template(phone, captain_name, team_name, tournament_name, dashboard_url, deadline, language='EN'):
+    """Send captain invitation using approved WhatsApp Content Template"""
+    from twilio.rest import Client
+    
+    account_sid = os.environ.get('TWILIO_ACCOUNT_SID')
+    auth_token = os.environ.get('TWILIO_AUTH_TOKEN')
+    from_number = os.environ.get('TWILIO_WHATSAPP_FROM', 'whatsapp:+14155238886')
+    
+    content_sid = CAPTAIN_INVITATION_TEMPLATES.get(language.upper(), CAPTAIN_INVITATION_TEMPLATES['EN'])
+    
+    phone_clean = phone.strip().replace(' ', '').replace('-', '')
+    if not phone_clean.startswith('+'):
+        phone_clean = '+' + phone_clean
+    to_number = f'whatsapp:{phone_clean}'
+    
+    try:
+        client = Client(account_sid, auth_token)
+        
+        message = client.messages.create(
+            from_=from_number,
+            to=to_number,
+            content_sid=content_sid,
+            content_variables=json.dumps({
+                "1": tournament_name,
+                "2": captain_name,
+                "3": team_name,
+                "4": dashboard_url,
+                "5": deadline
+            })
+        )
+        
+        return {'status': 'sent', 'message_sid': message.sid}
+        
+    except Exception as e:
+        return {'status': 'error', 'error': str(e)}
 
 
 # ============================================================================
@@ -573,11 +617,7 @@ def admin_team_detail(team_id):
     
     men = team.registrations.filter_by(gender='male').all()
     women = team.registrations.filter_by(gender='female').all()
-    
-    # Get all captains
     captains = team.registrations.filter_by(is_captain=True).all()
-    
-    # Get stats
     stats = team.get_stats()
     
     return render_template('pcl/admin_team_detail.html', 
@@ -604,7 +644,11 @@ def add_captain(team_id):
         flash('First name, last name and phone are required!', 'danger')
         return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
     
-    # Create captain registration
+    # Normalize phone
+    phone = phone.replace(' ', '').replace('-', '')
+    if not phone.startswith('+'):
+        phone = '+' + phone
+    
     captain = PCLRegistration(
         team_id=team.id,
         first_name=first_name,
@@ -624,27 +668,28 @@ def add_captain(team_id):
         
         flash(f'Captain {first_name} {last_name} added!', 'success')
         
-        # Send WhatsApp with captain link and profile link
+        # Send WhatsApp using Content Template
         if send_whatsapp and phone:
-            profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=captain.profile_token)
-            captain_link = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+            dashboard_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+            team_name = f"{team.country_flag} {team.country_name} {team.age_category}"
+            deadline = team.tournament.registration_deadline.strftime('%d.%m.%Y')
             
-            messages = {
-                'EN': f"Hi {first_name}!\n\nYou have been appointed as Captain for {team.country_flag} {team.country_name} {team.age_category} at {team.tournament.name}!\n\nYour Captain Dashboard:\n{captain_link}\n\nPlease complete your profile:\n{profile_url}",
-                'DE': f"Hallo {first_name}!\n\nDu wurdest zum Captain für {team.country_flag} {team.country_name} {team.age_category} bei {team.tournament.name} ernannt!\n\nDein Captain Dashboard:\n{captain_link}\n\nBitte vervollständige dein Profil:\n{profile_url}",
-                'ES': f"Hola {first_name}!\n\nHas sido nombrado Capitan de {team.country_flag} {team.country_name} {team.age_category} en {team.tournament.name}!\n\nTu Panel de Capitan:\n{captain_link}\n\nPor favor completa tu perfil:\n{profile_url}",
-                'FR': f"Bonjour {first_name}!\n\nVous avez ete nomme Capitaine de {team.country_flag} {team.country_name} {team.age_category} a {team.tournament.name}!\n\nVotre Tableau de Bord:\n{captain_link}\n\nVeuillez completer votre profil:\n{profile_url}"
-            }
+            result = send_captain_invitation_template(
+                phone=phone,
+                captain_name=first_name,
+                team_name=team_name,
+                tournament_name=team.tournament.name,
+                dashboard_url=dashboard_url,
+                deadline=deadline,
+                language=language
+            )
             
-            message = messages.get(language, messages['EN'])
-            result = send_whatsapp_message(phone, message, test_mode=False)
-            
-            if result.get('status') in ['sent', 'queued']:
+            if result.get('status') == 'sent':
                 captain.whatsapp_sent_at = datetime.now()
                 db.session.commit()
                 flash(f'WhatsApp sent to {first_name}!', 'success')
             else:
-                flash(f'WhatsApp failed: {result.get("error", "Unknown error")}', 'warning')
+                flash(f'WhatsApp failed: {result.get("error", "Unknown")}', 'warning')
         
     except Exception as e:
         db.session.rollback()

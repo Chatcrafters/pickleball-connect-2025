@@ -13,21 +13,18 @@
         </ol>
     </nav>
 
-    <!-- Header Section with Captains -->
-    <div class="row mb-4 align-items-center">
-        <div class="col-md-6">
-            <div class="d-flex align-items-center flex-wrap gap-3">
-                <div>
-                    <h1 class="mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</h1>
-                    <p class="text-muted mb-0">{{ team.tournament.name }}</p>
-                </div>
+    <!-- Header Section with Captain Avatars -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center">
+                <h1 class="me-3">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</h1>
                 <!-- Captain Avatars inline -->
                 {% if captains %}
-                <div class="d-flex align-items-center">
-                    {% for cap in captains %}
-                    <div class="text-center mx-1" title="{{ cap.first_name }} {{ cap.last_name }}">
-                        {% if cap.photo_filename %}
-                        <img src="{{ cap.photo_filename }}" class="rounded-circle border border-warning border-3" 
+                <div class="d-flex ms-2">
+                    {% for captain in captains %}
+                    <div class="position-relative" style="margin-left: -10px;" title="{{ captain.first_name }} {{ captain.last_name }} (Captain)">
+                        {% if captain.photo_filename %}
+                        <img src="{{ captain.photo_filename }}" class="rounded-circle border border-warning border-3" 
                              width="50" height="50" style="object-fit: cover;">
                         {% else %}
                         <div class="rounded-circle bg-warning d-flex align-items-center justify-content-center border border-warning border-3" 
@@ -35,16 +32,17 @@
                             <i class="bi bi-person-fill text-dark"></i>
                         </div>
                         {% endif %}
-                        <small class="d-block" style="font-size: 0.65rem;">{{ cap.first_name }}</small>
+                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;">👑</span>
                     </div>
                     {% endfor %}
                 </div>
                 {% endif %}
             </div>
+            <p class="text-muted">{{ team.tournament.name }}</p>
         </div>
-        <div class="col-md-6 text-end">
+        <div class="col-md-4 text-end">
             <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
-                <i class="bi bi-download"></i> Export
+                <i class="bi bi-download"></i> Export CSV
             </a>
             <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this team? All registrations will be removed!');">
                 <button type="submit" class="btn btn-outline-danger">
@@ -54,7 +52,7 @@
         </div>
     </div>
 
-    <!-- Captains Management Card -->
+    <!-- Team Captains Card -->
     <div class="card mb-4 border-warning">
         <div class="card-header bg-warning d-flex justify-content-between align-items-center">
             <h5 class="mb-0"><i class="bi bi-star-fill"></i> Team Captains</h5>
@@ -65,50 +63,57 @@
         <div class="card-body">
             {% if captains %}
             <div class="row">
-                {% for cap in captains %}
-                <div class="col-md-6 mb-3">
-                    <div class="card h-100 {% if cap.status == 'complete' %}border-success{% else %}border-warning{% endif %}">
-                        <div class="card-body d-flex align-items-center">
-                            {% if cap.photo_filename %}
-                            <img src="{{ cap.photo_filename }}" class="rounded-circle me-3" 
-                                 width="70" height="70" style="object-fit: cover;">
-                            {% else %}
-                            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" 
-                                 style="width: 70px; height: 70px;">
-                                <i class="bi bi-person text-white fs-3"></i>
-                            </div>
-                            {% endif %}
-                            <div class="flex-grow-1">
-                                <h5 class="mb-1">{{ cap.first_name }} {{ cap.last_name }}</h5>
-                                <p class="mb-1 text-muted small">
-                                    <i class="bi bi-telephone"></i> {{ cap.phone or 'No phone' }}
-                                </p>
-                                {% if cap.status == 'complete' %}
-                                <span class="badge bg-success">Profile Complete</span>
+                {% for captain in captains %}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                {% if captain.photo_filename %}
+                                <img src="{{ captain.photo_filename }}" class="rounded-circle me-3" 
+                                     width="60" height="60" style="object-fit: cover;">
                                 {% else %}
-                                <span class="badge bg-warning text-dark">Profile Incomplete</span>
+                                <div class="rounded-circle bg-secondary me-3 d-flex align-items-center justify-content-center" 
+                                     style="width: 60px; height: 60px;">
+                                    <i class="bi bi-person text-white fs-4"></i>
+                                </div>
                                 {% endif %}
-                                {% if cap.whatsapp_sent_at %}
-                                <br><small class="text-muted"><i class="bi bi-whatsapp"></i> Sent: {{ cap.whatsapp_sent_at.strftime('%d.%m. %H:%M') }}</small>
+                                <div>
+                                    <h6 class="mb-0">{{ captain.first_name }} {{ captain.last_name }}</h6>
+                                    <small class="text-muted">{{ captain.phone }}</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Status Badges -->
+                            <div class="mb-2">
+                                {% if captain.status == 'complete' %}
+                                <span class="badge bg-success">✓ Profile Complete</span>
+                                {% else %}
+                                <span class="badge bg-warning">⚠ Profile Incomplete</span>
+                                {% endif %}
+                                
+                                {% if captain.whatsapp_sent_at %}
+                                <span class="badge bg-info" title="Sent: {{ captain.whatsapp_sent_at.strftime('%d.%m.%Y %H:%M') }}">
+                                    📱 WhatsApp Sent
+                                </span>
                                 {% endif %}
                             </div>
-                            <div class="btn-group-vertical btn-group-sm">
-                                {% if cap.phone %}
-                                <a href="https://wa.me/{{ cap.phone|replace('+', '')|replace(' ', '')|replace('-', '') }}?text=Hi {{ cap.first_name }}! Captain Link: {{ request.host_url }}pcl/team/{{ team.captain_token }}" 
-                                   target="_blank" class="btn btn-outline-success" title="Send Captain Link">
-                                    <i class="bi bi-whatsapp"></i>
-                                </a>
-                                {% endif %}
-                                {% if cap.profile_token and cap.status != 'complete' %}
-                                <a href="https://wa.me/{{ cap.phone|replace('+', '')|replace(' ', '')|replace('-', '') }}?text=Hi {{ cap.first_name }}! Please complete your profile: {{ request.host_url }}pcl/complete/{{ cap.profile_token }}" 
-                                   target="_blank" class="btn btn-outline-primary" title="Send Profile Link">
-                                    <i class="bi bi-person-badge"></i>
-                                </a>
-                                {% endif %}
-                                <a href="{{ url_for('pcl.admin_edit_registration', registration_id=cap.id) }}" 
-                                   class="btn btn-outline-secondary" title="Edit">
+                            
+                            <!-- Action Buttons -->
+                            <div class="btn-group btn-group-sm w-100">
+                                <a href="{{ url_for('pcl.admin_edit_registration', registration_id=captain.id) }}" 
+                                   class="btn btn-outline-primary" title="Edit">
                                     <i class="bi bi-pencil"></i>
                                 </a>
+                                <button type="button" class="btn btn-outline-success" 
+                                        onclick="sendCaptainLink({{ captain.id }}, '{{ captain.first_name }}', '{{ captain.phone }}')"
+                                        title="Send Captain Dashboard Link">
+                                    <i class="bi bi-whatsapp"></i> Dashboard
+                                </button>
+                                <button type="button" class="btn btn-outline-info"
+                                        onclick="sendProfileLink({{ captain.id }}, '{{ captain.first_name }}', '{{ captain.phone }}')"
+                                        title="Send Profile Completion Link">
+                                    <i class="bi bi-person-badge"></i> Profile
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -117,10 +122,10 @@
             </div>
             {% else %}
             <div class="text-center py-4">
-                <i class="bi bi-person-plus fs-1 text-muted"></i>
-                <p class="text-muted mb-3">No captains assigned yet</p>
+                <i class="bi bi-person-plus display-4 text-muted"></i>
+                <p class="text-muted mt-2">No captains assigned yet</p>
                 <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#addCaptainModal">
-                    <i class="bi bi-plus-circle"></i> Add Captain
+                    <i class="bi bi-plus-circle"></i> Add First Captain
                 </button>
             </div>
             {% endif %}
@@ -132,11 +137,20 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header bg-warning">
-                    <h5 class="modal-title"><i class="bi bi-star-fill"></i> Add Captain</h5>
+                    <h5 class="modal-title"><i class="bi bi-star-fill"></i> Add Team Captain</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="{{ url_for('pcl.add_captain', team_id=team.id) }}" method="POST">
                     <div class="modal-body">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> The captain will receive:
+                            <ul class="mb-0 mt-1">
+                                <li>WhatsApp with Captain Dashboard link</li>
+                                <li>Link to complete their own profile</li>
+                                <li>Clickable button to open dashboard</li>
+                            </ul>
+                        </div>
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">First Name *</label>
@@ -147,41 +161,38 @@
                                 <input type="text" class="form-control" name="last_name" required>
                             </div>
                         </div>
+                        
                         <div class="mb-3">
                             <label class="form-label">WhatsApp Phone *</label>
-                            <input type="tel" class="form-control" name="phone" required placeholder="+49123456789">
-                            <small class="text-muted">With country code (e.g. +49, +34, +39)</small>
+                            <input type="tel" class="form-control" name="phone" required
+                                   placeholder="+49 170 1234567">
+                            <small class="text-muted">With country code (e.g., +49 for Germany)</small>
                         </div>
+                        
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Gender *</label>
                                 <select class="form-select" name="gender" required>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
+                                    <option value="male">👨 Male</option>
+                                    <option value="female">👩 Female</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Language</label>
                                 <select class="form-select" name="language">
-                                    <option value="EN">English</option>
-                                    <option value="DE">Deutsch</option>
-                                    <option value="ES">Espanol</option>
-                                    <option value="FR">Francais</option>
+                                    <option value="EN">🇬🇧 English</option>
+                                    <option value="DE">🇩🇪 Deutsch</option>
+                                    <option value="ES">🇪🇸 Español</option>
+                                    <option value="FR">🇫🇷 Français</option>
                                 </select>
                             </div>
                         </div>
-                        <div class="form-check mb-2">
+                        
+                        <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="send_whatsapp" id="sendWhatsapp" checked>
                             <label class="form-check-label" for="sendWhatsapp">
-                                <i class="bi bi-whatsapp text-success"></i> Send WhatsApp with Captain Link + Profile Link immediately
+                                <i class="bi bi-whatsapp text-success"></i> Send WhatsApp immediately
                             </label>
-                        </div>
-                        <div class="alert alert-info small mb-0">
-                            <i class="bi bi-info-circle"></i> Captain will receive:
-                            <ul class="mb-0 mt-1">
-                                <li>Captain Dashboard Link (to manage team)</li>
-                                <li>Profile Completion Link (to upload photo & bio)</li>
-                            </ul>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -198,7 +209,7 @@
     <!-- Captain Access Link -->
     <div class="card mb-4 border-primary">
         <div class="card-header bg-primary text-white">
-            <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Secret Link</h5>
+            <h5 class="mb-0"><i class="bi bi-link-45deg"></i> Captain Dashboard Link</h5>
         </div>
         <div class="card-body">
             <div class="input-group mb-2">
@@ -208,65 +219,68 @@
                     <i class="bi bi-clipboard"></i> Copy
                 </button>
             </div>
-            <small class="text-muted">This link gives access to the Captain Dashboard. Share only with captains!</small>
+            <small class="text-muted">This link gives access to the captain dashboard (shared by all captains)</small>
         </div>
     </div>
 
     <!-- Team Statistics -->
     <div class="row mb-4">
-        <div class="col-6 col-md-3 mb-2">
-            <div class="card text-center h-100">
-                <div class="card-body py-3">
-                    <h3 class="mb-0">{{ stats.total }}</h3>
-                    <small class="text-muted">Total Players</small>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3>{{ stats.total }}</h3>
+                    <p class="mb-0">Total Players</p>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-2">
-            <div class="card text-center h-100 {% if stats.men >= team.min_men %}border-success border-2{% else %}border-warning border-2{% endif %}">
-                <div class="card-body py-3">
-                    <h3 class="mb-0">{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
-                    <small>Men {% if stats.men < team.min_men %}<span class="text-warning">(need {{ team.min_men - stats.men }})</span>{% endif %}</small>
+        <div class="col-md-3">
+            <div class="card text-center {% if stats.men >= team.min_men %}border-success border-3{% else %}border-warning border-3{% endif %}">
+                <div class="card-body">
+                    <h3>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
+                    <p class="mb-0">👨 Men</p>
+                    <small class="text-muted">{% if stats.men >= team.min_men %}✅ OK{% else %}⚠️ Need {{ team.min_men - stats.men }}{% endif %}</small>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-2">
-            <div class="card text-center h-100 {% if stats.women >= team.min_women %}border-success border-2{% else %}border-warning border-2{% endif %}">
-                <div class="card-body py-3">
-                    <h3 class="mb-0">{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
-                    <small>Women {% if stats.women < team.min_women %}<span class="text-warning">(need {{ team.min_women - stats.women }})</span>{% endif %}</small>
+        <div class="col-md-3">
+            <div class="card text-center {% if stats.women >= team.min_women %}border-success border-3{% else %}border-warning border-3{% endif %}">
+                <div class="card-body">
+                    <h3>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
+                    <p class="mb-0">👩 Women</p>
+                    <small class="text-muted">{% if stats.women >= team.min_women %}✅ OK{% else %}⚠️ Need {{ team.min_women - stats.women }}{% endif %}</small>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3 mb-2">
-            <div class="card text-center h-100 {% if stats.is_complete %}bg-success text-white{% else %}bg-warning{% endif %}">
-                <div class="card-body py-3">
-                    <h3 class="mb-0">{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h3>
-                    <small>{% if stats.is_complete %}Complete{% else %}Incomplete{% endif %}</small>
+        <div class="col-md-3">
+            <div class="card text-center {% if stats.is_complete %}bg-success text-white{% else %}bg-warning{% endif %}">
+                <div class="card-body">
+                    <h3>{{ stats.complete }}/{{ stats.total }}</h3>
+                    <p class="mb-0">Complete</p>
+                    <small>{% if stats.is_complete %}✅ Ready{% else %}{{ stats.total - stats.complete }} incomplete{% endif %}</small>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Players Lists -->
+    <!-- Player Lists -->
     <div class="row">
         <!-- Men Players Section -->
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Men ({{ stats.men }})</h5>
+                    <h5 class="mb-0">👨 Men ({{ stats.men }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.men_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
                     {% if men %}
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0 small">
+                        <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Player</th>
                                     <th>Shirt</th>
                                     <th>Status</th>
-                                    <th width="80">Actions</th>
+                                    <th width="100">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -276,41 +290,42 @@
                                         <div class="d-flex align-items-center">
                                             {% if reg.photo_filename %}
                                             <img src="{{ reg.photo_filename }}" 
-                                                 class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                                                 class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
                                             {% else %}
-                                            <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                                <i class="bi bi-person text-white small"></i>
+                                            <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person text-white"></i>
                                             </div>
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning text-dark">C</span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning">👑</span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        {{ reg.shirt_name or '-' }}<br>
+                                        <strong>{{ reg.shirt_name or '-' }}</strong>
+                                        <br>
                                         <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success">OK</span>
+                                        <span class="badge bg-success">✓</span>
                                         {% else %}
-                                        <span class="badge bg-warning text-dark">!</span>
+                                        <span class="badge bg-warning">⚠</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ url_for('pcl.admin_edit_registration', registration_id=reg.id) }}" 
-                                               class="btn btn-outline-primary btn-sm" title="Edit">
+                                               class="btn btn-outline-primary" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <form action="{{ url_for('pcl.delete_registration', registration_id=reg.id) }}" 
                                                   method="POST" class="d-inline" 
                                                   onsubmit="return confirm('Delete {{ reg.first_name }}?');">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -322,7 +337,7 @@
                         </table>
                     </div>
                     {% else %}
-                    <p class="text-muted text-center py-4 mb-0">No men registered yet</p>
+                    <p class="text-muted text-center py-4">No men registered yet</p>
                     {% endif %}
                 </div>
             </div>
@@ -332,19 +347,19 @@
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Women ({{ stats.women }})</h5>
+                    <h5 class="mb-0">👩 Women ({{ stats.women }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.women_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
                     {% if women %}
                     <div class="table-responsive">
-                        <table class="table table-hover mb-0 small">
+                        <table class="table table-hover mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th>Player</th>
                                     <th>Shirt</th>
                                     <th>Status</th>
-                                    <th width="80">Actions</th>
+                                    <th width="100">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -354,41 +369,42 @@
                                         <div class="d-flex align-items-center">
                                             {% if reg.photo_filename %}
                                             <img src="{{ reg.photo_filename }}" 
-                                                 class="rounded-circle me-2" width="35" height="35" style="object-fit: cover;">
+                                                 class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
                                             {% else %}
-                                            <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
-                                                <i class="bi bi-person text-white small"></i>
+                                            <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                <i class="bi bi-person text-white"></i>
                                             </div>
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning text-dark">C</span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning">👑</span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        {{ reg.shirt_name or '-' }}<br>
+                                        <strong>{{ reg.shirt_name or '-' }}</strong>
+                                        <br>
                                         <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success">OK</span>
+                                        <span class="badge bg-success">✓</span>
                                         {% else %}
-                                        <span class="badge bg-warning text-dark">!</span>
+                                        <span class="badge bg-warning">⚠</span>
                                         {% endif %}
                                     </td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
                                             <a href="{{ url_for('pcl.admin_edit_registration', registration_id=reg.id) }}" 
-                                               class="btn btn-outline-primary btn-sm" title="Edit">
+                                               class="btn btn-outline-primary" title="Edit">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                             <form action="{{ url_for('pcl.delete_registration', registration_id=reg.id) }}" 
                                                   method="POST" class="d-inline" 
                                                   onsubmit="return confirm('Delete {{ reg.first_name }}?');">
-                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete">
+                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </form>
@@ -400,7 +416,7 @@
                         </table>
                     </div>
                     {% else %}
-                    <p class="text-muted text-center py-4 mb-0">No women registered yet</p>
+                    <p class="text-muted text-center py-4">No women registered yet</p>
                     {% endif %}
                 </div>
             </div>
@@ -408,7 +424,7 @@
     </div>
 
     <!-- Team Requirements Info -->
-    <div class="card mb-4">
+    <div class="card">
         <div class="card-header">
             <h5 class="mb-0"><i class="bi bi-info-circle"></i> Team Requirements</h5>
         </div>
@@ -424,10 +440,10 @@
                 <div class="col-md-6">
                     <h6>Required Profile Fields:</h6>
                     <ul class="mb-0">
-                        <li>Profile Photo</li>
-                        <li>Bio</li>
-                        <li>Shirt Name & Size</li>
-                        <li>Social Media (optional)</li>
+                        <li>✓ Profile Photo</li>
+                        <li>✓ Bio</li>
+                        <li>✓ Shirt Name & Size</li>
+                        <li>○ Social Media (optional)</li>
                     </ul>
                 </div>
             </div>
@@ -435,51 +451,49 @@
     </div>
 
     <!-- Back Navigation -->
-    <div class="mb-4">
+    <div class="mt-4">
         <a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=team.tournament.id) }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> Back to Tournament
         </a>
     </div>
 </div>
 
+<!-- JavaScript -->
 <script>
 function copyCaptainLink() {
     const linkInput = document.getElementById('captainLink');
-    const textToCopy = linkInput.value;
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
     
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            showCopySuccess();
-        }).catch(() => {
-            fallbackCopy(linkInput);
-        });
-    } else {
-        fallbackCopy(linkInput);
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy link');
+    });
+}
+
+function sendCaptainLink(captainId, name, phone) {
+    if(confirm('Send Captain Dashboard link to ' + name + ' (' + phone + ')?')) {
+        // This would need a route - for now just show info
+        alert('Feature coming: Will send dashboard link via WhatsApp Content Template');
     }
 }
 
-function fallbackCopy(inputElement) {
-    inputElement.select();
-    inputElement.setSelectionRange(0, 99999);
-    try {
-        document.execCommand('copy');
-        showCopySuccess();
-    } catch (err) {
-        prompt('Copy this link:', inputElement.value);
+function sendProfileLink(captainId, name, phone) {
+    if(confirm('Send Profile Completion link to ' + name + ' (' + phone + ')?')) {
+        // This would need a route - for now just show info
+        alert('Feature coming: Will send profile link via WhatsApp');
     }
-}
-
-function showCopySuccess() {
-    const btn = document.querySelector('[onclick="copyCaptainLink()"]');
-    const originalHTML = btn.innerHTML;
-    btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
-    btn.classList.remove('btn-outline-secondary');
-    btn.classList.add('btn-success');
-    setTimeout(() => {
-        btn.innerHTML = originalHTML;
-        btn.classList.remove('btn-success');
-        btn.classList.add('btn-outline-secondary');
-    }, 2000);
 }
 </script>
 {% endblock %}
