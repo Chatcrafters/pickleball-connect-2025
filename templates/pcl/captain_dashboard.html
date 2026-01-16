@@ -48,32 +48,38 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-4 mb-2">
-                    <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-success w-100">
-                        <i class="bi bi-person-plus-fill"></i>
-                        {{ t.quick_add_player if t.quick_add_player else 'Spieler hinzufügen' }}
+                <div class="col-md-3 col-6 mb-2">
+                    <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                        <i class="bi bi-person-plus-fill fs-4"></i>
+                        <small class="mt-1">{{ t.quick_add_player if t.quick_add_player else 'Spieler hinzufügen' }}</small>
                     </a>
                 </div>
-                <div class="col-md-4 mb-2">
-                    <form action="{{ url_for('pcl.send_all_profile_links', token=team.captain_token) }}" method="POST" class="d-inline w-100" onsubmit="return confirm('Links an alle unvollständigen Spieler senden?');">
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-whatsapp"></i>
-                            {{ t.send_all_links if t.send_all_links else 'Alle Links senden' }}
-                        </button>
-                    </form>
+                <div class="col-md-3 col-6 mb-2">
+                    <a href="https://wa.me/?text={{ share_message_encoded }}" 
+                       target="_blank" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                        <i class="bi bi-whatsapp fs-4"></i>
+                        <small class="mt-1">{{ t.share_whatsapp if t.share_whatsapp else 'Via WhatsApp teilen' }}</small>
+                    </a>
                 </div>
-                <div class="col-md-4 mb-2">
-                    <button type="button" class="btn btn-outline-secondary w-100" onclick="copyLink()">
-                        <i class="bi bi-link-45deg"></i>
-                        {{ t.copy_link }}
+                <div class="col-md-3 col-6 mb-2">
+                    <button type="button" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" onclick="copyLink()">
+                        <i class="bi bi-link-45deg fs-4"></i>
+                        <small class="mt-1">{{ t.copy_link if t.copy_link else 'Link kopieren' }}</small>
+                    </button>
+                </div>
+                <div class="col-md-3 col-6 mb-2">
+                    <button type="button" class="btn btn-outline-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" onclick="copyMessage()">
+                        <i class="bi bi-chat-text fs-4"></i>
+                        <small class="mt-1">{{ t.copy_message if t.copy_message else 'Nachricht kopieren' }}</small>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Registration Link (hidden input for copy) -->
-    <input type="hidden" id="registrationUrl" value="{{ registration_url }}">
+    <!-- Hidden inputs for copy functions -->
+    <input type="hidden" id="registrationUrl" value="{{ registration_url }}?lang={{ current_lang }}">
+    <input type="hidden" id="shareMessage" value="{{ share_message }}">
 
     <!-- Team Status -->
     <div class="row mb-4">
@@ -184,13 +190,12 @@
                             
                             <!-- Action buttons -->
                             <div class="mt-2 d-flex gap-1 flex-wrap">
-                                <!-- WhatsApp Button -->
+                                <!-- WhatsApp Direct Link -->
                                 {% if reg.phone and reg.status != 'complete' %}
-                                <form action="{{ url_for('pcl.send_single_profile_link', token=team.captain_token, registration_id=reg.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success" title="WhatsApp senden">
-                                        <i class="bi bi-whatsapp"></i>
-                                    </button>
-                                </form>
+                                <a href="https://wa.me/{{ reg.phone|replace('+', '')|replace(' ', '')|replace('-', '') }}?text={{ player_message_encoded }}" 
+                                   target="_blank" class="btn btn-sm btn-success" title="WhatsApp senden">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
                                 {% endif %}
                                 
                                 <!-- Edit Button -->
@@ -289,13 +294,12 @@
                             
                             <!-- Action buttons -->
                             <div class="mt-2 d-flex gap-1 flex-wrap">
-                                <!-- WhatsApp Button -->
+                                <!-- WhatsApp Direct Link -->
                                 {% if reg.phone and reg.status != 'complete' %}
-                                <form action="{{ url_for('pcl.send_single_profile_link', token=team.captain_token, registration_id=reg.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-success" title="WhatsApp senden">
-                                        <i class="bi bi-whatsapp"></i>
-                                    </button>
-                                </form>
+                                <a href="https://wa.me/{{ reg.phone|replace('+', '')|replace(' ', '')|replace('-', '') }}?text={{ player_message_encoded }}" 
+                                   target="_blank" class="btn btn-sm btn-success" title="WhatsApp senden">
+                                    <i class="bi bi-whatsapp"></i>
+                                </a>
                                 {% endif %}
                                 
                                 <!-- Edit Button -->
@@ -361,7 +365,6 @@
 function copyLink() {
     const input = document.getElementById('registrationUrl');
     
-    // Modern clipboard API
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(input.value).then(function() {
             showCopyFeedback();
@@ -374,7 +377,6 @@ function copyLink() {
 }
 
 function fallbackCopy(input) {
-    // Create temporary input
     const tempInput = document.createElement('input');
     tempInput.value = input.value;
     document.body.appendChild(tempInput);
@@ -389,11 +391,10 @@ function fallbackCopy(input) {
 }
 
 function showCopyFeedback() {
-    // Find the copy button
     const btn = document.querySelector('[onclick="copyLink()"]');
     const originalHTML = btn.innerHTML;
     
-    btn.innerHTML = '<i class="bi bi-check"></i> {{ t.link_copied if t.link_copied else "Link kopiert!" }}';
+    btn.innerHTML = '<i class="bi bi-check fs-4"></i><small class="mt-1">Kopiert!</small>';
     btn.classList.remove('btn-outline-secondary');
     btn.classList.add('btn-success');
     
@@ -401,6 +402,35 @@ function showCopyFeedback() {
         btn.innerHTML = originalHTML;
         btn.classList.remove('btn-success');
         btn.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+
+function copyMessage() {
+    const message = document.getElementById('shareMessage').value;
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(message).then(function() {
+            showMessageCopyFeedback();
+        }).catch(function() {
+            prompt('Nachricht kopieren:', message);
+        });
+    } else {
+        prompt('Nachricht kopieren:', message);
+    }
+}
+
+function showMessageCopyFeedback() {
+    const btn = document.querySelector('[onclick="copyMessage()"]');
+    const originalHTML = btn.innerHTML;
+    
+    btn.innerHTML = '<i class="bi bi-check fs-4"></i><small class="mt-1">Kopiert!</small>';
+    btn.classList.remove('btn-outline-primary');
+    btn.classList.add('btn-success');
+    
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-success');
+        btn.classList.add('btn-outline-primary');
     }, 2000);
 }
 </script>

@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS
 from datetime import datetime, date
@@ -651,7 +652,6 @@ def export_shirt_list(tournament_id):
 # ============================================================================
 # CAPTAIN ROUTES (Secret Link)
 # ============================================================================
-
 @pcl.route('/team/<token>')
 def captain_dashboard(token):
     """Captain dashboard - accessed via secret link"""
@@ -672,6 +672,70 @@ def captain_dashboard(token):
     registration_url = request.host_url.rstrip('/') + url_for('pcl.player_register', token=token)
     quick_add_url = request.host_url.rstrip('/') + url_for('pcl.quick_add_player', token=token)
     
+    # Share messages for WhatsApp
+    share_messages = {
+        'EN': f"""Hello Team! 🎾
+
+Please complete your PCL profile for {team.tournament.name}:
+
+{registration_url}?lang=EN
+
+Required:
+✓ Profile photo
+✓ Short bio
+✓ Shirt name & size
+
+Thank you! 🏆""",
+        'DE': f"""Hallo Team! 🎾
+
+Bitte vervollständigt euer PCL Profil für {team.tournament.name}:
+
+{registration_url}?lang=DE
+
+Benötigt werden:
+✓ Profilbild
+✓ Kurze Bio
+✓ Shirt Name & Größe
+
+Danke! 🏆""",
+        'ES': f"""¡Hola Equipo! 🎾
+
+Por favor completa tu perfil PCL para {team.tournament.name}:
+
+{registration_url}?lang=ES
+
+Requerido:
+✓ Foto de perfil
+✓ Biografía breve
+✓ Nombre y talla de camiseta
+
+¡Gracias! 🏆""",
+        'FR': f"""Bonjour l'équipe! 🎾
+
+Veuillez compléter votre profil PCL pour {team.tournament.name}:
+
+{registration_url}?lang=FR
+
+Requis:
+✓ Photo de profil
+✓ Courte bio
+✓ Nom et taille du maillot
+
+Merci! 🏆"""
+    }
+    
+    share_message = share_messages.get(lang, share_messages['EN'])
+    share_message_encoded = quote(share_message)
+    
+    # Individual player message
+    player_messages = {
+        'EN': f"Hi! 🎾 Please complete your PCL profile: {registration_url}?lang=EN",
+        'DE': f"Hallo! 🎾 Bitte vervollständige dein PCL Profil: {registration_url}?lang=DE",
+        'ES': f"¡Hola! 🎾 Por favor completa tu perfil PCL: {registration_url}?lang=ES",
+        'FR': f"Salut! 🎾 Veuillez compléter votre profil PCL: {registration_url}?lang=FR"
+    }
+    player_message_encoded = quote(player_messages.get(lang, player_messages['EN']))
+    
     return render_template('pcl/captain_dashboard.html',
                          team=team,
                          stats=stats,
@@ -680,6 +744,9 @@ def captain_dashboard(token):
                          days_left=days_left,
                          registration_url=registration_url,
                          quick_add_url=quick_add_url,
+                         share_message=share_message,
+                         share_message_encoded=share_message_encoded,
+                         player_message_encoded=player_message_encoded,
                          t=t,
                          current_lang=lang)
 
