@@ -254,9 +254,9 @@
         <div class="col-md-3">
             <div class="card text-center {% if stats.is_complete %}bg-success text-white{% else %}bg-warning{% endif %}">
                 <div class="card-body">
-                    <h3>{{ stats.complete }}/{{ stats.total }}</h3>
-                    <p class="mb-0">Complete</p>
-                    <small>{% if stats.is_complete %}✅ Ready{% else %}{{ stats.total - stats.complete }} incomplete{% endif %}</small>
+                    <h3>{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h3>
+<p class="mb-0">Complete</p>
+<small>{% if stats.is_complete %}✅ Ready{% else %}{{ stats.total - (stats.men_complete + stats.women_complete) }} incomplete{% endif %}</small>
                 </div>
             </div>
         </div>
