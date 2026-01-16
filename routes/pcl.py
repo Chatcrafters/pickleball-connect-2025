@@ -568,14 +568,14 @@ def add_team(tournament_id):
 
 @pcl.route('/admin/team/<int:team_id>')
 def admin_team_detail(team_id):
-    """Admin view of a specific team"""
+    """Admin view of a specific team with captain management"""
     team = PCLTeam.query.get_or_404(team_id)
     
     men = team.registrations.filter_by(gender='male').all()
     women = team.registrations.filter_by(gender='female').all()
     
-    # Find captain
-    captain = team.registrations.filter_by(is_captain=True).first()
+    # Get all captains
+    captains = team.registrations.filter_by(is_captain=True).all()
     
     # Get stats
     stats = team.get_stats()
@@ -584,8 +584,73 @@ def admin_team_detail(team_id):
                          team=team,
                          men=men,
                          women=women,
-                         captain=captain,
+                         captains=captains,
                          stats=stats)
+
+
+@pcl.route('/admin/team/<int:team_id>/add-captain', methods=['POST'])
+def add_captain(team_id):
+    """Admin adds a captain to a team"""
+    team = PCLTeam.query.get_or_404(team_id)
+    
+    first_name = request.form.get('first_name', '').strip()
+    last_name = request.form.get('last_name', '').strip()
+    phone = request.form.get('phone', '').strip()
+    gender = request.form.get('gender', 'male')
+    language = request.form.get('language', 'EN')
+    send_whatsapp = request.form.get('send_whatsapp') == 'on'
+    
+    if not first_name or not last_name or not phone:
+        flash('First name, last name and phone are required!', 'danger')
+        return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+    
+    # Create captain registration
+    captain = PCLRegistration(
+        team_id=team.id,
+        first_name=first_name,
+        last_name=last_name,
+        phone=phone,
+        gender=gender,
+        is_captain=True,
+        preferred_language=language,
+        status='incomplete'
+    )
+    
+    captain.generate_profile_token()
+    
+    try:
+        db.session.add(captain)
+        db.session.commit()
+        
+        flash(f'Captain {first_name} {last_name} added!', 'success')
+        
+        # Send WhatsApp with captain link and profile link
+        if send_whatsapp and phone:
+            profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=captain.profile_token)
+            captain_link = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
+            
+            messages = {
+                'EN': f"Hi {first_name}!\n\nYou have been appointed as Captain for {team.country_flag} {team.country_name} {team.age_category} at {team.tournament.name}!\n\nYour Captain Dashboard:\n{captain_link}\n\nPlease complete your profile:\n{profile_url}",
+                'DE': f"Hallo {first_name}!\n\nDu wurdest zum Captain für {team.country_flag} {team.country_name} {team.age_category} bei {team.tournament.name} ernannt!\n\nDein Captain Dashboard:\n{captain_link}\n\nBitte vervollständige dein Profil:\n{profile_url}",
+                'ES': f"Hola {first_name}!\n\nHas sido nombrado Capitan de {team.country_flag} {team.country_name} {team.age_category} en {team.tournament.name}!\n\nTu Panel de Capitan:\n{captain_link}\n\nPor favor completa tu perfil:\n{profile_url}",
+                'FR': f"Bonjour {first_name}!\n\nVous avez ete nomme Capitaine de {team.country_flag} {team.country_name} {team.age_category} a {team.tournament.name}!\n\nVotre Tableau de Bord:\n{captain_link}\n\nVeuillez completer votre profil:\n{profile_url}"
+            }
+            
+            message = messages.get(language, messages['EN'])
+            result = send_whatsapp_message(phone, message, test_mode=False)
+            
+            if result.get('status') in ['sent', 'queued']:
+                captain.whatsapp_sent_at = datetime.now()
+                db.session.commit()
+                flash(f'WhatsApp sent to {first_name}!', 'success')
+            else:
+                flash(f'WhatsApp failed: {result.get("error", "Unknown error")}', 'warning')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
 
 
 @pcl.route('/admin/team/<int:team_id>/export')
