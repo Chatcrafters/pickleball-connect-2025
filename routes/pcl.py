@@ -1079,7 +1079,7 @@ def player_register(token):
         return redirect(url_for('pcl.captain_dashboard', token=token))
     
     if request.method == 'POST':
-        # Handle photo upload to Supabase
+        # Handle profile photo upload to Supabase
         photo_url = None
         if 'photo' in request.files:
             file = request.files['photo']
@@ -1089,6 +1089,18 @@ def player_register(token):
                     photo_url = result['url']
                 else:
                     flash(f'Photo upload failed: {result["error"]}', 'warning')
+        
+        # Handle additional photos upload
+        additional_photos_list = []
+        if 'additional_photos' in request.files:
+            files = request.files.getlist('additional_photos')
+            for file in files:
+                if file and file.filename and allowed_file(file.filename):
+                    if len(additional_photos_list) >= 5:
+                        break  # Max 5 photos
+                    result = upload_photo_to_supabase(file, folder='players/social')
+                    if result['success']:
+                        additional_photos_list.append(result['url'])
         
         # Create registration
         registration = PCLRegistration(
@@ -1110,7 +1122,8 @@ def player_register(token):
             twitter=request.form.get('twitter', '').replace('@', ''),
             video_url=request.form.get('video_url'),
             dupr_rating=request.form.get('dupr_rating'),
-            preferred_language=lang
+            preferred_language=lang,
+            additional_photos=json.dumps(additional_photos_list) if additional_photos_list else None
         )
         
         registration.generate_profile_token()
@@ -1132,6 +1145,7 @@ def player_register(token):
                          shirt_sizes=SHIRT_SIZES,
                          t=t,
                          current_lang=lang)
+
 
 
 @pcl.route('/register/success/<int:registration_id>')
