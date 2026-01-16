@@ -344,6 +344,9 @@ class PCLRegistration(db.Model):
     # Registration status
     status = db.Column(db.String(20), default='incomplete')
     
+    # WhatsApp Tracking
+    whatsapp_sent_at = db.Column(db.DateTime, nullable=True)
+    
     # ========== NEW: Profile completion token ==========
     profile_token = db.Column(db.String(64), unique=True, nullable=True)
     

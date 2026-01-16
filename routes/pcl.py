@@ -869,6 +869,8 @@ def send_single_profile_link(token, registration_id):
     result = send_whatsapp_message(registration.phone, message, test_mode=False)
     
     if result.get('status') in ['sent', 'queued']:
+        registration.whatsapp_sent_at = datetime.now()
+        db.session.commit()
         flash(f'{registration.first_name}: {t["whatsapp_sent"]}', 'success')
     else:
         flash(f'{registration.first_name}: {t["whatsapp_failed"]}', 'danger')

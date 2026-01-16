@@ -172,6 +172,16 @@
                             </div>
                             {% endif %}
                             
+                            <!-- WhatsApp Status -->
+                            {% if reg.whatsapp_sent_at %}
+                            <div class="mt-1">
+                                <small class="text-success">
+                                    <i class="bi bi-whatsapp"></i> 
+                                    {{ t.sent if t.sent else 'Gesendet' }}: {{ reg.whatsapp_sent_at.strftime('%d.%m. %H:%M') }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
                             <!-- Action buttons -->
                             <div class="mt-2 d-flex gap-1 flex-wrap">
                                 <!-- WhatsApp Button -->
@@ -267,6 +277,16 @@
                             </div>
                             {% endif %}
                             
+                            <!-- WhatsApp Status -->
+                            {% if reg.whatsapp_sent_at %}
+                            <div class="mt-1">
+                                <small class="text-success">
+                                    <i class="bi bi-whatsapp"></i> 
+                                    {{ t.sent if t.sent else 'Gesendet' }}: {{ reg.whatsapp_sent_at.strftime('%d.%m. %H:%M') }}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
                             <!-- Action buttons -->
                             <div class="mt-2 d-flex gap-1 flex-wrap">
                                 <!-- WhatsApp Button -->
@@ -342,16 +362,30 @@ function copyLink() {
     const input = document.getElementById('registrationUrl');
     
     // Modern clipboard API
-    if (navigator.clipboard) {
+    if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(input.value).then(function() {
             showCopyFeedback();
+        }).catch(function() {
+            fallbackCopy(input);
         });
     } else {
-        // Fallback
-        input.select();
+        fallbackCopy(input);
+    }
+}
+
+function fallbackCopy(input) {
+    // Create temporary input
+    const tempInput = document.createElement('input');
+    tempInput.value = input.value;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
         document.execCommand('copy');
         showCopyFeedback();
+    } catch (err) {
+        prompt('Link kopieren:', input.value);
     }
+    document.body.removeChild(tempInput);
 }
 
 function showCopyFeedback() {
