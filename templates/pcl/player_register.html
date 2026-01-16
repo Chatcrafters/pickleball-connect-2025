@@ -3,14 +3,93 @@
 {% block title %}{{ t.page_title }} - {{ team.country_flag }} {{ team.country_name }}{% endblock %}
 
 {% block content %}
+<style>
+    .additional-photos-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 10px;
+        max-width: 500px;
+    }
+    .additional-photo-item {
+        position: relative;
+        aspect-ratio: 1;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+    .additional-photo-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .additional-photo-item .delete-btn {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        background: rgba(220, 53, 69, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .add-photo-btn {
+        aspect-ratio: 1;
+        border: 2px dashed #dee2e6;
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        background: #f8f9fa;
+    }
+    .add-photo-btn:hover {
+        border-color: #28a745;
+        background: #e8f5e9;
+    }
+    .add-photo-btn i {
+        font-size: 1.5rem;
+        color: #6c757d;
+    }
+    .add-photo-btn span {
+        font-size: 0.7rem;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .profile-photo-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #28a745;
+    }
+    .profile-photo-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px dashed #dee2e6;
+    }
+</style>
+
 <div class="container">
     <!-- Language Switcher -->
     <div class="text-end mb-3">
         <div class="btn-group btn-group-sm">
-            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡¬ðŸ‡§ EN</a>
-            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡©ðŸ‡ª DE</a>
-            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡ªðŸ‡¸ ES</a>
-            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">ðŸ‡«ðŸ‡· FR</a>
+            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">EN</a>
+            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">DE</a>
+            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">ES</a>
+            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">FR</a>
         </div>
     </div>
 
@@ -30,7 +109,7 @@
             <!-- Form -->
             <div class="card shadow">
                 <div class="card-body p-4">
-                    <form method="POST" enctype="multipart/form-data">
+                    <form method="POST" enctype="multipart/form-data" id="registrationForm">
                         <input type="hidden" name="preferred_language" value="{{ current_lang }}">
                         
                         <!-- Personal Info -->
@@ -39,27 +118,22 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.first_name }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="first_name" 
-                                       value="{{ registration.first_name if registration else '' }}" required>
+                                <input type="text" class="form-control" name="first_name" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.last_name }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="last_name" 
-                                       value="{{ registration.last_name if registration else '' }}" required>
+                                <input type="text" class="form-control" name="last_name" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.email }} <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" name="email" 
-                                       value="{{ registration.email if registration else '' }}" required>
+                                <input type="email" class="form-control" name="email" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.phone }}</label>
-                                <input type="tel" class="form-control" name="phone" 
-                                       value="{{ registration.phone if registration else '' }}"
-                                       placeholder="+49...">
+                                <input type="tel" class="form-control" name="phone" placeholder="+49...">
                             </div>
                         </div>
 
@@ -67,30 +141,15 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.gender }} <span class="text-danger">*</span></label>
                                 <select class="form-select" name="gender" required>
-                                    <option value="">-- Select --</option>
-                                    <option value="male" {% if registration and registration.gender == 'male' %}selected{% endif %}>
-                                        ðŸ‘¨ {{ t.male }}
-                                    </option>
-                                    <option value="female" {% if registration and registration.gender == 'female' %}selected{% endif %}>
-                                        ðŸ‘© {{ t.female }}
-                                    </option>
+                                    <option value="">-- {{ t.select if t.select else 'Select' }} --</option>
+                                    <option value="male">{{ t.male }}</option>
+                                    <option value="female">{{ t.female }}</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.birth_year }}</label>
                                 <input type="number" class="form-control" name="birth_year" 
-                                       value="{{ registration.birth_year if registration else '' }}"
                                        min="1940" max="2010" placeholder="1985">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="is_captain" id="is_captain"
-                                       {% if registration and registration.is_captain %}checked{% endif %}>
-                                <label class="form-check-label" for="is_captain">
-                                    ðŸŽ–ï¸ {{ t.captain }}
-                                </label>
                             </div>
                         </div>
 
@@ -102,20 +161,16 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.shirt_name }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="shirt_name" 
-                                       value="{{ registration.shirt_name if registration else '' }}"
-                                       placeholder="MÃœLLER" required>
+                                <input type="text" class="form-control" name="shirt_name" id="shirt_name"
+                                       maxlength="15" placeholder="NACHNAME" required style="text-transform: uppercase;">
                                 <small class="form-text text-muted">{{ t.shirt_name_help }}</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.shirt_size }} <span class="text-danger">*</span></label>
                                 <select class="form-select" name="shirt_size" required>
-                                    <option value="">-- Select --</option>
+                                    <option value="">-- {{ t.select if t.select else 'Select' }} --</option>
                                     {% for size in shirt_sizes %}
-                                    <option value="{{ size }}" 
-                                            {% if registration and registration.shirt_size == size %}selected{% endif %}>
-                                        {{ size }}
-                                    </option>
+                                    <option value="{{ size }}">{{ size }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -123,70 +178,97 @@
 
                         <hr class="my-4">
 
-                        <!-- Profile -->
-                        <h5 class="mb-3"><i class="bi bi-camera"></i> {{ t.profile }}</h5>
+                        <!-- Profile Photo -->
+                        <h5 class="mb-3"><i class="bi bi-camera"></i> {{ t.profile if t.profile else 'Profil' }}</h5>
                         
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label">{{ t.photo }} <span class="text-danger">*</span></label>
-                            {% if registration and registration.photo_filename %}
-                            <div class="mb-2">
-                                <img src="{% if registration.photo_filename and registration.photo_filename.startswith('http') %}{{ registration.photo_filename }}{% elif registration.photo_filename %}{{ url_for('static', filename='uploads/pcl/' + registration.photo_filename) }}{% else %}#{% endif %}"
-                                     class="rounded" width="100" height="100" style="object-fit: cover;">
-                                <span class="text-success ms-2">âœ“ Photo uploaded</span>
+                            <div class="d-flex align-items-center gap-3 mb-2">
+                                <div class="profile-photo-placeholder" id="photoPlaceholder">
+                                    <i class="bi bi-person-circle text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                                <img src="#" class="profile-photo-preview d-none" id="photoPreview" alt="Preview">
+                                <div>
+                                    <label for="photo" class="btn btn-outline-success">
+                                        <i class="bi bi-upload"></i> {{ t.upload_photo if t.upload_photo else 'Foto wählen' }}
+                                    </label>
+                                    <input type="file" id="photo" name="photo" accept="image/*" 
+                                           class="d-none" required onchange="previewProfilePhoto(this)">
+                                    <br>
+                                    <small class="text-muted">{{ t.photo_help if t.photo_help else 'JPG, PNG, max 5MB' }}</small>
+                                </div>
                             </div>
-                            {% endif %}
-                            <input type="file" class="form-control" name="photo" accept="image/*"
-                                   {% if not registration %}required{% endif %}>
-                            <small class="form-text text-muted">{{ t.photo_help }}</small>
+                        </div>
+
+                        <!-- Social Media Photos -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <i class="bi bi-images"></i> {{ t.social_media_photos if t.social_media_photos else 'Social Media Fotos' }}
+                                <span class="badge bg-secondary">{{ t.optional if t.optional else 'Optional' }}</span>
+                            </label>
+                            <p class="text-muted small mb-2">
+                                <i class="bi bi-info-circle"></i>
+                                {{ t.social_media_photos_help if t.social_media_photos_help else 'Lade bis zu 5 Fotos hoch, die wir für Social Media Posts verwenden dürfen (Action Shots, Spielfotos, etc.)' }}
+                            </p>
+                            
+                            <div class="additional-photos-grid" id="additionalPhotosGrid">
+                                <!-- Add photo button -->
+                                <label class="add-photo-btn" id="addPhotoBtn">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span>{{ t.add_photo if t.add_photo else 'Hinzufügen' }}</span>
+                                    <input type="file" name="additional_photos" accept="image/*" multiple 
+                                           class="d-none" id="additionalPhotosInput" onchange="handleAdditionalPhotos(this)">
+                                </label>
+                            </div>
+                            
+                            <small class="text-muted d-block mt-2">
+                                <span id="photoCount">0</span>/5 {{ t.photos if t.photos else 'Fotos' }}
+                            </small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">{{ t.bio }} <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="bio" rows="4" 
-                                      placeholder="{{ t.bio_placeholder }}" required>{{ registration.bio if registration else '' }}</textarea>
-                            <small class="form-text text-muted">100-500 characters</small>
+                            <textarea class="form-control" name="bio" rows="4" id="bio"
+                                      placeholder="{{ t.bio_placeholder if t.bio_placeholder else 'Erzähl uns etwas über dich...' }}" 
+                                      required minlength="50" maxlength="500"></textarea>
+                            <div class="d-flex justify-content-between">
+                                <small class="form-text text-muted">{{ t.bio_help if t.bio_help else '50-500 Zeichen' }}</small>
+                                <small class="text-muted"><span id="bioCount">0</span>/500</small>
+                            </div>
                         </div>
 
                         <hr class="my-4">
 
-                        <!-- Social Media -->
+                        <!-- Social Media Links -->
                         <h5 class="mb-3"><i class="bi bi-share"></i> {{ t.social_media }}</h5>
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-instagram"></i> Instagram</label>
+                                <label class="form-label"><i class="bi bi-instagram text-danger"></i> Instagram</label>
                                 <div class="input-group">
                                     <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control" name="instagram" 
-                                           value="{{ registration.instagram if registration else '' }}"
-                                           placeholder="username">
+                                    <input type="text" class="form-control" name="instagram" placeholder="username">
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-tiktok"></i> TikTok</label>
                                 <div class="input-group">
                                     <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control" name="tiktok" 
-                                           value="{{ registration.tiktok if registration else '' }}"
-                                           placeholder="username">
+                                    <input type="text" class="form-control" name="tiktok" placeholder="username">
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label"><i class="bi bi-youtube"></i> YouTube</label>
-                                <input type="url" class="form-control" name="youtube" 
-                                       value="{{ registration.youtube if registration else '' }}"
-                                       placeholder="https://youtube.com/@channel">
+                                <label class="form-label"><i class="bi bi-youtube text-danger"></i> YouTube</label>
+                                <input type="url" class="form-control" name="youtube" placeholder="https://youtube.com/@channel">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-twitter-x"></i> X (Twitter)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control" name="twitter" 
-                                           value="{{ registration.twitter if registration else '' }}"
-                                           placeholder="username">
+                                    <input type="text" class="form-control" name="twitter" placeholder="username">
                                 </div>
                             </div>
                         </div>
@@ -198,16 +280,12 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ t.video_url }}</label>
-                                <input type="url" class="form-control" name="video_url" 
-                                       value="{{ registration.video_url if registration else '' }}"
-                                       placeholder="https://youtube.com/...">
+                                <label class="form-label">{{ t.video_url if t.video_url else 'Video URL' }}</label>
+                                <input type="url" class="form-control" name="video_url" placeholder="https://youtube.com/...">
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">{{ t.dupr_rating }}</label>
-                                <input type="text" class="form-control" name="dupr_rating" 
-                                       value="{{ registration.dupr_rating if registration else '' }}"
-                                       placeholder="4.25">
+                                <label class="form-label">{{ t.dupr_rating if t.dupr_rating else 'DUPR Rating' }}</label>
+                                <input type="text" class="form-control" name="dupr_rating" placeholder="4.25">
                             </div>
                         </div>
 
@@ -226,8 +304,7 @@
                         <!-- Submit -->
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">
-                                <i class="bi bi-check-circle"></i> 
-                                {% if edit_mode %}{{ t['update'] }}{% else %}{{ t['submit'] }}{% endif %}
+                                <i class="bi bi-check-circle"></i> {{ t.submit if t.submit else 'Registrieren' }}
                             </button>
                         </div>
                     </form>
@@ -237,10 +314,115 @@
             <!-- Back Link -->
             <div class="text-center mt-3">
                 <a href="{{ url_for('pcl.captain_dashboard', token=team.captain_token, lang=current_lang) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Back to Team Dashboard
+                    <i class="bi bi-arrow-left"></i> {{ t.back if t.back else 'Zurück zum Team' }}
                 </a>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Store files to upload
+let additionalFiles = [];
+
+// Profile photo preview
+function previewProfilePhoto(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('photoPreview');
+            const placeholder = document.getElementById('photoPlaceholder');
+            
+            preview.src = e.target.result;
+            preview.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+        }
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+// Handle additional photos selection
+function handleAdditionalPhotos(input) {
+    if (!input.files) return;
+    
+    const grid = document.getElementById('additionalPhotosGrid');
+    const addBtn = document.getElementById('addPhotoBtn');
+    const currentCount = grid.querySelectorAll('.additional-photo-item').length;
+    const maxPhotos = 5;
+    const filesToAdd = Math.min(input.files.length, maxPhotos - currentCount);
+    
+    for (let i = 0; i < filesToAdd; i++) {
+        const file = input.files[i];
+        additionalFiles.push(file);
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const div = document.createElement('div');
+            div.className = 'additional-photo-item';
+            div.dataset.fileIndex = additionalFiles.length - 1;
+            div.innerHTML = `
+                <img src="${e.target.result}" alt="Photo">
+                <button type="button" class="delete-btn" onclick="removeAdditionalPhoto(this)">
+                    <i class="bi bi-x"></i>
+                </button>
+            `;
+            grid.insertBefore(div, addBtn);
+            updatePhotoCount();
+        }
+        reader.readAsDataURL(file);
+    }
+    
+    // Clear input so same file can be selected again
+    input.value = '';
+}
+
+// Remove additional photo
+function removeAdditionalPhoto(btn) {
+    const item = btn.closest('.additional-photo-item');
+    const fileIndex = parseInt(item.dataset.fileIndex);
+    
+    // Mark file as removed (set to null)
+    if (!isNaN(fileIndex)) {
+        additionalFiles[fileIndex] = null;
+    }
+    
+    item.remove();
+    updatePhotoCount();
+}
+
+// Update photo count display
+function updatePhotoCount() {
+    const count = document.querySelectorAll('.additional-photo-item').length;
+    document.getElementById('photoCount').textContent = count;
+    
+    const addBtn = document.getElementById('addPhotoBtn');
+    if (count >= 5) {
+        addBtn.style.display = 'none';
+    } else {
+        addBtn.style.display = 'flex';
+    }
+}
+
+// Before form submit, add files to FormData
+document.getElementById('registrationForm').addEventListener('submit', function(e) {
+    // Create new file input with selected files
+    const dataTransfer = new DataTransfer();
+    additionalFiles.forEach(file => {
+        if (file) {
+            dataTransfer.items.add(file);
+        }
+    });
+    document.getElementById('additionalPhotosInput').files = dataTransfer.files;
+});
+
+// Bio character counter
+document.getElementById('bio').addEventListener('input', function() {
+    document.getElementById('bioCount').textContent = this.value.length;
+});
+
+// Shirt name uppercase
+document.getElementById('shirt_name').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+});
+</script>
 {% endblock %}
