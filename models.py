@@ -277,8 +277,10 @@ class PCLTeam(db.Model):
     def get_stats(self):
         """Get team registration statistics"""
         registrations = self.registrations.all()
-        men = [r for r in registrations if r.gender == 'male']
-        women = [r for r in registrations if r.gender == 'female']
+        # Only count players who are actually playing (not captain-only)
+        playing = [r for r in registrations if r.is_playing != False]
+        men = [r for r in playing if r.gender == 'male']
+        women = [r for r in playing if r.gender == 'female']
         captains = [r for r in registrations if r.is_captain]
         
         men_complete = len([r for r in men if r.status == 'complete'])
@@ -322,6 +324,8 @@ class PCLRegistration(db.Model):
     
     # Role
     is_captain = db.Column(db.Boolean, default=False)
+    is_captain = db.Column(db.Boolean, default=False)
+    is_playing = db.Column(db.Boolean, default=True)  # Captain may not play
     
     # Shirt info (can be filled later)
     shirt_name = db.Column(db.String(50), nullable=True)

@@ -640,6 +640,7 @@ def add_captain(team_id):
     phone = request.form.get('phone', '').strip()
     gender = request.form.get('gender', 'male')
     language = request.form.get('language', 'EN')
+    is_playing = request.form.get('is_playing') == 'on'
     send_whatsapp = request.form.get('send_whatsapp') == 'on'
     
     if not first_name or not last_name or not phone:
@@ -658,6 +659,7 @@ def add_captain(team_id):
         phone=phone,
         gender=gender,
         is_captain=True,
+        is_playing=is_playing,
         preferred_language=language,
         status='incomplete'
     )
@@ -668,7 +670,10 @@ def add_captain(team_id):
         db.session.add(captain)
         db.session.commit()
         
-        flash(f'Captain {first_name} {last_name} added!', 'success')
+        if is_playing:
+            flash(f'Captain {first_name} {last_name} added as player!', 'success')
+        else:
+            flash(f'Captain {first_name} {last_name} added (not playing)!', 'success')
         
         # Send WhatsApp using Content Template
         if send_whatsapp and phone:

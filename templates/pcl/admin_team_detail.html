@@ -188,6 +188,13 @@
                             </div>
                         </div>
                         
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" name="is_playing" id="isPlaying" checked>
+                            <label class="form-check-label" for="isPlaying">
+                                👟 Also plays in team (counts as player)
+                            </label>
+                        </div>
+                        
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" name="send_whatsapp" id="sendWhatsapp" checked>
                             <label class="form-check-label" for="sendWhatsapp">
@@ -462,11 +469,33 @@
 <script>
 function copyCaptainLink() {
     const linkInput = document.getElementById('captainLink');
-    linkInput.select();
-    linkInput.setSelectionRange(0, 99999);
+    const text = linkInput.value;
     
-    navigator.clipboard.writeText(linkInput.value).then(() => {
-        const btn = event.target.closest('button');
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+            showCopySuccess();
+        }).catch(() => {
+            fallbackCopy(linkInput);
+        });
+    } else {
+        fallbackCopy(linkInput);
+    }
+}
+
+function fallbackCopy(input) {
+    input.select();
+    input.setSelectionRange(0, 99999);
+    try {
+        document.execCommand('copy');
+        showCopySuccess();
+    } catch (err) {
+        alert('Copy failed. Please select and copy manually: Ctrl+C');
+    }
+}
+
+function showCopySuccess() {
+    const btn = document.querySelector('[onclick="copyCaptainLink()"]');
+    if (btn) {
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
         btn.classList.remove('btn-outline-secondary');
@@ -477,21 +506,17 @@ function copyCaptainLink() {
             btn.classList.remove('btn-success');
             btn.classList.add('btn-outline-secondary');
         }, 2000);
-    }).catch(err => {
-        alert('Failed to copy link');
-    });
+    }
 }
 
 function sendCaptainLink(captainId, name, phone) {
     if(confirm('Send Captain Dashboard link to ' + name + ' (' + phone + ')?')) {
-        // This would need a route - for now just show info
         alert('Feature coming: Will send dashboard link via WhatsApp Content Template');
     }
 }
 
 function sendProfileLink(captainId, name, phone) {
     if(confirm('Send Profile Completion link to ' + name + ' (' + phone + ')?')) {
-        // This would need a route - for now just show info
         alert('Feature coming: Will send profile link via WhatsApp');
     }
 }
