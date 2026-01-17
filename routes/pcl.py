@@ -1315,6 +1315,7 @@ def edit_registration(registration_id):
         registration.gender = request.form['gender']
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
         registration.is_captain = request.form.get('is_captain') == 'on'
+        registration.is_playing = request.form.get('is_playing') == 'on'
         registration.shirt_name = request.form.get('shirt_name', '').upper()[:15]
         registration.shirt_size = request.form.get('shirt_size')
         registration.bio = request.form.get('bio')

@@ -68,16 +68,22 @@
                                        value="{{ registration.birth_year or '' }}" min="1940" max="2010">
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label for="is_captain" class="form-label">Role</label>
+                                <label class="form-label">Role</label>
                                 <div class="form-check mt-2">
                                     <input class="form-check-input" type="checkbox" id="is_captain" name="is_captain" 
                                            {% if registration.is_captain %}checked{% endif %}>
                                     <label class="form-check-label" for="is_captain">
-                                        👑‘‘ Captain
+                                        👑 Captain
+                                    </label>
+                                </div>
+                                <div class="form-check mt-1">
+                                    <input class="form-check-input" type="checkbox" id="is_playing" name="is_playing" 
+                                           {% if registration.is_playing != False %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_playing">
+                                        👟 Plays in team
                                     </label>
                                 </div>
                             </div>
-                        </div>
 
                         <!-- Shirt Info -->
                         <div class="row">
