@@ -46,6 +46,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 0 50px;
+        z-index: 10;
     }
     
     .player-card-pcl .logo-text {
@@ -101,6 +102,7 @@
         z-index: 10;
     }
     
+    /* Photo container - uses overflow hidden + transform for positioning */
     .player-card-pcl .photo-container {
         position: absolute;
         top: 160px;
@@ -114,7 +116,15 @@
         background: #2d6a7e;
     }
     
-    .player-card-pcl .photo-container img {
+    .player-card-pcl .photo-inner {
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        left: -50%;
+        top: -50%;
+    }
+    
+    .player-card-pcl .photo-inner img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -139,6 +149,7 @@
         background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
         padding: 120px 50px 40px;
         text-align: center;
+        z-index: 5;
     }
     
     .player-card-pcl .shirt-name {
@@ -192,6 +203,7 @@
         transform: translateX(-50%);
         display: flex;
         gap: 30px;
+        z-index: 5;
     }
     
     .player-card-pcl.doubles-card .doubles-photos .player-photo {
@@ -201,9 +213,18 @@
         border: 6px solid rgba(255,255,255,0.3);
         overflow: hidden;
         background: rgba(0,0,0,0.3);
+        position: relative;
     }
     
-    .player-card-pcl.doubles-card .doubles-photos .player-photo img {
+    .player-card-pcl.doubles-card .doubles-photos .photo-inner {
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        left: -50%;
+        top: -50%;
+    }
+    
+    .player-card-pcl.doubles-card .doubles-photos .photo-inner img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -253,6 +274,7 @@
         justify-content: space-between;
         align-items: center;
         padding: 0 50px;
+        z-index: 10;
     }
     
     .player-card-wpc .logo-text {
@@ -321,7 +343,15 @@
         background: #3d6a32;
     }
     
-    .player-card-wpc .photo-container img {
+    .player-card-wpc .photo-inner {
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        left: -50%;
+        top: -50%;
+    }
+    
+    .player-card-wpc .photo-inner img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -346,6 +376,7 @@
         background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
         padding: 120px 50px 40px;
         text-align: center;
+        z-index: 5;
     }
     
     .player-card-wpc .shirt-name {
@@ -399,6 +430,7 @@
         transform: translateX(-50%);
         display: flex;
         gap: 30px;
+        z-index: 5;
     }
     
     .player-card-wpc.doubles-card .doubles-photos .player-photo {
@@ -408,9 +440,18 @@
         border: 6px solid rgba(255,255,255,0.3);
         overflow: hidden;
         background: rgba(0,0,0,0.3);
+        position: relative;
     }
     
-    .player-card-wpc.doubles-card .doubles-photos .player-photo img {
+    .player-card-wpc.doubles-card .doubles-photos .photo-inner {
+        position: absolute;
+        width: 200%;
+        height: 200%;
+        left: -50%;
+        top: -50%;
+    }
+    
+    .player-card-wpc.doubles-card .doubles-photos .photo-inner img {
         width: 100%;
         height: 100%;
         object-fit: cover;
@@ -562,21 +603,8 @@
         color: #888;
     }
     
-    .form-range {
-        background: transparent;
-    }
-    
-    .form-range::-webkit-slider-track {
-        background: rgba(255,255,255,0.2);
-        border-radius: 5px;
-    }
-    
     .form-range::-webkit-slider-thumb {
         background: #f4a03a;
-    }
-    
-    .form-range::-moz-range-track {
-        background: rgba(255,255,255,0.2);
     }
     
     .form-range::-moz-range-thumb {
@@ -660,7 +688,7 @@
                         <!-- Player Selection -->
                         <div class="form-section">
                             <h5><i class="bi bi-person-check"></i> 2. Select Player(s)</h5>
-                            <div style="max-height: 250px; overflow-y: auto;" id="playerList">
+                            <div style="max-height: 200px; overflow-y: auto;" id="playerList">
                                 {% for reg in registrations %}
                                 <div class="player-select-card" 
                                      onclick="togglePlayer(this, {{ reg.id }})" 
@@ -690,7 +718,7 @@
                         <div class="form-section">
                             <h5><i class="bi bi-pencil"></i> 3. Card Options</h5>
                             <div class="mb-3">
-                                <label class="text-muted small">Tagline (appears on card)</label>
+                                <label class="text-muted small">Tagline</label>
                                 <input type="text" 
                                        class="form-control tagline-input" 
                                        id="taglineInput" 
@@ -698,32 +726,14 @@
                                        oninput="updatePreview()">
                             </div>
                             
-                            <div class="mb-3">
-                                <label class="text-muted small">Photo Position (horizontal)</label>
-                                <input type="range" 
-                                       class="form-range" 
-                                       id="photoPositionX" 
-                                       min="0" max="100" value="50"
-                                       oninput="updatePreview()">
-                                <div class="d-flex justify-content-between text-muted small">
-                                    <span>Left</span>
-                                    <span>Center</span>
-                                    <span>Right</span>
-                                </div>
+                            <div class="mb-2">
+                                <label class="text-muted small">Photo: Left ↔ Right</label>
+                                <input type="range" class="form-range" id="photoX" min="0" max="100" value="50" oninput="updatePreview()">
                             </div>
                             
                             <div class="mb-3">
-                                <label class="text-muted small">Photo Position (vertical)</label>
-                                <input type="range" 
-                                       class="form-range" 
-                                       id="photoPositionY" 
-                                       min="0" max="100" value="30"
-                                       oninput="updatePreview()">
-                                <div class="d-flex justify-content-between text-muted small">
-                                    <span>Top</span>
-                                    <span>Center</span>
-                                    <span>Bottom</span>
-                                </div>
+                                <label class="text-muted small">Photo: Top ↔ Bottom</label>
+                                <input type="range" class="form-range" id="photoY" min="0" max="100" value="25" oninput="updatePreview()">
                             </div>
                             
                             <button class="btn btn-warning w-100" onclick="downloadCard()">
@@ -736,28 +746,11 @@
                     <div class="col-lg-7">
                         <div class="preview-container">
                             <div class="preview-wrapper">
-                                <h5 id="previewTitle">PCL Europe - Singles</h5>
+                                <h5 id="previewTitle">PCL Europe - SINGLES</h5>
                                 <div class="card-container">
                                     <div class="card-scale">
                                         <div class="player-card-pcl" id="cardPreview">
-                                            <div class="header">
-                                                <div class="logo-text">PCL <span>EUROPE</span></div>
-                                                <div class="flag-container">
-                                                    <span class="flag">{{ team.country_flag }}</span>
-                                                    <span class="country-name">{{ team.country_name }}</span>
-                                                </div>
-                                                <span class="age-category">{{ team.age_category }}</span>
-                                            </div>
-                                            <div class="category-badge">SINGLES</div>
-                                            <div class="photo-container">
-                                                <div class="photo-placeholder"><i class="bi bi-person"></i></div>
-                                            </div>
-                                            <div class="info-section">
-                                                <div class="shirt-name">SELECT PLAYER</div>
-                                                <div class="full-name">Choose a player from the left</div>
-                                                <div class="tagline"></div>
-                                                <div class="social"></div>
-                                            </div>
+                                            <!-- Will be populated by JS -->
                                         </div>
                                     </div>
                                 </div>
@@ -780,31 +773,24 @@
                                 <option value="pcl">PCL Europe</option>
                                 <option value="wpc">WPC Series</option>
                             </select>
-                            <input type="text" 
-                                   class="form-control tagline-input" 
-                                   id="teamTaglineInput" 
-                                   placeholder="Optional tagline for all cards"
-                                   style="width: 250px;">
                             <button class="btn btn-warning btn-lg" onclick="downloadTeamZip()">
                                 <i class="bi bi-download"></i> Download All (ZIP)
                             </button>
                         </div>
                     </div>
                     
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <label class="text-muted small">Photo Position X (all cards)</label>
-                            <input type="range" class="form-range" id="teamPhotoX" min="0" max="100" value="50">
-                            <div class="d-flex justify-content-between text-muted small">
-                                <span>Left</span><span>Center</span><span>Right</span>
-                            </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="text-muted small">Tagline for all cards</label>
+                            <input type="text" class="form-control tagline-input" id="teamTagline" placeholder="Optional">
                         </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Photo Position Y (all cards)</label>
-                            <input type="range" class="form-range" id="teamPhotoY" min="0" max="100" value="30">
-                            <div class="d-flex justify-content-between text-muted small">
-                                <span>Top</span><span>Center</span><span>Bottom</span>
-                            </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Photo: Left ↔ Right</label>
+                            <input type="range" class="form-range" id="teamPhotoX" min="0" max="100" value="50">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-muted small">Photo: Top ↔ Bottom</label>
+                            <input type="range" class="form-range" id="teamPhotoY" min="0" max="100" value="25">
                         </div>
                     </div>
                     
@@ -821,8 +807,7 @@
                                     </div>
                                     {% endif %}
                                     <h6 class="text-warning mb-1">{{ reg.shirt_name or reg.first_name|upper }}</h6>
-                                    <small>{{ reg.first_name }} {{ reg.last_name }}</small><br>
-                                    <small class="text-muted">{{ '@' + reg.instagram if reg.instagram else '' }}</small>
+                                    <small>{{ reg.first_name }} {{ reg.last_name }}</small>
                                 </div>
                             </div>
                         </div>
@@ -867,22 +852,24 @@
         'mixed-doubles': { min: 2, max: 2, label: 'MIXED DOUBLES', hint: 'Select 1 male + 1 female' }
     };
     
+    // ==================== INIT ====================
+    document.addEventListener('DOMContentLoaded', function() {
+        updatePreview();
+    });
+    
     // ==================== CATEGORY SELECTION ====================
     function selectCategory(cat, btn) {
         currentCategory = cat;
         selectedPlayers = [];
         
-        // Update button states
         var buttons = document.querySelectorAll('.category-btn');
         for (var i = 0; i < buttons.length; i++) {
             buttons[i].classList.remove('active');
         }
         btn.classList.add('active');
         
-        // Update hint
         document.getElementById('categoryHint').textContent = categoryConfig[cat].hint;
         
-        // Clear selections
         var cards = document.querySelectorAll('#playerList .player-select-card');
         for (var i = 0; i < cards.length; i++) {
             cards[i].classList.remove('selected');
@@ -902,7 +889,6 @@
             }
         }
         
-        // Check if already selected
         var idx = -1;
         for (var i = 0; i < selectedPlayers.length; i++) {
             if (selectedPlayers[i].id === id) {
@@ -912,37 +898,31 @@
         }
         
         if (idx > -1) {
-            // Deselect
             selectedPlayers.splice(idx, 1);
             el.classList.remove('selected');
         } else {
-            // Select - with validation
             if (selectedPlayers.length >= cfg.max) {
                 alert('Maximum ' + cfg.max + ' player(s) for ' + cfg.label);
                 return;
             }
             
-            // Gender validation for gendered categories
             if (cfg.gender && player.gender !== cfg.gender) {
                 alert('Please select ' + cfg.gender + ' players for ' + cfg.label);
                 return;
             }
             
-            // Mixed doubles validation
             if (currentCategory === 'mixed-doubles') {
-                var males = 0;
-                var females = 0;
+                var males = 0, females = 0;
                 for (var i = 0; i < selectedPlayers.length; i++) {
                     if (selectedPlayers[i].gender === 'male') males++;
                     if (selectedPlayers[i].gender === 'female') females++;
                 }
-                
                 if (player.gender === 'male' && males >= 1) {
-                    alert('Already have 1 male player. Select a female player.');
+                    alert('Already have 1 male. Select a female.');
                     return;
                 }
                 if (player.gender === 'female' && females >= 1) {
-                    alert('Already have 1 female player. Select a male player.');
+                    alert('Already have 1 female. Select a male.');
                     return;
                 }
             }
@@ -954,117 +934,127 @@
         updatePreview();
     }
     
+    // ==================== BUILD CARD HTML ====================
+    function buildCardHTML(brand, category, playersList, tagline, posX, posY) {
+        var cfg = categoryConfig[category];
+        var logoText = brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>';
+        var isDoubles = category !== 'singles';
+        
+        // Calculate transform for photo positioning
+        // posX: 0=show left edge, 50=center, 100=show right edge
+        // posY: 0=show top edge, 50=center, 100=show bottom edge
+        var translateX = -posX;
+        var translateY = -posY;
+        var transform = 'translate(' + translateX + '%, ' + translateY + '%)';
+        
+        var html = '';
+        
+        // Header
+        html += '<div class="header">';
+        html += '<div class="logo-text">' + logoText + '</div>';
+        html += '<div class="flag-container">';
+        html += '<span class="flag">' + teamData.flag + '</span>';
+        html += '<span class="country-name">' + teamData.country + '</span>';
+        html += '</div>';
+        html += '<span class="age-category">' + teamData.age + '</span>';
+        html += '</div>';
+        
+        // Category badge
+        html += '<div class="category-badge">' + cfg.label + '</div>';
+        
+        // Photos
+        if (isDoubles && playersList.length === 2) {
+            html += '<div class="doubles-photos">';
+            for (var i = 0; i < 2; i++) {
+                var p = playersList[i];
+                html += '<div class="player-photo">';
+                if (p.photo) {
+                    html += '<div class="photo-inner" style="transform:' + transform + '">';
+                    html += '<img src="' + p.photo + '">';
+                    html += '</div>';
+                } else {
+                    html += '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        } else if (playersList.length >= 1) {
+            var p = playersList[0];
+            html += '<div class="photo-container">';
+            if (p.photo) {
+                html += '<div class="photo-inner" style="transform:' + transform + '">';
+                html += '<img src="' + p.photo + '">';
+                html += '</div>';
+            } else {
+                html += '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
+            }
+            html += '</div>';
+        } else {
+            html += '<div class="photo-container">';
+            html += '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
+            html += '</div>';
+        }
+        
+        // Info section
+        html += '<div class="info-section">';
+        
+        if (isDoubles && playersList.length === 2) {
+            html += '<div class="shirt-name">' + playersList[0].shirt + ' & ' + playersList[1].shirt + '</div>';
+            html += '<div class="full-name">' + playersList[0].name + ' & ' + playersList[1].name + '</div>';
+            if (tagline) html += '<div class="tagline">' + tagline + '</div>';
+            html += '<div class="social">';
+            if (playersList[0].instagram) html += '<span><i class="bi bi-instagram"></i> @' + playersList[0].instagram + '</span>';
+            if (playersList[1].instagram) html += '<span><i class="bi bi-instagram"></i> @' + playersList[1].instagram + '</span>';
+            html += '</div>';
+        } else if (playersList.length >= 1) {
+            var p = playersList[0];
+            html += '<div class="shirt-name">' + p.shirt + '</div>';
+            html += '<div class="full-name">' + p.name + '</div>';
+            if (tagline) html += '<div class="tagline">' + tagline + '</div>';
+            html += '<div class="social">';
+            if (p.instagram) html += '<span><i class="bi bi-instagram"></i> @' + p.instagram + '</span>';
+            if (p.dupr !== '-') html += '<span>DUPR: ' + p.dupr + '</span>';
+            html += '</div>';
+        } else {
+            html += '<div class="shirt-name">SELECT PLAYER</div>';
+            html += '<div class="full-name">Choose a player from the left</div>';
+        }
+        
+        html += '</div>';
+        
+        return html;
+    }
+    
     // ==================== PREVIEW UPDATE ====================
     function updatePreview() {
         var brand = document.getElementById('brandSelect').value;
-        var preview = document.getElementById('cardPreview');
+        var tagline = document.getElementById('taglineInput').value;
+        var posX = parseInt(document.getElementById('photoX').value);
+        var posY = parseInt(document.getElementById('photoY').value);
         var cfg = categoryConfig[currentCategory];
         var isDoubles = currentCategory !== 'singles';
-        var tagline = document.getElementById('taglineInput').value;
-        var posX = document.getElementById('photoPositionX').value;
-        var posY = document.getElementById('photoPositionY').value;
-        var photoPosition = posX + '% ' + posY + '%';
         
         // Update title
         var brandName = brand === 'pcl' ? 'PCL Europe' : 'WPC Series';
         document.getElementById('previewTitle').textContent = brandName + ' - ' + cfg.label;
         
-        // Set card class
+        // Update card
+        var preview = document.getElementById('cardPreview');
         var cardClass = 'player-card-' + brand;
         if (isDoubles && selectedPlayers.length === 2) {
             cardClass += ' doubles-card';
         }
         preview.className = cardClass;
-        
-        // Build card HTML
-        var logoText = brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>';
-        var photoHTML = '';
-        var infoHTML = '';
-        
-        if (isDoubles && selectedPlayers.length === 2) {
-            // DOUBLES CARD
-            var p1 = selectedPlayers[0];
-            var p2 = selectedPlayers[1];
-            
-            var p1Photo = p1.photo 
-                ? '<img src="' + p1.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
-                : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
-            var p2Photo = p2.photo 
-                ? '<img src="' + p2.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
-                : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
-            
-            photoHTML = 
-                '<div class="doubles-photos">' +
-                    '<div class="player-photo">' + p1Photo + '</div>' +
-                    '<div class="player-photo">' + p2Photo + '</div>' +
-                '</div>';
-            
-            var p1IG = p1.instagram ? '<span><i class="bi bi-instagram"></i> @' + p1.instagram + '</span>' : '';
-            var p2IG = p2.instagram ? '<span><i class="bi bi-instagram"></i> @' + p2.instagram + '</span>' : '';
-            var taglineHTML = tagline ? '<div class="tagline">' + tagline + '</div>' : '';
-            
-            infoHTML = 
-                '<div class="shirt-name">' + p1.shirt + ' & ' + p2.shirt + '</div>' +
-                '<div class="full-name">' + p1.name + ' & ' + p2.name + '</div>' +
-                taglineHTML +
-                '<div class="social">' + p1IG + p2IG + '</div>';
-                
-        } else if (selectedPlayers.length === 1) {
-            // SINGLES CARD
-            var p = selectedPlayers[0];
-            
-            var pPhoto = p.photo 
-                ? '<img src="' + p.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
-                : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
-            
-            photoHTML = '<div class="photo-container">' + pPhoto + '</div>';
-            
-            var pIG = p.instagram ? '<span><i class="bi bi-instagram"></i> @' + p.instagram + '</span>' : '';
-            var pDUPR = p.dupr !== '-' ? '<span>DUPR: ' + p.dupr + '</span>' : '';
-            var taglineHTML = tagline ? '<div class="tagline">' + tagline + '</div>' : '';
-            
-            infoHTML = 
-                '<div class="shirt-name">' + p.shirt + '</div>' +
-                '<div class="full-name">' + p.name + '</div>' +
-                taglineHTML +
-                '<div class="social">' + pIG + pDUPR + '</div>';
-                
-        } else {
-            // NO SELECTION
-            photoHTML = '<div class="photo-container"><div class="photo-placeholder"><i class="bi bi-person"></i></div></div>';
-            infoHTML = 
-                '<div class="shirt-name">SELECT PLAYER</div>' +
-                '<div class="full-name">Choose player(s) from the left</div>' +
-                '<div class="tagline"></div>' +
-                '<div class="social"></div>';
-        }
-        
-        preview.innerHTML = 
-            '<div class="header">' +
-                '<div class="logo-text">' + logoText + '</div>' +
-                '<div class="flag-container">' +
-                    '<span class="flag">' + teamData.flag + '</span>' +
-                    '<span class="country-name">' + teamData.country + '</span>' +
-                '</div>' +
-                '<span class="age-category">' + teamData.age + '</span>' +
-            '</div>' +
-            '<div class="category-badge">' + cfg.label + '</div>' +
-            photoHTML +
-            '<div class="info-section">' + infoHTML + '</div>';
+        preview.innerHTML = buildCardHTML(brand, currentCategory, selectedPlayers, tagline, posX, posY);
     }
     
     // ==================== DOWNLOAD SINGLE CARD ====================
     async function downloadCard() {
         var cfg = categoryConfig[currentCategory];
-        
         if (selectedPlayers.length < cfg.min) {
             alert('Please select ' + cfg.min + ' player(s) for ' + cfg.label);
             return;
         }
-        
-        // Get current position values
-        var posX = document.getElementById('photoPositionX').value;
-        var posY = document.getElementById('photoPositionY').value;
         
         var card = document.getElementById('cardPreview');
         var clone = card.cloneNode(true);
@@ -1077,7 +1067,8 @@
                 height: 1080, 
                 scale: 1, 
                 useCORS: true,
-                allowTaint: true
+                allowTaint: true,
+                backgroundColor: null
             });
             
             var brand = document.getElementById('brandSelect').value;
@@ -1105,42 +1096,16 @@
         
         var zip = new JSZip();
         var brand = document.getElementById('teamBrandSelect').value;
-        var tagline = document.getElementById('teamTaglineInput').value;
-        var posX = document.getElementById('teamPhotoX').value;
-        var posY = document.getElementById('teamPhotoY').value;
-        var photoPosition = posX + '% ' + posY + '%';
-        var logoText = brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>';
+        var tagline = document.getElementById('teamTagline').value;
+        var posX = parseInt(document.getElementById('teamPhotoX').value);
+        var posY = parseInt(document.getElementById('teamPhotoY').value);
         
         for (var i = 0; i < players.length; i++) {
             var p = players[i];
+            
             var temp = document.createElement('div');
             temp.className = 'player-card-' + brand;
-            
-            var pPhoto = p.photo 
-                ? '<img src="' + p.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
-                : '<div class="photo-placeholder"><i class="bi bi-person" style="font-size:150px;color:rgba(255,255,255,0.3);"></i></div>';
-            
-            var pIG = p.instagram ? '<span><i class="bi bi-instagram"></i> @' + p.instagram + '</span>' : '';
-            var pDUPR = p.dupr !== '-' ? '<span>DUPR: ' + p.dupr + '</span>' : '';
-            var taglineHTML = tagline ? '<div class="tagline">' + tagline + '</div>' : '';
-            
-            temp.innerHTML = 
-                '<div class="header">' +
-                    '<div class="logo-text">' + logoText + '</div>' +
-                    '<div class="flag-container">' +
-                        '<span class="flag">' + teamData.flag + '</span>' +
-                        '<span class="country-name">' + teamData.country + '</span>' +
-                    '</div>' +
-                    '<span class="age-category">' + teamData.age + '</span>' +
-                '</div>' +
-                '<div class="photo-container">' + pPhoto + '</div>' +
-                '<div class="info-section">' +
-                    '<div class="shirt-name">' + p.shirt + '</div>' +
-                    '<div class="full-name">' + p.name + '</div>' +
-                    taglineHTML +
-                    '<div class="social">' + pIG + pDUPR + '</div>' +
-                '</div>';
-            
+            temp.innerHTML = buildCardHTML(brand, 'singles', [p], tagline, posX, posY);
             temp.style.cssText = 'position:fixed;left:-9999px;width:1080px;height:1080px;';
             document.body.appendChild(temp);
             
@@ -1150,7 +1115,8 @@
                     height: 1080, 
                     scale: 1, 
                     useCORS: true,
-                    allowTaint: true
+                    allowTaint: true,
+                    backgroundColor: null
                 });
                 var data = canvas.toDataURL('image/png').split(',')[1];
                 var num = String(i + 1);
