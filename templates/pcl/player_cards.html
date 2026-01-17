@@ -580,19 +580,19 @@
     };
     
     const players = [
-        {% for reg in registrations %}
-        {
-            id: {{ reg.id }},
-            shirt: '{{ reg.shirt_name or reg.first_name|upper }}',
-            name: '{{ reg.first_name }} {{ reg.last_name }}',
-            gender: '{{ reg.gender }}',
-            instagram: '{{ reg.instagram or "" }}',
-            dupr: '{{ reg.dupr_rating or "-" }}',
-            bio: '{{ reg.bio or "" }}',
-            photo: '{{ reg.photo_filename or "" }}'
-        },
-        {% endfor %}
-    ];
+    {% for reg in registrations %}
+    {
+        id: {{ reg.id }},
+        shirt: {{ (reg.shirt_name or reg.first_name|upper)|tojson }},
+        name: {{ (reg.first_name ~ ' ' ~ reg.last_name)|tojson }},
+        gender: {{ reg.gender|tojson }},
+        instagram: {{ (reg.instagram or "")|tojson }},
+        dupr: {{ (reg.dupr_rating or "-")|tojson }},
+        bio: {{ (reg.bio or "")|tojson }},
+        photo: {{ (reg.photo_filename or "")|tojson }}
+    },
+    {% endfor %}
+];
     
     // Single Player
     let selectedSinglePlayer = null;
