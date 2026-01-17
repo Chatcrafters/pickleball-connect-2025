@@ -35,6 +35,18 @@
         font-family: 'Montserrat', sans-serif;
     }
     
+    .player-card-pcl .venue-silhouette {
+        position: absolute;
+        bottom: 280px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 900px;
+        height: 450px;
+        opacity: 0.12;
+        z-index: 1;
+        pointer-events: none;
+    }
+    
     .player-card-pcl .header {
         position: absolute;
         top: 0;
@@ -56,9 +68,7 @@
         letter-spacing: 2px;
     }
     
-    .player-card-pcl .logo-text span {
-        color: #f4a03a;
-    }
+    .player-card-pcl .logo-text span { color: #f4a03a; }
     
     .player-card-pcl .flag-container {
         display: flex;
@@ -66,9 +76,7 @@
         gap: 15px;
     }
     
-    .player-card-pcl .flag {
-        font-size: 60px;
-    }
+    .player-card-pcl .flag { font-size: 60px; }
     
     .player-card-pcl .country-name {
         font-size: 28px;
@@ -114,6 +122,7 @@
         background-color: #2d6a7e;
         background-size: cover;
         background-repeat: no-repeat;
+        z-index: 5;
     }
     
     .player-card-pcl .photo-placeholder {
@@ -135,7 +144,7 @@
         background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
         padding: 120px 50px 40px;
         text-align: center;
-        z-index: 5;
+        z-index: 8;
     }
     
     .player-card-pcl .shirt-name {
@@ -162,11 +171,19 @@
         font-style: italic;
     }
     
+    .player-card-pcl .venue-name {
+        font-size: 18px;
+        color: rgba(255,255,255,0.6);
+        margin-top: 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+    
     .player-card-pcl .social {
         display: flex;
         justify-content: center;
         gap: 30px;
-        margin-top: 20px;
+        margin-top: 15px;
         font-size: 26px;
         color: #f4a03a;
     }
@@ -178,9 +195,7 @@
     }
     
     /* PCL DOUBLES */
-    .player-card-pcl.doubles-card .photo-circle {
-        display: none;
-    }
+    .player-card-pcl.doubles-card .photo-circle { display: none; }
     
     .player-card-pcl.doubles-card .doubles-photos {
         position: absolute;
@@ -202,18 +217,9 @@
         background-repeat: no-repeat;
     }
     
-    .player-card-pcl.doubles-card .info-section {
-        height: 420px;
-        padding-top: 140px;
-    }
-    
-    .player-card-pcl.doubles-card .shirt-name {
-        font-size: 56px;
-    }
-    
-    .player-card-pcl.doubles-card .full-name {
-        font-size: 28px;
-    }
+    .player-card-pcl.doubles-card .info-section { height: 420px; padding-top: 140px; }
+    .player-card-pcl.doubles-card .shirt-name { font-size: 56px; }
+    .player-card-pcl.doubles-card .full-name { font-size: 28px; }
     
     /* ==================== WPC SERIES CARD ==================== */
     .player-card-wpc {
@@ -223,6 +229,18 @@
         position: relative;
         overflow: hidden;
         font-family: 'Montserrat', sans-serif;
+    }
+    
+    .player-card-wpc .venue-silhouette {
+        position: absolute;
+        bottom: 280px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 900px;
+        height: 450px;
+        opacity: 0.10;
+        z-index: 1;
+        pointer-events: none;
     }
     
     .player-card-wpc .header {
@@ -246,9 +264,7 @@
         letter-spacing: 2px;
     }
     
-    .player-card-wpc .logo-text span {
-        color: #f4a03a;
-    }
+    .player-card-wpc .logo-text span { color: #f4a03a; }
     
     .player-card-wpc .flag-container {
         display: flex;
@@ -256,9 +272,7 @@
         gap: 15px;
     }
     
-    .player-card-wpc .flag {
-        font-size: 60px;
-    }
+    .player-card-wpc .flag { font-size: 60px; }
     
     .player-card-wpc .country-name {
         font-size: 28px;
@@ -304,6 +318,7 @@
         background-color: #3d6a32;
         background-size: cover;
         background-repeat: no-repeat;
+        z-index: 5;
     }
     
     .player-card-wpc .photo-placeholder {
@@ -325,7 +340,7 @@
         background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
         padding: 120px 50px 40px;
         text-align: center;
-        z-index: 5;
+        z-index: 8;
     }
     
     .player-card-wpc .shirt-name {
@@ -352,11 +367,19 @@
         font-style: italic;
     }
     
+    .player-card-wpc .venue-name {
+        font-size: 18px;
+        color: rgba(255,255,255,0.6);
+        margin-top: 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+    }
+    
     .player-card-wpc .social {
         display: flex;
         justify-content: center;
         gap: 30px;
-        margin-top: 20px;
+        margin-top: 15px;
         font-size: 26px;
         color: #f4a03a;
     }
@@ -368,9 +391,7 @@
     }
     
     /* WPC DOUBLES */
-    .player-card-wpc.doubles-card .photo-circle {
-        display: none;
-    }
+    .player-card-wpc.doubles-card .photo-circle { display: none; }
     
     .player-card-wpc.doubles-card .doubles-photos {
         position: absolute;
@@ -392,84 +413,62 @@
         background-repeat: no-repeat;
     }
     
-    .player-card-wpc.doubles-card .info-section {
-        height: 420px;
-        padding-top: 140px;
-    }
-    
-    .player-card-wpc.doubles-card .shirt-name {
-        font-size: 56px;
-    }
-    
-    .player-card-wpc.doubles-card .full-name {
-        font-size: 28px;
-    }
+    .player-card-wpc.doubles-card .info-section { height: 420px; padding-top: 140px; }
+    .player-card-wpc.doubles-card .shirt-name { font-size: 56px; }
+    .player-card-wpc.doubles-card .full-name { font-size: 28px; }
     
     /* ==================== UI STYLES ==================== */
     .form-section {
         background: rgba(255,255,255,0.1);
         border-radius: 15px;
-        padding: 25px;
-        margin-bottom: 20px;
+        padding: 20px;
+        margin-bottom: 15px;
     }
     
     .form-section h5 {
         color: #ffd700;
-        margin-bottom: 15px;
+        margin-bottom: 12px;
+        font-size: 16px;
     }
     
     .category-btn {
-        padding: 12px 20px;
+        padding: 10px 16px;
         border: 2px solid #555;
         background: transparent;
         color: white;
-        border-radius: 25px;
+        border-radius: 20px;
         cursor: pointer;
         transition: all 0.3s;
-        margin: 5px;
-        font-size: 14px;
+        margin: 3px;
+        font-size: 13px;
     }
     
-    .category-btn:hover {
-        border-color: #f4a03a;
-        color: #f4a03a;
-    }
-    
-    .category-btn.active {
-        background: #f4a03a;
-        color: #1a1a2e;
-        border-color: #f4a03a;
-    }
+    .category-btn:hover { border-color: #f4a03a; color: #f4a03a; }
+    .category-btn.active { background: #f4a03a; color: #1a1a2e; border-color: #f4a03a; }
     
     .player-select-card {
         background: rgba(255,255,255,0.05);
         border: 2px solid transparent;
         border-radius: 10px;
-        padding: 12px;
-        margin-bottom: 8px;
+        padding: 10px;
+        margin-bottom: 6px;
         cursor: pointer;
         transition: all 0.3s;
     }
     
-    .player-select-card:hover {
-        border-color: #f4a03a;
-    }
-    
-    .player-select-card.selected {
-        border-color: #f4a03a;
-        background: rgba(244,160,58,0.2);
-    }
+    .player-select-card:hover { border-color: #f4a03a; }
+    .player-select-card.selected { border-color: #f4a03a; background: rgba(244,160,58,0.2); }
     
     .player-select-card img {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
         object-fit: cover;
     }
     
     .player-select-card .placeholder-img {
-        width: 50px;
-        height: 50px;
+        width: 45px;
+        height: 45px;
         border-radius: 50%;
         background: rgba(255,255,255,0.2);
         display: flex;
@@ -477,25 +476,15 @@
         justify-content: center;
     }
     
-    .preview-container {
-        display: flex;
-        justify-content: center;
-    }
-    
-    .preview-wrapper {
-        text-align: center;
-    }
-    
-    .preview-wrapper h5 {
-        color: #ffd700;
-        margin-bottom: 10px;
-    }
+    .preview-container { display: flex; justify-content: center; }
+    .preview-wrapper { text-align: center; }
+    .preview-wrapper h5 { color: #ffd700; margin-bottom: 10px; }
     
     .nav-tabs .nav-link {
         color: #aaa;
         background: transparent;
         border: none;
-        padding: 15px 25px;
+        padding: 12px 20px;
     }
     
     .nav-tabs .nav-link.active {
@@ -504,30 +493,36 @@
         border-bottom: 3px solid #f4a03a;
     }
     
-    .tagline-input {
+    .tagline-input, .venue-select {
         background: rgba(255,255,255,0.1);
         border: 1px solid #555;
         color: white;
     }
     
-    .tagline-input:focus {
+    .tagline-input:focus, .venue-select:focus {
         background: rgba(255,255,255,0.15);
         border-color: #f4a03a;
         color: white;
     }
     
-    .tagline-input::placeholder {
-        color: #888;
+    .tagline-input::placeholder { color: #888; }
+    .venue-select option { background: #1a1a2e; color: white; }
+    
+    .form-range::-webkit-slider-thumb { background: #f4a03a; }
+    .form-range::-moz-range-thumb { background: #f4a03a; border: none; }
+    
+    .venue-badge {
+        display: inline-block;
+        background: linear-gradient(135deg, #e86c3a, #f4a03a);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 10px;
     }
     
-    .form-range::-webkit-slider-thumb {
-        background: #f4a03a;
-    }
-    
-    .form-range::-moz-range-thumb {
-        background: #f4a03a;
-        border: none;
-    }
+    .venue-badge.no-venue { background: #555; }
 </style>
 
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
@@ -537,26 +532,29 @@
 <div class="generator-container">
     <div class="container-fluid">
         <!-- Header -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
                 <a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}" class="btn btn-outline-light btn-sm mb-2">
-                    <i class="bi bi-arrow-left"></i> Back to Team
+                    <i class="bi bi-arrow-left"></i> Back
                 </a>
-                <h2 class="mb-0"><i class="bi bi-card-image"></i> Player Card Generator</h2>
-                <p class="text-muted mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</p>
+                <h2 class="mb-0" style="font-size: 24px;">
+                    <i class="bi bi-card-image"></i> Player Cards
+                    <span class="venue-badge" id="venueBadge"><i class="bi bi-geo-alt"></i> <span id="venueBadgeText">Málaga</span></span>
+                </h2>
+                <p class="text-muted mb-0 small">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</p>
             </div>
         </div>
         
         <!-- Tabs -->
-        <ul class="nav nav-tabs mb-4">
+        <ul class="nav nav-tabs mb-3">
             <li class="nav-item">
                 <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#createTab">
-                    <i class="bi bi-trophy"></i> Create Cards
+                    <i class="bi bi-person"></i> Create
                 </button>
             </li>
             <li class="nav-item">
                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#teamTab">
-                    <i class="bi bi-people"></i> Download All
+                    <i class="bi bi-people"></i> Team ZIP
                 </button>
             </li>
         </ul>
@@ -566,43 +564,56 @@
             <div class="tab-pane fade show active" id="createTab">
                 <div class="row">
                     <div class="col-lg-5">
-                        <!-- 1. Category -->
+                        <!-- Venue & Brand -->
                         <div class="form-section">
-                            <h5><i class="bi bi-trophy"></i> 1. Category</h5>
-                            <div class="d-flex flex-wrap mb-3">
-                                <button class="category-btn active" onclick="selectCategory('singles', this)">Singles</button>
-                                <button class="category-btn" onclick="selectCategory('mens-doubles', this)">Men's Doubles</button>
-                                <button class="category-btn" onclick="selectCategory('womens-doubles', this)">Women's Doubles</button>
-                                <button class="category-btn" onclick="selectCategory('mixed-doubles', this)">Mixed Doubles</button>
-                            </div>
+                            <h5><i class="bi bi-geo-alt"></i> Venue & Brand</h5>
                             <div class="row">
-                                <div class="col-6">
-                                    <select class="form-select form-select-sm" id="brandSelect" onchange="updatePreview()">
+                                <div class="col-7">
+                                    <select class="form-select form-select-sm venue-select" id="venueSelect" onchange="changeVenue()">
+                                        <option value="none">Kein Venue</option>
+                                        <option value="malaga" selected>🇪🇸 Málaga - Palacio Martín Carpena</option>
+                                        <option value="istanbul">🇹🇷 Istanbul - Hagia Sophia</option>
+                                        <option value="algarve">🇵🇹 Algarve - Ponta da Piedade</option>
+                                        <option value="alba">🇮🇹 Alba - Piemont</option>
+                                        <option value="marrakech">🇲🇦 Marrakesch - Koutoubia</option>
+                                    </select>
+                                </div>
+                                <div class="col-5">
+                                    <select class="form-select form-select-sm" id="brandSelect" onchange="changeBrand()">
                                         <option value="pcl">PCL Europe</option>
                                         <option value="wpc">WPC Series</option>
                                     </select>
                                 </div>
-                                <div class="col-6">
-                                    <span class="text-warning" id="categoryHint">Select 1 player</span>
-                                </div>
                             </div>
                         </div>
                         
-                        <!-- 2. Players -->
+                        <!-- Category -->
                         <div class="form-section">
-                            <h5><i class="bi bi-person-check"></i> 2. Player(s)</h5>
-                            <div style="max-height: 180px; overflow-y: auto;" id="playerList">
+                            <h5><i class="bi bi-trophy"></i> Category</h5>
+                            <div class="d-flex flex-wrap">
+                                <button class="category-btn active" onclick="selectCategory('singles', this)">Singles</button>
+                                <button class="category-btn" onclick="selectCategory('mens-doubles', this)">Men's Dbl</button>
+                                <button class="category-btn" onclick="selectCategory('womens-doubles', this)">Women's Dbl</button>
+                                <button class="category-btn" onclick="selectCategory('mixed-doubles', this)">Mixed Dbl</button>
+                            </div>
+                            <div class="mt-1 text-warning small" id="categoryHint">Select 1 player</div>
+                        </div>
+                        
+                        <!-- Players -->
+                        <div class="form-section">
+                            <h5><i class="bi bi-person-check"></i> Player(s)</h5>
+                            <div style="max-height: 150px; overflow-y: auto;" id="playerList">
                                 {% for reg in registrations %}
                                 <div class="player-select-card" onclick="togglePlayer(this, {{ reg.id }})" data-id="{{ reg.id }}" data-gender="{{ reg.gender }}">
-                                    <div class="d-flex align-items-center gap-3">
+                                    <div class="d-flex align-items-center gap-2">
                                         {% if reg.photo_filename %}
                                         <img src="{{ reg.photo_filename }}">
                                         {% else %}
                                         <div class="placeholder-img"><i class="bi bi-person"></i></div>
                                         {% endif %}
                                         <div>
-                                            <strong>{{ reg.shirt_name or reg.first_name|upper }}</strong>
-                                            <span class="badge bg-{{ 'primary' if reg.gender == 'male' else 'danger' }}">{{ '♂' if reg.gender == 'male' else '♀' }}</span>
+                                            <strong style="font-size: 14px;">{{ reg.shirt_name or reg.first_name|upper }}</strong>
+                                            <span class="badge bg-{{ 'primary' if reg.gender == 'male' else 'danger' }} ms-1" style="font-size: 10px;">{{ '♂' if reg.gender == 'male' else '♀' }}</span>
                                             <br><small class="text-muted">{{ reg.first_name }} {{ reg.last_name }}</small>
                                         </div>
                                     </div>
@@ -611,22 +622,22 @@
                             </div>
                         </div>
                         
-                        <!-- 3. Options -->
+                        <!-- Options -->
                         <div class="form-section">
-                            <h5><i class="bi bi-sliders"></i> 3. Options</h5>
-                            <div class="mb-2">
-                                <input type="text" class="form-control form-control-sm tagline-input" id="taglineInput" placeholder="Tagline (e.g. Signed for WPC Malaga)" oninput="updatePreview()">
+                            <h5><i class="bi bi-sliders"></i> Options</h5>
+                            <input type="text" class="form-control form-control-sm tagline-input mb-2" id="taglineInput" placeholder="Tagline" oninput="updatePreview()">
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="small text-muted">X: <span id="posXVal">50</span>%</label>
+                                    <input type="range" class="form-range" id="posX" min="0" max="100" value="50" oninput="updatePreview()">
+                                </div>
+                                <div class="col-6">
+                                    <label class="small text-muted">Y: <span id="posYVal">20</span>%</label>
+                                    <input type="range" class="form-range" id="posY" min="0" max="100" value="20" oninput="updatePreview()">
+                                </div>
                             </div>
-                            <div class="mb-2">
-                                <label class="small text-muted">Photo X: <span id="posXVal">50</span>%</label>
-                                <input type="range" class="form-range" id="posX" min="0" max="100" value="50" oninput="updatePreview()">
-                            </div>
-                            <div class="mb-3">
-                                <label class="small text-muted">Photo Y: <span id="posYVal">20</span>%</label>
-                                <input type="range" class="form-range" id="posY" min="0" max="100" value="20" oninput="updatePreview()">
-                            </div>
-                            <button class="btn btn-warning w-100" onclick="downloadCard()">
-                                <i class="bi bi-download"></i> Download Card
+                            <button class="btn btn-warning w-100 mt-2" onclick="downloadCard()">
+                                <i class="bi bi-download"></i> Download
                             </button>
                         </div>
                     </div>
@@ -650,15 +661,15 @@
             <!-- TEAM TAB -->
             <div class="tab-pane fade" id="teamTab">
                 <div class="form-section">
-                    <div class="row align-items-center mb-4">
-                        <div class="col-md-3">
-                            <select class="form-select" id="teamBrand">
+                    <div class="row align-items-center mb-3">
+                        <div class="col-md-2">
+                            <select class="form-select form-select-sm" id="teamBrand">
                                 <option value="pcl">PCL Europe</option>
                                 <option value="wpc">WPC Series</option>
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <input type="text" class="form-control tagline-input" id="teamTagline" placeholder="Tagline (optional)">
+                            <input type="text" class="form-control form-control-sm tagline-input" id="teamTagline" placeholder="Tagline">
                         </div>
                         <div class="col-md-2">
                             <label class="small text-muted">X: <span id="teamXVal">50</span>%</label>
@@ -668,19 +679,19 @@
                             <label class="small text-muted">Y: <span id="teamYVal">20</span>%</label>
                             <input type="range" class="form-range" id="teamPosY" min="0" max="100" value="20" oninput="document.getElementById('teamYVal').textContent=this.value">
                         </div>
-                        <div class="col-md-2">
+                        <div class="col-md-3">
                             <button class="btn btn-warning w-100" onclick="downloadTeamZip()">
-                                <i class="bi bi-download"></i> ZIP
+                                <i class="bi bi-download"></i> Download ZIP
                             </button>
                         </div>
                     </div>
                     <div class="row">
                         {% for reg in registrations %}
-                        <div class="col-6 col-md-3 col-lg-2 mb-3 text-center">
+                        <div class="col-4 col-md-2 mb-2 text-center">
                             {% if reg.photo_filename %}
-                            <img src="{{ reg.photo_filename }}" class="rounded-circle mb-1" width="60" height="60" style="object-fit:cover;">
+                            <img src="{{ reg.photo_filename }}" class="rounded-circle mb-1" width="50" height="50" style="object-fit:cover;">
                             {% else %}
-                            <div class="rounded-circle bg-secondary mx-auto mb-1" style="width:60px;height:60px;"></div>
+                            <div class="rounded-circle bg-secondary mx-auto mb-1" style="width:50px;height:50px;"></div>
                             {% endif %}
                             <div class="small text-warning">{{ reg.shirt_name or reg.first_name|upper }}</div>
                         </div>
@@ -693,6 +704,30 @@
 </div>
 
 <script>
+// ==================== VENUES ====================
+// Venues werden aus externen Dateien geladen
+var venues = {
+    'none': {
+        name: '',
+        svg: '',
+        taglineWPC: '',
+        taglinePCL: '',
+        badge: 'Kein Venue'
+    }
+};
+</script>
+
+<!-- Venue-Dateien (einzeln bearbeitbar) -->
+<script src="{{ url_for('static', filename='venues/malaga.js') }}"></script>
+<script src="{{ url_for('static', filename='venues/istanbul.js') }}"></script>
+<script src="{{ url_for('static', filename='venues/algarve.js') }}"></script>
+<script src="{{ url_for('static', filename='venues/alba.js') }}"></script>
+<script src="{{ url_for('static', filename='venues/marrakech.js') }}"></script>
+
+<script>
+var currentVenue = 'malaga';
+
+// ==================== DATA ====================
 var teamData = {
     flag: '{{ team.country_flag }}',
     country: '{{ team.country_name }}',
@@ -722,8 +757,56 @@ var categoryConfig = {
     'mixed-doubles': { min: 2, max: 2, label: 'MIXED DOUBLES', hint: '1 male + 1 female' }
 };
 
-document.addEventListener('DOMContentLoaded', updatePreview);
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded', function() {
+    // Load saved venue
+    var saved = localStorage.getItem('wpc_venue');
+    if (saved && venues[saved]) {
+        currentVenue = saved;
+    }
+    document.getElementById('venueSelect').value = currentVenue;
+    
+    // Set tagline based on brand
+    updateTaglineForBrand();
+    
+    updateBadge();
+    updatePreview();
+});
 
+function updateTaglineForBrand() {
+    var brand = document.getElementById('brandSelect').value;
+    var v = venues[currentVenue];
+    var tagline = brand === 'wpc' ? (v.taglineWPC || '') : (v.taglinePCL || '');
+    document.getElementById('taglineInput').value = tagline;
+    document.getElementById('teamTagline').value = tagline;
+}
+
+// ==================== VENUE ====================
+function changeVenue() {
+    currentVenue = document.getElementById('venueSelect').value;
+    localStorage.setItem('wpc_venue', currentVenue);
+    
+    updateTaglineForBrand();
+    
+    updateBadge();
+    updatePreview();
+}
+
+function changeBrand() {
+    updateTaglineForBrand();
+    updatePreview();
+}
+
+function updateBadge() {
+    var badge = document.getElementById('venueBadge');
+    var text = document.getElementById('venueBadgeText');
+    var v = venues[currentVenue];
+    
+    text.textContent = v.badge;
+    badge.className = currentVenue === 'none' ? 'venue-badge no-venue' : 'venue-badge';
+}
+
+// ==================== CATEGORY ====================
 function selectCategory(cat, btn) {
     currentCategory = cat;
     selectedPlayers = [];
@@ -734,6 +817,7 @@ function selectCategory(cat, btn) {
     updatePreview();
 }
 
+// ==================== PLAYER ====================
 function togglePlayer(el, id) {
     var cfg = categoryConfig[currentCategory];
     var player = players.find(function(p) { return p.id === id; });
@@ -743,13 +827,13 @@ function togglePlayer(el, id) {
         selectedPlayers.splice(idx, 1);
         el.classList.remove('selected');
     } else {
-        if (selectedPlayers.length >= cfg.max) { alert('Max ' + cfg.max + ' players'); return; }
-        if (cfg.gender && player.gender !== cfg.gender) { alert('Select ' + cfg.gender + ' players'); return; }
+        if (selectedPlayers.length >= cfg.max) { alert('Max ' + cfg.max); return; }
+        if (cfg.gender && player.gender !== cfg.gender) { alert('Select ' + cfg.gender); return; }
         if (currentCategory === 'mixed-doubles') {
             var m = selectedPlayers.filter(function(p) { return p.gender === 'male'; }).length;
             var f = selectedPlayers.filter(function(p) { return p.gender === 'female'; }).length;
-            if (player.gender === 'male' && m >= 1) { alert('Need 1 female'); return; }
-            if (player.gender === 'female' && f >= 1) { alert('Need 1 male'); return; }
+            if (player.gender === 'male' && m >= 1) { alert('Need female'); return; }
+            if (player.gender === 'female' && f >= 1) { alert('Need male'); return; }
         }
         selectedPlayers.push(player);
         el.classList.add('selected');
@@ -757,13 +841,23 @@ function togglePlayer(el, id) {
     updatePreview();
 }
 
+// ==================== BUILD CARD ====================
 function buildCard(brand, category, pList, tagline, posX, posY) {
     var cfg = categoryConfig[category];
+    var v = venues[currentVenue];
     var logo = brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>';
     var bgPos = posX + '% ' + posY + '%';
     var isDoubles = category !== 'singles' && pList.length === 2;
     
-    var html = '<div class="header">' +
+    var html = '';
+    
+    // Venue silhouette
+    if (v.svg) {
+        html += '<div class="venue-silhouette">' + v.svg + '</div>';
+    }
+    
+    // Header
+    html += '<div class="header">' +
         '<div class="logo-text">' + logo + '</div>' +
         '<div class="flag-container"><span class="flag">' + teamData.flag + '</span><span class="country-name">' + teamData.country + '</span></div>' +
         '<span class="age-category">' + teamData.age + '</span></div>' +
@@ -784,6 +878,7 @@ function buildCard(brand, category, pList, tagline, posX, posY) {
             '<div class="shirt-name">' + pList[0].shirt + ' & ' + pList[1].shirt + '</div>' +
             '<div class="full-name">' + pList[0].name + ' & ' + pList[1].name + '</div>' +
             (tagline ? '<div class="tagline">' + tagline + '</div>' : '') +
+            (v.name ? '<div class="venue-name">' + v.name + '</div>' : '') +
             '<div class="social">' +
             (pList[0].instagram ? '<span><i class="bi bi-instagram"></i> @' + pList[0].instagram + '</span>' : '') +
             (pList[1].instagram ? '<span><i class="bi bi-instagram"></i> @' + pList[1].instagram + '</span>' : '') +
@@ -799,17 +894,20 @@ function buildCard(brand, category, pList, tagline, posX, posY) {
             '<div class="shirt-name">' + p.shirt + '</div>' +
             '<div class="full-name">' + p.name + '</div>' +
             (tagline ? '<div class="tagline">' + tagline + '</div>' : '') +
+            (v.name ? '<div class="venue-name">' + v.name + '</div>' : '') +
             '<div class="social">' +
             (p.instagram ? '<span><i class="bi bi-instagram"></i> @' + p.instagram + '</span>' : '') +
             (p.dupr !== '-' ? '<span>DUPR: ' + p.dupr + '</span>' : '') +
             '</div></div>';
     } else {
         html += '<div class="photo-circle"><div class="photo-placeholder"><i class="bi bi-person"></i></div></div>' +
-            '<div class="info-section"><div class="shirt-name">SELECT</div><div class="full-name">Choose a player</div></div>';
+            '<div class="info-section"><div class="shirt-name">SELECT</div><div class="full-name">Choose player</div>' +
+            (v.name ? '<div class="venue-name">' + v.name + '</div>' : '') + '</div>';
     }
     return html;
 }
 
+// ==================== PREVIEW ====================
 function updatePreview() {
     var brand = document.getElementById('brandSelect').value;
     var tagline = document.getElementById('taglineInput').value;
@@ -828,6 +926,7 @@ function updatePreview() {
     preview.innerHTML = buildCard(brand, currentCategory, selectedPlayers, tagline, posX, posY);
 }
 
+// ==================== DOWNLOAD ====================
 async function downloadCard() {
     var cfg = categoryConfig[currentCategory];
     if (selectedPlayers.length < cfg.min) { alert('Select ' + cfg.min + ' player(s)'); return; }
@@ -840,9 +939,10 @@ async function downloadCard() {
     try {
         var canvas = await html2canvas(clone, { width: 1080, height: 1080, scale: 1, useCORS: true, allowTaint: true });
         var brand = document.getElementById('brandSelect').value;
+        var venuePart = currentVenue !== 'none' ? '_' + venues[currentVenue].badge : '';
         var names = selectedPlayers.map(function(p) { return p.shirt; }).join('_');
         var link = document.createElement('a');
-        link.download = brand.toUpperCase() + '_' + currentCategory + '_' + names + '.png';
+        link.download = brand.toUpperCase() + venuePart + '_' + currentCategory + '_' + names + '.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
     } finally {
@@ -878,8 +978,9 @@ async function downloadTeamZip() {
     }
     
     var blob = await zip.generateAsync({ type: 'blob' });
+    var venuePart = currentVenue !== 'none' ? '_' + venues[currentVenue].badge : '';
     var link = document.createElement('a');
-    link.download = brand.toUpperCase() + '_' + teamData.country + '_' + teamData.age + '.zip';
+    link.download = brand.toUpperCase() + venuePart + '_' + teamData.country + '_' + teamData.age + '.zip';
     link.href = URL.createObjectURL(blob);
     link.click();
 }
