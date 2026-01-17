@@ -1,3 +1,4 @@
+from urllib.parse import quote
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
 from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS
 from datetime import datetime, date
@@ -8,6 +9,7 @@ import os
 import csv
 import io
 import json
+from urllib.parse import quote
 
 pcl = Blueprint('pcl', __name__)
 
