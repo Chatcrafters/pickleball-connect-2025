@@ -41,9 +41,12 @@
             <p class="text-muted">{{ team.tournament.name }}</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
-                <i class="bi bi-download"></i> Export CSV
-            </a>
+            <a href="{{ url_for('pcl.player_cards', team_id=team.id) }}" class="btn btn-warning">
+    <i class="bi bi-card-image"></i> Player Cards
+</a>
+<a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
+    <i class="bi bi-download"></i> Export CSV
+</a>
             <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this team? All registrations will be removed!');">
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i> Delete Team

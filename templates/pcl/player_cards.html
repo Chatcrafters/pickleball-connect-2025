@@ -1,0 +1,897 @@
+{% extends "base.html" %}
+
+{% block title %}Player Cards - {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}{% endblock %}
+
+{% block content %}
+<style>
+    .generator-container {
+        background: #1a1a2e;
+        color: white;
+        min-height: 100vh;
+        margin: -20px;
+        padding: 20px;
+    }
+    
+    .card-scale { transform: scale(0.333); transform-origin: top left; }
+    
+    .card-container {
+        width: 360px;
+        height: 360px;
+        overflow: hidden;
+        border-radius: 10px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+    }
+    
+    /* PCL EUROPE CARD */
+    .player-card-pcl {
+        width: 1080px;
+        height: 1080px;
+        background: linear-gradient(135deg, #1a4a5e 0%, #2d6a7e 25%, #e86c3a 75%, #f4a03a 100%);
+        position: relative;
+        overflow: hidden;
+        font-family: 'Montserrat', sans-serif;
+    }
+    
+    .player-card-pcl .header {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 140px;
+        background: rgba(0,0,0,0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 50px;
+    }
+    
+    .player-card-pcl .logo-text {
+        color: white;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: 2px;
+    }
+    
+    .player-card-pcl .logo-text span { color: #f4a03a; }
+    
+    .player-card-pcl .flag-container {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .player-card-pcl .flag { font-size: 60px; }
+    
+    .player-card-pcl .country-name {
+        font-size: 28px;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+    }
+    
+    .player-card-pcl .age-category {
+        background: #f4a03a;
+        color: #1a1a2e;
+        padding: 8px 25px;
+        border-radius: 25px;
+        font-size: 32px;
+        font-weight: 900;
+    }
+    
+    .player-card-pcl .category-badge {
+        position: absolute;
+        top: 155px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.7);
+        color: #f4a03a;
+        padding: 10px 40px;
+        border-radius: 30px;
+        font-size: 28px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        z-index: 10;
+    }
+    
+    .player-card-pcl .photo-container {
+        position: absolute;
+        top: 160px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 450px;
+        height: 450px;
+        border-radius: 50%;
+        border: 8px solid rgba(255,255,255,0.3);
+        overflow: hidden;
+        background: #2d6a7e;
+    }
+    
+    .player-card-pcl .photo-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .player-card-pcl .photo-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 150px;
+        color: rgba(255,255,255,0.3);
+    }
+    
+    .player-card-pcl .info-section {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 380px;
+        background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%);
+        padding: 120px 50px 40px;
+        text-align: center;
+    }
+    
+    .player-card-pcl .shirt-name {
+        font-size: 72px;
+        font-weight: 900;
+        color: #f4a03a;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    .player-card-pcl .full-name {
+        font-size: 32px;
+        font-weight: 400;
+        color: white;
+        margin-top: 5px;
+    }
+    
+    .player-card-pcl .bio {
+        font-size: 24px;
+        color: rgba(255,255,255,0.8);
+        margin-top: 20px;
+        line-height: 1.4;
+        max-height: 70px;
+        overflow: hidden;
+    }
+    
+    .player-card-pcl .social {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 25px;
+        font-size: 26px;
+        color: #f4a03a;
+    }
+    
+    .player-card-pcl .social span {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    /* DOUBLES CARD */
+    .player-card-pcl.doubles-card .photo-container { display: none; }
+    
+    .player-card-pcl.doubles-card .doubles-photos {
+        position: absolute;
+        top: 200px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 30px;
+    }
+    
+    .player-card-pcl.doubles-card .doubles-photos .player-photo {
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        border: 6px solid rgba(255,255,255,0.3);
+        overflow: hidden;
+        background: rgba(0,0,0,0.3);
+    }
+    
+    .player-card-pcl.doubles-card .doubles-photos .player-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .player-card-pcl.doubles-card .info-section {
+        height: 420px;
+        padding-top: 140px;
+    }
+    
+    .player-card-pcl.doubles-card .shirt-name { font-size: 56px; }
+    .player-card-pcl.doubles-card .full-name { font-size: 28px; }
+    
+    /* WPC SERIES CARD */
+    .player-card-wpc {
+        width: 1080px;
+        height: 1080px;
+        background: linear-gradient(135deg, #4a7c3f 0%, #5a9a4a 50%, #3d6a32 100%);
+        position: relative;
+        overflow: hidden;
+        font-family: 'Montserrat', sans-serif;
+    }
+    
+    .player-card-wpc .header {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 140px;
+        background: rgba(0,0,0,0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 50px;
+    }
+    
+    .player-card-wpc .logo-text {
+        color: white;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: 2px;
+    }
+    
+    .player-card-wpc .logo-text span { color: #f4a03a; }
+    .player-card-wpc .flag-container { display: flex; align-items: center; gap: 15px; }
+    .player-card-wpc .flag { font-size: 60px; }
+    .player-card-wpc .country-name { font-size: 28px; font-weight: 700; color: white; text-transform: uppercase; }
+    .player-card-wpc .age-category { background: #f4a03a; color: #1a1a2e; padding: 8px 25px; border-radius: 25px; font-size: 32px; font-weight: 900; }
+    .player-card-wpc .category-badge { position: absolute; top: 155px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: #f4a03a; padding: 10px 40px; border-radius: 30px; font-size: 28px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; z-index: 10; }
+    .player-card-wpc .photo-container { position: absolute; top: 160px; left: 50%; transform: translateX(-50%); width: 450px; height: 450px; border-radius: 50%; border: 8px solid rgba(255,255,255,0.3); overflow: hidden; background: #3d6a32; }
+    .player-card-wpc .photo-container img { width: 100%; height: 100%; object-fit: cover; }
+    .player-card-wpc .photo-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 150px; color: rgba(255,255,255,0.3); }
+    .player-card-wpc .info-section { position: absolute; bottom: 0; left: 0; right: 0; height: 380px; background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 60%, transparent 100%); padding: 120px 50px 40px; text-align: center; }
+    .player-card-wpc .shirt-name { font-size: 72px; font-weight: 900; color: #f4a03a; text-transform: uppercase; letter-spacing: 3px; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+    .player-card-wpc .full-name { font-size: 32px; font-weight: 400; color: white; margin-top: 5px; }
+    .player-card-wpc .bio { font-size: 24px; color: rgba(255,255,255,0.8); margin-top: 20px; line-height: 1.4; max-height: 70px; overflow: hidden; }
+    .player-card-wpc .social { display: flex; justify-content: center; gap: 30px; margin-top: 25px; font-size: 26px; color: #f4a03a; }
+    .player-card-wpc .social span { display: flex; align-items: center; gap: 8px; }
+    
+    .player-card-wpc.doubles-card .photo-container { display: none; }
+    .player-card-wpc.doubles-card .doubles-photos { position: absolute; top: 200px; left: 50%; transform: translateX(-50%); display: flex; gap: 30px; }
+    .player-card-wpc.doubles-card .doubles-photos .player-photo { width: 320px; height: 320px; border-radius: 50%; border: 6px solid rgba(255,255,255,0.3); overflow: hidden; background: rgba(0,0,0,0.3); }
+    .player-card-wpc.doubles-card .doubles-photos .player-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .player-card-wpc.doubles-card .info-section { height: 420px; padding-top: 140px; }
+    .player-card-wpc.doubles-card .shirt-name { font-size: 56px; }
+    .player-card-wpc.doubles-card .full-name { font-size: 28px; }
+    
+    /* UI Styles */
+    .form-section {
+        background: rgba(255,255,255,0.1);
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .form-section h5 { color: #ffd700; margin-bottom: 15px; }
+    
+    .category-btn {
+        padding: 10px 20px;
+        border: 2px solid #555;
+        background: transparent;
+        color: white;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s;
+        margin: 5px;
+    }
+    
+    .category-btn:hover { border-color: #f4a03a; color: #f4a03a; }
+    .category-btn.active { background: #f4a03a; color: #1a1a2e; border-color: #f4a03a; }
+    
+    .player-select-card {
+        background: rgba(255,255,255,0.05);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    
+    .player-select-card:hover { border-color: #f4a03a; }
+    .player-select-card.selected { border-color: #f4a03a; background: rgba(244,160,58,0.2); }
+    
+    .player-select-card img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .player-select-card .placeholder-img {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .preview-container {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        flex-wrap: wrap;
+    }
+    
+    .preview-wrapper { text-align: center; }
+    .preview-wrapper h5 { color: #ffd700; margin-bottom: 10px; }
+    
+    .nav-tabs .nav-link { color: #aaa; background: transparent; border: none; }
+    .nav-tabs .nav-link.active { color: #f4a03a; background: rgba(244,160,58,0.2); border-bottom: 2px solid #f4a03a; }
+</style>
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<div class="generator-container">
+    <div class="container-fluid">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}" class="btn btn-outline-light btn-sm mb-2">
+                    <i class="bi bi-arrow-left"></i> Back to Team
+                </a>
+                <h2 class="mb-0">
+                    <i class="bi bi-card-image"></i> Player Card Generator
+                </h2>
+                <p class="text-muted mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} - {{ team.tournament.name }}</p>
+            </div>
+        </div>
+        
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-4" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#singleTab">
+                    <i class="bi bi-person"></i> Single
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#categoryTab">
+                    <i class="bi bi-trophy"></i> Categories
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#teamTab">
+                    <i class="bi bi-people"></i> Full Team
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content">
+            <!-- SINGLE PLAYER TAB -->
+            <div class="tab-pane fade show active" id="singleTab">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="form-section">
+                            <h5><i class="bi bi-person-check"></i> Select Player</h5>
+                            <div class="mb-3">
+                                <select class="form-select" id="brandSelect" onchange="updateSinglePreview()">
+                                    <option value="pcl">PCL Europe</option>
+                                    <option value="wpc">WPC Series</option>
+                                </select>
+                            </div>
+                            <div style="max-height: 400px; overflow-y: auto;">
+                                {% for reg in registrations %}
+                                <div class="player-select-card" onclick="selectSinglePlayer(this, {{ reg.id }})" data-player='{{ reg|tojson|safe }}'>
+                                    <div class="d-flex align-items-center gap-3">
+                                        {% if reg.photo_filename %}
+                                        <img src="{{ reg.photo_filename }}">
+                                        {% else %}
+                                        <div class="placeholder-img"><i class="bi bi-person"></i></div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ reg.shirt_name or reg.first_name|upper }}</strong><br>
+                                            <small class="text-muted">{{ reg.first_name }} {{ reg.last_name }}</small><br>
+                                            <small class="text-muted">{{ '@' + reg.instagram if reg.instagram else 'No IG' }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Edit Fields -->
+                            <div class="mt-3" id="singleEditFields" style="display: none;">
+                                <h6 class="text-warning">Edit for Card:</h6>
+                                <div class="mb-2">
+                                    <input type="text" class="form-control form-control-sm" id="editBio" placeholder="Bio text" oninput="updateSinglePreview()">
+                                </div>
+                                <div class="mb-2">
+                                    <input type="file" class="form-control form-control-sm" id="editPhoto" accept="image/*" onchange="loadEditPhoto(event)">
+                                    <small class="text-muted">Override photo</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-8">
+                        <div class="preview-container">
+                            <div class="preview-wrapper">
+                                <h5 id="previewBrandTitle">PCL Europe</h5>
+                                <div class="card-container">
+                                    <div class="card-scale">
+                                        <div class="player-card-pcl" id="singlePreview">
+                                            <div class="header">
+                                                <div class="logo-text">PCL <span>EUROPE</span></div>
+                                                <div class="flag-container">
+                                                    <span class="flag">{{ team.country_flag }}</span>
+                                                    <span class="country-name">{{ team.country_name }}</span>
+                                                </div>
+                                                <span class="age-category">{{ team.age_category }}</span>
+                                            </div>
+                                            <div class="photo-container">
+                                                <div class="photo-placeholder"><i class="bi bi-person"></i></div>
+                                            </div>
+                                            <div class="info-section">
+                                                <div class="shirt-name">SELECT PLAYER</div>
+                                                <div class="full-name">Click a player on the left</div>
+                                                <div class="bio"></div>
+                                                <div class="social"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-warning mt-3" onclick="downloadSingleCard()">
+                                    <i class="bi bi-download"></i> Download Card
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CATEGORY TAB -->
+            <div class="tab-pane fade" id="categoryTab">
+                <div class="row">
+                    <div class="col-lg-5">
+                        <div class="form-section">
+                            <h5><i class="bi bi-trophy"></i> Select Category</h5>
+                            <div class="mb-3">
+                                <button class="category-btn active" onclick="selectCategory('singles')">👤 Singles</button>
+                                <button class="category-btn" onclick="selectCategory('mens-doubles')">👬 Men's Doubles</button>
+                                <button class="category-btn" onclick="selectCategory('womens-doubles')">👭 Women's Doubles</button>
+                                <button class="category-btn" onclick="selectCategory('mixed-doubles')">👫 Mixed Doubles</button>
+                            </div>
+                            <div class="mb-3">
+                                <select class="form-select" id="catBrandSelect" onchange="updateCategoryPreview()">
+                                    <option value="pcl">PCL Europe</option>
+                                    <option value="wpc">WPC Series</option>
+                                </select>
+                            </div>
+                            <p class="text-muted" id="categoryHint">Select 1 player for Singles</p>
+                            
+                            <h6 class="mt-3">Select Players:</h6>
+                            <div style="max-height: 300px; overflow-y: auto;">
+                                {% for reg in registrations %}
+                                <div class="player-select-card" onclick="toggleCategoryPlayer(this, {{ reg.id }})" 
+                                     data-id="{{ reg.id }}"
+                                     data-gender="{{ reg.gender }}"
+                                     data-player='{{ reg|tojson|safe }}'>
+                                    <div class="d-flex align-items-center gap-3">
+                                        {% if reg.photo_filename %}
+                                        <img src="{{ reg.photo_filename }}">
+                                        {% else %}
+                                        <div class="placeholder-img"><i class="bi bi-person"></i></div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ reg.shirt_name or reg.first_name|upper }}</strong>
+                                            <span class="badge bg-{{ 'primary' if reg.gender == 'male' else 'danger' }}">
+                                                {{ '♂' if reg.gender == 'male' else '♀' }}
+                                            </span><br>
+                                            <small class="text-muted">{{ reg.first_name }} {{ reg.last_name }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-7">
+                        <div class="preview-container">
+                            <div class="preview-wrapper">
+                                <h5 id="catPreviewTitle">Category Card</h5>
+                                <div class="card-container">
+                                    <div class="card-scale">
+                                        <div class="player-card-pcl" id="categoryPreview">
+                                            <div class="header">
+                                                <div class="logo-text">PCL <span>EUROPE</span></div>
+                                                <div class="flag-container">
+                                                    <span class="flag">{{ team.country_flag }}</span>
+                                                    <span class="country-name">{{ team.country_name }}</span>
+                                                </div>
+                                                <span class="age-category">{{ team.age_category }}</span>
+                                            </div>
+                                            <div class="category-badge">SINGLES</div>
+                                            <div class="photo-container">
+                                                <div class="photo-placeholder"><i class="bi bi-person"></i></div>
+                                            </div>
+                                            <div class="info-section">
+                                                <div class="shirt-name">SELECT PLAYER</div>
+                                                <div class="full-name">Choose players on the left</div>
+                                                <div class="bio"></div>
+                                                <div class="social"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-warning mt-3" onclick="downloadCategoryCard()">
+                                    <i class="bi bi-download"></i> Download Card
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FULL TEAM TAB -->
+            <div class="tab-pane fade" id="teamTab">
+                <div class="form-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0"><i class="bi bi-people"></i> Full Team Carousel</h5>
+                        <div>
+                            <select class="form-select form-select-sm d-inline-block w-auto" id="teamBrandSelect">
+                                <option value="pcl">PCL Europe</option>
+                                <option value="wpc">WPC Series</option>
+                            </select>
+                            <button class="btn btn-warning btn-sm ms-2" onclick="downloadTeamZip()">
+                                <i class="bi bi-download"></i> Download All (ZIP)
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        {% for reg in registrations %}
+                        <div class="col-md-4 col-lg-3 mb-3">
+                            <div class="card bg-dark text-white h-100">
+                                <div class="card-body text-center">
+                                    {% if reg.photo_filename %}
+                                    <img src="{{ reg.photo_filename }}" class="rounded-circle mb-2" width="80" height="80" style="object-fit: cover;">
+                                    {% else %}
+                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 80px; height: 80px;">
+                                        <i class="bi bi-person fs-3"></i>
+                                    </div>
+                                    {% endif %}
+                                    <h6 class="text-warning mb-1">{{ reg.shirt_name or reg.first_name|upper }}</h6>
+                                    <small>{{ reg.first_name }} {{ reg.last_name }}</small><br>
+                                    <small class="text-muted">{{ '@' + reg.instagram if reg.instagram else '' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Team data from server
+    const teamData = {
+        flag: '{{ team.country_flag }}',
+        country: '{{ team.country_name }}',
+        age: '{{ team.age_category }}'
+    };
+    
+    const players = [
+        {% for reg in registrations %}
+        {
+            id: {{ reg.id }},
+            shirt: '{{ reg.shirt_name or reg.first_name|upper }}',
+            name: '{{ reg.first_name }} {{ reg.last_name }}',
+            gender: '{{ reg.gender }}',
+            instagram: '{{ reg.instagram or "" }}',
+            dupr: '{{ reg.dupr_rating or "-" }}',
+            bio: '{{ reg.bio or "" }}',
+            photo: '{{ reg.photo_filename or "" }}'
+        },
+        {% endfor %}
+    ];
+    
+    // Single Player
+    let selectedSinglePlayer = null;
+    let customPhoto = null;
+    
+    function selectSinglePlayer(el, id) {
+        document.querySelectorAll('#singleTab .player-select-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSinglePlayer = players.find(p => p.id === id);
+        document.getElementById('singleEditFields').style.display = 'block';
+        document.getElementById('editBio').value = selectedSinglePlayer.bio || '';
+        customPhoto = null;
+        updateSinglePreview();
+    }
+    
+    function loadEditPhoto(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = ev => {
+            customPhoto = ev.target.result;
+            updateSinglePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+    
+    function updateSinglePreview() {
+        const brand = document.getElementById('brandSelect').value;
+        const preview = document.getElementById('singlePreview');
+        const title = document.getElementById('previewBrandTitle');
+        
+        preview.className = `player-card-${brand}`;
+        title.textContent = brand === 'pcl' ? 'PCL Europe' : 'WPC Series';
+        
+        if (!selectedSinglePlayer) return;
+        
+        const p = selectedSinglePlayer;
+        const bio = document.getElementById('editBio').value || p.bio;
+        const photo = customPhoto || p.photo;
+        
+        preview.innerHTML = `
+            <div class="header">
+                <div class="logo-text">${brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>'}</div>
+                <div class="flag-container">
+                    <span class="flag">${teamData.flag}</span>
+                    <span class="country-name">${teamData.country}</span>
+                </div>
+                <span class="age-category">${teamData.age}</span>
+            </div>
+            <div class="photo-container">
+                ${photo ? `<img src="${photo}">` : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>'}
+            </div>
+            <div class="info-section">
+                <div class="shirt-name">${p.shirt}</div>
+                <div class="full-name">${p.name}</div>
+                <div class="bio">${bio}</div>
+                <div class="social">
+                    ${p.instagram ? `<span><i class="bi bi-instagram"></i> @${p.instagram}</span>` : ''}
+                    ${p.dupr !== '-' ? `<span>DUPR: ${p.dupr}</span>` : ''}
+                </div>
+            </div>
+        `;
+    }
+    
+    async function downloadSingleCard() {
+        if (!selectedSinglePlayer) {
+            alert('Please select a player first');
+            return;
+        }
+        
+        const card = document.getElementById('singlePreview');
+        const clone = card.cloneNode(true);
+        clone.style.cssText = 'transform:none;position:fixed;left:-9999px;width:1080px;height:1080px;';
+        document.body.appendChild(clone);
+        
+        try {
+            const canvas = await html2canvas(clone, { width: 1080, height: 1080, scale: 1, useCORS: true });
+            const brand = document.getElementById('brandSelect').value;
+            const link = document.createElement('a');
+            link.download = `${brand.toUpperCase()}_${selectedSinglePlayer.shirt}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } finally {
+            document.body.removeChild(clone);
+        }
+    }
+    
+    // Category Cards
+    let currentCategory = 'singles';
+    let selectedCategoryPlayers = [];
+    
+    const categoryConfig = {
+        'singles': { min: 1, max: 1, label: 'SINGLES', hint: 'Select 1 player' },
+        'mens-doubles': { min: 2, max: 2, label: "MEN'S DOUBLES", hint: 'Select 2 male players', gender: 'male' },
+        'womens-doubles': { min: 2, max: 2, label: "WOMEN'S DOUBLES", hint: 'Select 2 female players', gender: 'female' },
+        'mixed-doubles': { min: 2, max: 2, label: 'MIXED DOUBLES', hint: 'Select 1 male + 1 female' }
+    };
+    
+    function selectCategory(cat) {
+        currentCategory = cat;
+        selectedCategoryPlayers = [];
+        
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        document.getElementById('categoryHint').textContent = categoryConfig[cat].hint;
+        
+        document.querySelectorAll('#categoryTab .player-select-card').forEach(c => c.classList.remove('selected'));
+        updateCategoryPreview();
+    }
+    
+    function toggleCategoryPlayer(el, id) {
+        const cfg = categoryConfig[currentCategory];
+        const player = players.find(p => p.id === id);
+        const idx = selectedCategoryPlayers.findIndex(p => p.id === id);
+        
+        if (idx > -1) {
+            selectedCategoryPlayers.splice(idx, 1);
+            el.classList.remove('selected');
+        } else {
+            // Validation
+            if (selectedCategoryPlayers.length >= cfg.max) {
+                alert(`Maximum ${cfg.max} player(s) for this category`);
+                return;
+            }
+            
+            if (cfg.gender && player.gender !== cfg.gender) {
+                alert(`Please select ${cfg.gender} players for ${cfg.label}`);
+                return;
+            }
+            
+            if (currentCategory === 'mixed-doubles') {
+                const males = selectedCategoryPlayers.filter(p => p.gender === 'male').length;
+                const females = selectedCategoryPlayers.filter(p => p.gender === 'female').length;
+                if (player.gender === 'male' && males >= 1) {
+                    alert('Already have 1 male player. Select a female player.');
+                    return;
+                }
+                if (player.gender === 'female' && females >= 1) {
+                    alert('Already have 1 female player. Select a male player.');
+                    return;
+                }
+            }
+            
+            selectedCategoryPlayers.push(player);
+            el.classList.add('selected');
+        }
+        
+        updateCategoryPreview();
+    }
+    
+    function updateCategoryPreview() {
+        const brand = document.getElementById('catBrandSelect').value;
+        const preview = document.getElementById('categoryPreview');
+        const cfg = categoryConfig[currentCategory];
+        const isDoubles = currentCategory !== 'singles';
+        
+        document.getElementById('catPreviewTitle').textContent = cfg.label;
+        preview.className = `player-card-${brand}${isDoubles && selectedCategoryPlayers.length === 2 ? ' doubles-card' : ''}`;
+        
+        let photoHTML = '';
+        let infoHTML = '';
+        
+        if (isDoubles && selectedCategoryPlayers.length === 2) {
+            const p1 = selectedCategoryPlayers[0];
+            const p2 = selectedCategoryPlayers[1];
+            photoHTML = `
+                <div class="doubles-photos">
+                    <div class="player-photo">
+                        ${p1.photo ? `<img src="${p1.photo}">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:100px;color:rgba(255,255,255,0.3);"><i class="bi bi-person"></i></div>'}
+                    </div>
+                    <div class="player-photo">
+                        ${p2.photo ? `<img src="${p2.photo}">` : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:100px;color:rgba(255,255,255,0.3);"><i class="bi bi-person"></i></div>'}
+                    </div>
+                </div>
+            `;
+            infoHTML = `
+                <div class="shirt-name">${p1.shirt} & ${p2.shirt}</div>
+                <div class="full-name">${p1.name} & ${p2.name}</div>
+                <div class="social">
+                    ${p1.instagram ? `<span><i class="bi bi-instagram"></i> @${p1.instagram}</span>` : ''}
+                    ${p2.instagram ? `<span><i class="bi bi-instagram"></i> @${p2.instagram}</span>` : ''}
+                </div>
+            `;
+        } else if (selectedCategoryPlayers.length === 1) {
+            const p = selectedCategoryPlayers[0];
+            photoHTML = `
+                <div class="photo-container">
+                    ${p.photo ? `<img src="${p.photo}">` : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>'}
+                </div>
+            `;
+            infoHTML = `
+                <div class="shirt-name">${p.shirt}</div>
+                <div class="full-name">${p.name}</div>
+                <div class="social">
+                    ${p.instagram ? `<span><i class="bi bi-instagram"></i> @${p.instagram}</span>` : ''}
+                    ${p.dupr !== '-' ? `<span>DUPR: ${p.dupr}</span>` : ''}
+                </div>
+            `;
+        } else {
+            photoHTML = '<div class="photo-container"><div class="photo-placeholder"><i class="bi bi-person"></i></div></div>';
+            infoHTML = '<div class="shirt-name">SELECT</div><div class="full-name">Choose players</div>';
+        }
+        
+        preview.innerHTML = `
+            <div class="header">
+                <div class="logo-text">${brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>'}</div>
+                <div class="flag-container">
+                    <span class="flag">${teamData.flag}</span>
+                    <span class="country-name">${teamData.country}</span>
+                </div>
+                <span class="age-category">${teamData.age}</span>
+            </div>
+            <div class="category-badge">${cfg.label}</div>
+            ${photoHTML}
+            <div class="info-section">
+                ${infoHTML}
+            </div>
+        `;
+    }
+    
+    async function downloadCategoryCard() {
+        const cfg = categoryConfig[currentCategory];
+        if (selectedCategoryPlayers.length < cfg.min) {
+            alert(`Please select ${cfg.min} player(s) for ${cfg.label}`);
+            return;
+        }
+        
+        const card = document.getElementById('categoryPreview');
+        const clone = card.cloneNode(true);
+        clone.style.cssText = 'transform:none;position:fixed;left:-9999px;width:1080px;height:1080px;';
+        document.body.appendChild(clone);
+        
+        try {
+            const canvas = await html2canvas(clone, { width: 1080, height: 1080, scale: 1, useCORS: true });
+            const brand = document.getElementById('catBrandSelect').value;
+            const names = selectedCategoryPlayers.map(p => p.shirt).join('_');
+            const link = document.createElement('a');
+            link.download = `${brand.toUpperCase()}_${currentCategory}_${names}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        } finally {
+            document.body.removeChild(clone);
+        }
+    }
+    
+    // Full Team
+    async function downloadTeamZip() {
+        if (players.length === 0) {
+            alert('No players in team');
+            return;
+        }
+        
+        const zip = new JSZip();
+        const brand = document.getElementById('teamBrandSelect').value;
+        
+        for (let i = 0; i < players.length; i++) {
+            const p = players[i];
+            const temp = document.createElement('div');
+            temp.className = `player-card-${brand}`;
+            temp.innerHTML = `
+                <div class="header">
+                    <div class="logo-text">${brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>'}</div>
+                    <div class="flag-container">
+                        <span class="flag">${teamData.flag}</span>
+                        <span class="country-name">${teamData.country}</span>
+                    </div>
+                    <span class="age-category">${teamData.age}</span>
+                </div>
+                <div class="photo-container">
+                    ${p.photo ? `<img src="${p.photo}">` : '<div class="photo-placeholder"><i class="bi bi-person" style="font-size:150px;color:rgba(255,255,255,0.3);"></i></div>'}
+                </div>
+                <div class="info-section">
+                    <div class="shirt-name">${p.shirt}</div>
+                    <div class="full-name">${p.name}</div>
+                    <div class="bio">${p.bio}</div>
+                    <div class="social">
+                        ${p.instagram ? `<span><i class="bi bi-instagram"></i> @${p.instagram}</span>` : ''}
+                        ${p.dupr !== '-' ? `<span>DUPR: ${p.dupr}</span>` : ''}
+                    </div>
+                </div>
+            `;
+            temp.style.cssText = 'position:fixed;left:-9999px;width:1080px;height:1080px;';
+            document.body.appendChild(temp);
+            
+            try {
+                const canvas = await html2canvas(temp, { width: 1080, height: 1080, scale: 1, useCORS: true });
+                const data = canvas.toDataURL('image/png').split(',')[1];
+                zip.file(`${String(i + 1).padStart(2, '0')}_${p.shirt}.png`, data, { base64: true });
+            } finally {
+                document.body.removeChild(temp);
+            }
+        }
+        
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.download = `${brand.toUpperCase()}_${teamData.country}_${teamData.age}_team.zip`;
+        link.href = URL.createObjectURL(blob);
+        link.click();
+    }
+</script>
+{% endblock %}
