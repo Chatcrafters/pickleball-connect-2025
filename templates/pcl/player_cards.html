@@ -987,10 +987,10 @@
             var p2 = selectedPlayers[1];
             
             var p1Photo = p1.photo 
-                ? '<img src="' + p1.photo + '" style="object-position:' + photoPosition + '">' 
+                ? '<img src="' + p1.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
                 : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
             var p2Photo = p2.photo 
-                ? '<img src="' + p2.photo + '" style="object-position:' + photoPosition + '">' 
+                ? '<img src="' + p2.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
                 : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
             
             photoHTML = 
@@ -1014,7 +1014,7 @@
             var p = selectedPlayers[0];
             
             var pPhoto = p.photo 
-                ? '<img src="' + p.photo + '" style="object-position:' + photoPosition + '">' 
+                ? '<img src="' + p.photo + '" style="width:100%;height:100%;object-fit:cover;object-position:' + photoPosition + ';">' 
                 : '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
             
             photoHTML = '<div class="photo-container">' + pPhoto + '</div>';
