@@ -772,7 +772,7 @@ def export_shirt_list(tournament_id):
 # ============================================================================
 @pcl.route('/team/<token>')
 def captain_dashboard(token):
-    """Captain dashboard - accessed via secret link"""
+    """Captain dashboard - accessed via secret link, shows all teams for this captain"""
     team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
     
     lang = request.args.get('lang', 'EN').upper()
@@ -780,6 +780,25 @@ def captain_dashboard(token):
         lang = 'EN'
     
     t = get_translations(lang)
+    
+    # Find captain in this team (to get phone number)
+    current_captain = team.registrations.filter_by(is_captain=True).first()
+    
+    # Find ALL teams where this person is captain (by phone number)
+    other_teams = []
+    if current_captain and current_captain.phone:
+        # Find all captain registrations with same phone
+        all_captain_regs = PCLRegistration.query.filter_by(
+            phone=current_captain.phone,
+            is_captain=True
+        ).all()
+        
+        # Get unique teams (excluding current)
+        for reg in all_captain_regs:
+            if reg.team_id != team.id:
+                other_team = PCLTeam.query.get(reg.team_id)
+                if other_team and other_team not in other_teams:
+                    other_teams.append(other_team)
     
     stats = team.get_stats()
     men = team.registrations.filter_by(gender='male').all()
@@ -794,50 +813,50 @@ def captain_dashboard(token):
     share_messages = {
         'EN': f"""Hello Team! 🎾
 
-Please complete your PCL profile for {team.tournament.name}:
+Please complete your PCL profile for {team.country_name} {team.age_category} at {team.tournament.name}:
 
 {registration_url}?lang=EN
 
 Required:
-✓ Profile photo
-✓ Short bio
-✓ Shirt name & size
+✔ Profile photo
+✔ Short bio
+✔ Shirt name & size
 
 Thank you! 🏆""",
         'DE': f"""Hallo Team! 🎾
 
-Bitte vervollständigt euer PCL Profil für {team.tournament.name}:
+Bitte vervollständigt euer PCL Profil für {team.country_name} {team.age_category} bei {team.tournament.name}:
 
 {registration_url}?lang=DE
 
 Benötigt werden:
-✓ Profilbild
-✓ Kurze Bio
-✓ Shirt Name & Größe
+✔ Profilbild
+✔ Kurze Bio
+✔ Shirt Name & Größe
 
 Danke! 🏆""",
         'ES': f"""¡Hola Equipo! 🎾
 
-Por favor completa tu perfil PCL para {team.tournament.name}:
+Por favor completa tu perfil PCL para {team.country_name} {team.age_category} en {team.tournament.name}:
 
 {registration_url}?lang=ES
 
 Requerido:
-✓ Foto de perfil
-✓ Biografía breve
-✓ Nombre y talla de camiseta
+✔ Foto de perfil
+✔ Biografía breve
+✔ Nombre y talla de camiseta
 
 ¡Gracias! 🏆""",
         'FR': f"""Bonjour l'équipe! 🎾
 
-Veuillez compléter votre profil PCL pour {team.tournament.name}:
+Veuillez compléter votre profil PCL pour {team.country_name} {team.age_category} à {team.tournament.name}:
 
 {registration_url}?lang=FR
 
 Requis:
-✓ Photo de profil
-✓ Courte bio
-✓ Nom et taille du maillot
+✔ Photo de profil
+✔ Courte bio
+✔ Nom et taille du maillot
 
 Merci! 🏆"""
     }
@@ -847,15 +866,16 @@ Merci! 🏆"""
     
     # Individual player message
     player_messages = {
-        'EN': f"Hi! 🎾 Please complete your PCL profile: {registration_url}?lang=EN",
-        'DE': f"Hallo! 🎾 Bitte vervollständige dein PCL Profil: {registration_url}?lang=DE",
-        'ES': f"¡Hola! 🎾 Por favor completa tu perfil PCL: {registration_url}?lang=ES",
-        'FR': f"Salut! 🎾 Veuillez compléter votre profil PCL: {registration_url}?lang=FR"
+        'EN': f"Hi! 🎾 Please complete your PCL profile for {team.country_name} {team.age_category}: {registration_url}?lang=EN",
+        'DE': f"Hallo! 🎾 Bitte vervollständige dein PCL Profil für {team.country_name} {team.age_category}: {registration_url}?lang=DE",
+        'ES': f"¡Hola! 🎾 Por favor completa tu perfil PCL para {team.country_name} {team.age_category}: {registration_url}?lang=ES",
+        'FR': f"Salut! 🎾 Veuillez compléter votre profil PCL pour {team.country_name} {team.age_category}: {registration_url}?lang=FR"
     }
     player_message_encoded = quote(player_messages.get(lang, player_messages['EN']))
     
     return render_template('pcl/captain_dashboard.html',
                          team=team,
+                         other_teams=other_teams,
                          stats=stats,
                          men=men,
                          women=women,
