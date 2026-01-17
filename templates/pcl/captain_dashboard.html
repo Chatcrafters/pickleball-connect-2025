@@ -13,6 +13,27 @@
             <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇫🇷 FR</a>
         </div>
     </div>
+    <!-- Team Switcher (if captain manages multiple teams) -->
+    {% if other_teams %}
+    <div class="alert alert-info mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap">
+            <div>
+                <i class="bi bi-people-fill"></i> <strong>You manage multiple teams:</strong>
+            </div>
+            <div class="btn-group mt-2 mt-md-0">
+                <span class="btn btn-primary disabled">
+                    {{ team.country_flag }} {{ team.age_category }}
+                </span>
+                {% for other in other_teams %}
+                <a href="{{ url_for('pcl.captain_dashboard', token=other.captain_token, lang=current_lang) }}" 
+                   class="btn btn-outline-primary">
+                    {{ other.country_flag }} {{ other.age_category }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Header -->
     <div class="row mb-4">
