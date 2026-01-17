@@ -378,7 +378,7 @@
                             </div>
                             <div style="max-height: 400px; overflow-y: auto;">
                                 {% for reg in registrations %}
-                                <div class="player-select-card" onclick="selectSinglePlayer(this, {{ reg.id }})" data-player='{{ reg|tojson|safe }}'>
+                                <div class="player-select-card" onclick="selectSinglePlayer({{ reg.id }})" data-player-id="{{ reg.id }}">
                                     <div class="d-flex align-items-center gap-3">
                                         {% if reg.photo_filename %}
                                         <img src="{{ reg.photo_filename }}">
@@ -471,7 +471,7 @@
                                 <div class="player-select-card" onclick="toggleCategoryPlayer(this, {{ reg.id }})" 
                                      data-id="{{ reg.id }}"
                                      data-gender="{{ reg.gender }}"
-                                     data-player='{{ reg|tojson|safe }}'>
+                                     data-player-id="{{ reg.id }}">
                                     <div class="d-flex align-items-center gap-3">
                                         {% if reg.photo_filename %}
                                         <img src="{{ reg.photo_filename }}">
