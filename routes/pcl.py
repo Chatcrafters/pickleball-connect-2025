@@ -736,6 +736,15 @@ def export_team_data(team_id):
         download_name=f'pcl_{team.country_code}_{team.age_category}_players.csv'
     )
 
+@pcl.route('/admin/team/<int:team_id>/cards')
+def player_cards(team_id):
+    """Player Card Generator for Instagram"""
+    team = PCLTeam.query.get_or_404(team_id)
+    registrations = team.registrations.filter(PCLRegistration.is_playing != False).all()
+    
+    return render_template('pcl/player_cards.html',
+                         team=team,
+                         registrations=registrations)
 
 @pcl.route('/admin/export-shirts/<int:tournament_id>')
 def export_shirt_list(tournament_id):
