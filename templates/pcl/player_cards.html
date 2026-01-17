@@ -102,8 +102,7 @@
         z-index: 10;
     }
     
-    /* Photo container - uses overflow hidden + transform for positioning */
-    .player-card-pcl .photo-container {
+    .player-card-pcl .photo-circle {
         position: absolute;
         top: 160px;
         left: 50%;
@@ -112,22 +111,9 @@
         height: 450px;
         border-radius: 50%;
         border: 8px solid rgba(255,255,255,0.3);
-        overflow: hidden;
-        background: #2d6a7e;
-    }
-    
-    .player-card-pcl .photo-inner {
-        position: absolute;
-        width: 200%;
-        height: 200%;
-        left: -50%;
-        top: -50%;
-    }
-    
-    .player-card-pcl .photo-inner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        background-color: #2d6a7e;
+        background-size: cover;
+        background-repeat: no-repeat;
     }
     
     .player-card-pcl .photo-placeholder {
@@ -192,7 +178,7 @@
     }
     
     /* PCL DOUBLES */
-    .player-card-pcl.doubles-card .photo-container {
+    .player-card-pcl.doubles-card .photo-circle {
         display: none;
     }
     
@@ -206,38 +192,14 @@
         z-index: 5;
     }
     
-    .player-card-pcl.doubles-card .doubles-photos .player-photo {
+    .player-card-pcl.doubles-card .player-photo {
         width: 320px;
         height: 320px;
         border-radius: 50%;
         border: 6px solid rgba(255,255,255,0.3);
-        overflow: hidden;
-        background: rgba(0,0,0,0.3);
-        position: relative;
-    }
-    
-    .player-card-pcl.doubles-card .doubles-photos .photo-inner {
-        position: absolute;
-        width: 200%;
-        height: 200%;
-        left: -50%;
-        top: -50%;
-    }
-    
-    .player-card-pcl.doubles-card .doubles-photos .photo-inner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .player-card-pcl.doubles-card .doubles-photos .photo-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 100px;
-        color: rgba(255,255,255,0.3);
+        background-color: rgba(0,0,0,0.3);
+        background-size: cover;
+        background-repeat: no-repeat;
     }
     
     .player-card-pcl.doubles-card .info-section {
@@ -330,7 +292,7 @@
         z-index: 10;
     }
     
-    .player-card-wpc .photo-container {
+    .player-card-wpc .photo-circle {
         position: absolute;
         top: 160px;
         left: 50%;
@@ -339,22 +301,9 @@
         height: 450px;
         border-radius: 50%;
         border: 8px solid rgba(255,255,255,0.3);
-        overflow: hidden;
-        background: #3d6a32;
-    }
-    
-    .player-card-wpc .photo-inner {
-        position: absolute;
-        width: 200%;
-        height: 200%;
-        left: -50%;
-        top: -50%;
-    }
-    
-    .player-card-wpc .photo-inner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        background-color: #3d6a32;
+        background-size: cover;
+        background-repeat: no-repeat;
     }
     
     .player-card-wpc .photo-placeholder {
@@ -419,7 +368,7 @@
     }
     
     /* WPC DOUBLES */
-    .player-card-wpc.doubles-card .photo-container {
+    .player-card-wpc.doubles-card .photo-circle {
         display: none;
     }
     
@@ -433,38 +382,14 @@
         z-index: 5;
     }
     
-    .player-card-wpc.doubles-card .doubles-photos .player-photo {
+    .player-card-wpc.doubles-card .player-photo {
         width: 320px;
         height: 320px;
         border-radius: 50%;
         border: 6px solid rgba(255,255,255,0.3);
-        overflow: hidden;
-        background: rgba(0,0,0,0.3);
-        position: relative;
-    }
-    
-    .player-card-wpc.doubles-card .doubles-photos .photo-inner {
-        position: absolute;
-        width: 200%;
-        height: 200%;
-        left: -50%;
-        top: -50%;
-    }
-    
-    .player-card-wpc.doubles-card .doubles-photos .photo-inner img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    
-    .player-card-wpc.doubles-card .doubles-photos .photo-placeholder {
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 100px;
-        color: rgba(255,255,255,0.3);
+        background-color: rgba(0,0,0,0.3);
+        background-size: cover;
+        background-repeat: no-repeat;
     }
     
     .player-card-wpc.doubles-card .info-section {
@@ -555,8 +480,6 @@
     .preview-container {
         display: flex;
         justify-content: center;
-        gap: 30px;
-        flex-wrap: wrap;
     }
     
     .preview-wrapper {
@@ -581,22 +504,16 @@
         border-bottom: 3px solid #f4a03a;
     }
     
-    .nav-tabs .nav-link:hover {
-        color: #f4a03a;
-    }
-    
     .tagline-input {
         background: rgba(255,255,255,0.1);
         border: 1px solid #555;
         color: white;
-        border-radius: 8px;
     }
     
     .tagline-input:focus {
         background: rgba(255,255,255,0.15);
         border-color: #f4a03a;
         color: white;
-        box-shadow: 0 0 0 2px rgba(244,160,58,0.25);
     }
     
     .tagline-input::placeholder {
@@ -625,17 +542,15 @@
                 <a href="{{ url_for('pcl.admin_team_detail', team_id=team.id) }}" class="btn btn-outline-light btn-sm mb-2">
                     <i class="bi bi-arrow-left"></i> Back to Team
                 </a>
-                <h2 class="mb-0">
-                    <i class="bi bi-card-image"></i> Player Card Generator
-                </h2>
-                <p class="text-muted mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} - {{ team.tournament.name }}</p>
+                <h2 class="mb-0"><i class="bi bi-card-image"></i> Player Card Generator</h2>
+                <p class="text-muted mb-0">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</p>
             </div>
         </div>
         
         <!-- Tabs -->
-        <ul class="nav nav-tabs mb-4" role="tablist">
+        <ul class="nav nav-tabs mb-4">
             <li class="nav-item">
-                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#categoryTab">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#createTab">
                     <i class="bi bi-trophy"></i> Create Cards
                 </button>
             </li>
@@ -647,66 +562,48 @@
         </ul>
         
         <div class="tab-content">
-            <!-- ==================== CREATE CARDS TAB ==================== -->
-            <div class="tab-pane fade show active" id="categoryTab">
+            <!-- CREATE TAB -->
+            <div class="tab-pane fade show active" id="createTab">
                 <div class="row">
-                    <!-- Left Panel: Controls -->
                     <div class="col-lg-5">
-                        <!-- Category Selection -->
+                        <!-- 1. Category -->
                         <div class="form-section">
-                            <h5><i class="bi bi-trophy"></i> 1. Select Category</h5>
+                            <h5><i class="bi bi-trophy"></i> 1. Category</h5>
                             <div class="d-flex flex-wrap mb-3">
-                                <button class="category-btn active" onclick="selectCategory('singles', this)">
-                                    <i class="bi bi-person"></i> Singles
-                                </button>
-                                <button class="category-btn" onclick="selectCategory('mens-doubles', this)">
-                                    <i class="bi bi-people"></i> Men's Doubles
-                                </button>
-                                <button class="category-btn" onclick="selectCategory('womens-doubles', this)">
-                                    <i class="bi bi-people"></i> Women's Doubles
-                                </button>
-                                <button class="category-btn" onclick="selectCategory('mixed-doubles', this)">
-                                    <i class="bi bi-people"></i> Mixed Doubles
-                                </button>
+                                <button class="category-btn active" onclick="selectCategory('singles', this)">Singles</button>
+                                <button class="category-btn" onclick="selectCategory('mens-doubles', this)">Men's Doubles</button>
+                                <button class="category-btn" onclick="selectCategory('womens-doubles', this)">Women's Doubles</button>
+                                <button class="category-btn" onclick="selectCategory('mixed-doubles', this)">Mixed Doubles</button>
                             </div>
-                            
                             <div class="row">
                                 <div class="col-6">
-                                    <label class="text-muted small">Brand</label>
                                     <select class="form-select form-select-sm" id="brandSelect" onchange="updatePreview()">
                                         <option value="pcl">PCL Europe</option>
                                         <option value="wpc">WPC Series</option>
                                     </select>
                                 </div>
                                 <div class="col-6">
-                                    <label class="text-muted small">Required</label>
-                                    <div class="text-warning" id="categoryHint">Select 1 player</div>
+                                    <span class="text-warning" id="categoryHint">Select 1 player</span>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- Player Selection -->
+                        <!-- 2. Players -->
                         <div class="form-section">
-                            <h5><i class="bi bi-person-check"></i> 2. Select Player(s)</h5>
-                            <div style="max-height: 200px; overflow-y: auto;" id="playerList">
+                            <h5><i class="bi bi-person-check"></i> 2. Player(s)</h5>
+                            <div style="max-height: 180px; overflow-y: auto;" id="playerList">
                                 {% for reg in registrations %}
-                                <div class="player-select-card" 
-                                     onclick="togglePlayer(this, {{ reg.id }})" 
-                                     data-player-id="{{ reg.id }}"
-                                     data-gender="{{ reg.gender }}">
+                                <div class="player-select-card" onclick="togglePlayer(this, {{ reg.id }})" data-id="{{ reg.id }}" data-gender="{{ reg.gender }}">
                                     <div class="d-flex align-items-center gap-3">
                                         {% if reg.photo_filename %}
                                         <img src="{{ reg.photo_filename }}">
                                         {% else %}
                                         <div class="placeholder-img"><i class="bi bi-person"></i></div>
                                         {% endif %}
-                                        <div class="flex-grow-1">
+                                        <div>
                                             <strong>{{ reg.shirt_name or reg.first_name|upper }}</strong>
-                                            <span class="badge bg-{{ 'primary' if reg.gender == 'male' else 'danger' }} ms-1">
-                                                {{ '♂' if reg.gender == 'male' else '♀' }}
-                                            </span>
-                                            <br>
-                                            <small class="text-muted">{{ reg.first_name }} {{ reg.last_name }}</small>
+                                            <span class="badge bg-{{ 'primary' if reg.gender == 'male' else 'danger' }}">{{ '♂' if reg.gender == 'male' else '♀' }}</span>
+                                            <br><small class="text-muted">{{ reg.first_name }} {{ reg.last_name }}</small>
                                         </div>
                                     </div>
                                 </div>
@@ -714,44 +611,34 @@
                             </div>
                         </div>
                         
-                        <!-- Card Options -->
+                        <!-- 3. Options -->
                         <div class="form-section">
-                            <h5><i class="bi bi-pencil"></i> 3. Card Options</h5>
-                            <div class="mb-3">
-                                <label class="text-muted small">Tagline</label>
-                                <input type="text" 
-                                       class="form-control tagline-input" 
-                                       id="taglineInput" 
-                                       placeholder="e.g. Signed for WPC Open Malaga"
-                                       oninput="updatePreview()">
-                            </div>
-                            
+                            <h5><i class="bi bi-sliders"></i> 3. Options</h5>
                             <div class="mb-2">
-                                <label class="text-muted small">Photo: Left ↔ Right</label>
-                                <input type="range" class="form-range" id="photoX" min="0" max="100" value="50" oninput="updatePreview()">
+                                <input type="text" class="form-control form-control-sm tagline-input" id="taglineInput" placeholder="Tagline (e.g. Signed for WPC Malaga)" oninput="updatePreview()">
                             </div>
-                            
+                            <div class="mb-2">
+                                <label class="small text-muted">Photo X: <span id="posXVal">50</span>%</label>
+                                <input type="range" class="form-range" id="posX" min="0" max="100" value="50" oninput="updatePreview()">
+                            </div>
                             <div class="mb-3">
-                                <label class="text-muted small">Photo: Top ↔ Bottom</label>
-                                <input type="range" class="form-range" id="photoY" min="0" max="100" value="25" oninput="updatePreview()">
+                                <label class="small text-muted">Photo Y: <span id="posYVal">20</span>%</label>
+                                <input type="range" class="form-range" id="posY" min="0" max="100" value="20" oninput="updatePreview()">
                             </div>
-                            
                             <button class="btn btn-warning w-100" onclick="downloadCard()">
                                 <i class="bi bi-download"></i> Download Card
                             </button>
                         </div>
                     </div>
                     
-                    <!-- Right Panel: Preview -->
+                    <!-- Preview -->
                     <div class="col-lg-7">
                         <div class="preview-container">
                             <div class="preview-wrapper">
                                 <h5 id="previewTitle">PCL Europe - SINGLES</h5>
                                 <div class="card-container">
                                     <div class="card-scale">
-                                        <div class="player-card-pcl" id="cardPreview">
-                                            <!-- Will be populated by JS -->
-                                        </div>
+                                        <div class="player-card-pcl" id="cardPreview"></div>
                                     </div>
                                 </div>
                             </div>
@@ -760,56 +647,42 @@
                 </div>
             </div>
             
-            <!-- ==================== DOWNLOAD ALL TAB ==================== -->
+            <!-- TEAM TAB -->
             <div class="tab-pane fade" id="teamTab">
                 <div class="form-section">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <div>
-                            <h5 class="mb-1"><i class="bi bi-people"></i> Full Team Export</h5>
-                            <p class="text-muted mb-0">Download all {{ registrations|length }} player cards as a ZIP file</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <select class="form-select" id="teamBrandSelect" style="width: auto;">
+                    <div class="row align-items-center mb-4">
+                        <div class="col-md-3">
+                            <select class="form-select" id="teamBrand">
                                 <option value="pcl">PCL Europe</option>
                                 <option value="wpc">WPC Series</option>
                             </select>
-                            <button class="btn btn-warning btn-lg" onclick="downloadTeamZip()">
-                                <i class="bi bi-download"></i> Download All (ZIP)
+                        </div>
+                        <div class="col-md-3">
+                            <input type="text" class="form-control tagline-input" id="teamTagline" placeholder="Tagline (optional)">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted">X: <span id="teamXVal">50</span>%</label>
+                            <input type="range" class="form-range" id="teamPosX" min="0" max="100" value="50" oninput="document.getElementById('teamXVal').textContent=this.value">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small text-muted">Y: <span id="teamYVal">20</span>%</label>
+                            <input type="range" class="form-range" id="teamPosY" min="0" max="100" value="20" oninput="document.getElementById('teamYVal').textContent=this.value">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-warning w-100" onclick="downloadTeamZip()">
+                                <i class="bi bi-download"></i> ZIP
                             </button>
                         </div>
                     </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="text-muted small">Tagline for all cards</label>
-                            <input type="text" class="form-control tagline-input" id="teamTagline" placeholder="Optional">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Photo: Left ↔ Right</label>
-                            <input type="range" class="form-range" id="teamPhotoX" min="0" max="100" value="50">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Photo: Top ↔ Bottom</label>
-                            <input type="range" class="form-range" id="teamPhotoY" min="0" max="100" value="25">
-                        </div>
-                    </div>
-                    
                     <div class="row">
                         {% for reg in registrations %}
-                        <div class="col-md-4 col-lg-3 mb-3">
-                            <div class="card bg-dark text-white h-100">
-                                <div class="card-body text-center">
-                                    {% if reg.photo_filename %}
-                                    <img src="{{ reg.photo_filename }}" class="rounded-circle mb-2" width="80" height="80" style="object-fit: cover;">
-                                    {% else %}
-                                    <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center mx-auto mb-2" style="width: 80px; height: 80px;">
-                                        <i class="bi bi-person fs-3"></i>
-                                    </div>
-                                    {% endif %}
-                                    <h6 class="text-warning mb-1">{{ reg.shirt_name or reg.first_name|upper }}</h6>
-                                    <small>{{ reg.first_name }} {{ reg.last_name }}</small>
-                                </div>
-                            </div>
+                        <div class="col-6 col-md-3 col-lg-2 mb-3 text-center">
+                            {% if reg.photo_filename %}
+                            <img src="{{ reg.photo_filename }}" class="rounded-circle mb-1" width="60" height="60" style="object-fit:cover;">
+                            {% else %}
+                            <div class="rounded-circle bg-secondary mx-auto mb-1" style="width:60px;height:60px;"></div>
+                            {% endif %}
+                            <div class="small text-warning">{{ reg.shirt_name or reg.first_name|upper }}</div>
                         </div>
                         {% endfor %}
                     </div>
@@ -820,318 +693,195 @@
 </div>
 
 <script>
-    // ==================== DATA ====================
-    var teamData = {
-        flag: '{{ team.country_flag }}',
-        country: '{{ team.country_name }}',
-        age: '{{ team.age_category }}'
-    };
+var teamData = {
+    flag: '{{ team.country_flag }}',
+    country: '{{ team.country_name }}',
+    age: '{{ team.age_category }}'
+};
+
+var players = [
+    {% for reg in registrations %}
+    {
+        id: {{ reg.id }},
+        shirt: {{ (reg.shirt_name or reg.first_name|upper)|tojson }},
+        name: {{ (reg.first_name ~ ' ' ~ reg.last_name)|tojson }},
+        gender: {{ reg.gender|tojson }},
+        instagram: {{ (reg.instagram or '')|tojson }},
+        dupr: {{ (reg.dupr_rating or '-')|tojson }},
+        photo: {{ (reg.photo_filename or '')|tojson }}
+    },
+    {% endfor %}
+];
+
+var currentCategory = 'singles';
+var selectedPlayers = [];
+var categoryConfig = {
+    'singles': { min: 1, max: 1, label: 'SINGLES', hint: 'Select 1 player' },
+    'mens-doubles': { min: 2, max: 2, label: "MEN'S DOUBLES", hint: 'Select 2 males', gender: 'male' },
+    'womens-doubles': { min: 2, max: 2, label: "WOMEN'S DOUBLES", hint: 'Select 2 females', gender: 'female' },
+    'mixed-doubles': { min: 2, max: 2, label: 'MIXED DOUBLES', hint: '1 male + 1 female' }
+};
+
+document.addEventListener('DOMContentLoaded', updatePreview);
+
+function selectCategory(cat, btn) {
+    currentCategory = cat;
+    selectedPlayers = [];
+    document.querySelectorAll('.category-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('categoryHint').textContent = categoryConfig[cat].hint;
+    document.querySelectorAll('#playerList .player-select-card').forEach(function(c) { c.classList.remove('selected'); });
+    updatePreview();
+}
+
+function togglePlayer(el, id) {
+    var cfg = categoryConfig[currentCategory];
+    var player = players.find(function(p) { return p.id === id; });
+    var idx = selectedPlayers.findIndex(function(p) { return p.id === id; });
     
-    var players = [
-        {% for reg in registrations %}
-        {
-            id: {{ reg.id }},
-            shirt: {{ (reg.shirt_name or reg.first_name|upper)|tojson }},
-            name: {{ (reg.first_name ~ ' ' ~ reg.last_name)|tojson }},
-            gender: {{ reg.gender|tojson }},
-            instagram: {{ (reg.instagram or '')|tojson }},
-            dupr: {{ (reg.dupr_rating or '-')|tojson }},
-            photo: {{ (reg.photo_filename or '')|tojson }}
-        },
-        {% endfor %}
-    ];
-    
-    // ==================== STATE ====================
-    var currentCategory = 'singles';
-    var selectedPlayers = [];
-    
-    var categoryConfig = {
-        'singles': { min: 1, max: 1, label: 'SINGLES', hint: 'Select 1 player' },
-        'mens-doubles': { min: 2, max: 2, label: "MEN'S DOUBLES", hint: 'Select 2 male players', gender: 'male' },
-        'womens-doubles': { min: 2, max: 2, label: "WOMEN'S DOUBLES", hint: 'Select 2 female players', gender: 'female' },
-        'mixed-doubles': { min: 2, max: 2, label: 'MIXED DOUBLES', hint: 'Select 1 male + 1 female' }
-    };
-    
-    // ==================== INIT ====================
-    document.addEventListener('DOMContentLoaded', function() {
-        updatePreview();
-    });
-    
-    // ==================== CATEGORY SELECTION ====================
-    function selectCategory(cat, btn) {
-        currentCategory = cat;
-        selectedPlayers = [];
-        
-        var buttons = document.querySelectorAll('.category-btn');
-        for (var i = 0; i < buttons.length; i++) {
-            buttons[i].classList.remove('active');
+    if (idx > -1) {
+        selectedPlayers.splice(idx, 1);
+        el.classList.remove('selected');
+    } else {
+        if (selectedPlayers.length >= cfg.max) { alert('Max ' + cfg.max + ' players'); return; }
+        if (cfg.gender && player.gender !== cfg.gender) { alert('Select ' + cfg.gender + ' players'); return; }
+        if (currentCategory === 'mixed-doubles') {
+            var m = selectedPlayers.filter(function(p) { return p.gender === 'male'; }).length;
+            var f = selectedPlayers.filter(function(p) { return p.gender === 'female'; }).length;
+            if (player.gender === 'male' && m >= 1) { alert('Need 1 female'); return; }
+            if (player.gender === 'female' && f >= 1) { alert('Need 1 male'); return; }
         }
-        btn.classList.add('active');
-        
-        document.getElementById('categoryHint').textContent = categoryConfig[cat].hint;
-        
-        var cards = document.querySelectorAll('#playerList .player-select-card');
-        for (var i = 0; i < cards.length; i++) {
-            cards[i].classList.remove('selected');
-        }
-        
-        updatePreview();
+        selectedPlayers.push(player);
+        el.classList.add('selected');
     }
+    updatePreview();
+}
+
+function buildCard(brand, category, pList, tagline, posX, posY) {
+    var cfg = categoryConfig[category];
+    var logo = brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>';
+    var bgPos = posX + '% ' + posY + '%';
+    var isDoubles = category !== 'singles' && pList.length === 2;
     
-    // ==================== PLAYER SELECTION ====================
-    function togglePlayer(el, id) {
-        var cfg = categoryConfig[currentCategory];
-        var player = null;
-        for (var i = 0; i < players.length; i++) {
-            if (players[i].id === id) {
-                player = players[i];
-                break;
-            }
-        }
-        
-        var idx = -1;
-        for (var i = 0; i < selectedPlayers.length; i++) {
-            if (selectedPlayers[i].id === id) {
-                idx = i;
-                break;
-            }
-        }
-        
-        if (idx > -1) {
-            selectedPlayers.splice(idx, 1);
-            el.classList.remove('selected');
-        } else {
-            if (selectedPlayers.length >= cfg.max) {
-                alert('Maximum ' + cfg.max + ' player(s) for ' + cfg.label);
-                return;
-            }
-            
-            if (cfg.gender && player.gender !== cfg.gender) {
-                alert('Please select ' + cfg.gender + ' players for ' + cfg.label);
-                return;
-            }
-            
-            if (currentCategory === 'mixed-doubles') {
-                var males = 0, females = 0;
-                for (var i = 0; i < selectedPlayers.length; i++) {
-                    if (selectedPlayers[i].gender === 'male') males++;
-                    if (selectedPlayers[i].gender === 'female') females++;
-                }
-                if (player.gender === 'male' && males >= 1) {
-                    alert('Already have 1 male. Select a female.');
-                    return;
-                }
-                if (player.gender === 'female' && females >= 1) {
-                    alert('Already have 1 female. Select a male.');
-                    return;
-                }
-            }
-            
-            selectedPlayers.push(player);
-            el.classList.add('selected');
-        }
-        
-        updatePreview();
-    }
+    var html = '<div class="header">' +
+        '<div class="logo-text">' + logo + '</div>' +
+        '<div class="flag-container"><span class="flag">' + teamData.flag + '</span><span class="country-name">' + teamData.country + '</span></div>' +
+        '<span class="age-category">' + teamData.age + '</span></div>' +
+        '<div class="category-badge">' + cfg.label + '</div>';
     
-    // ==================== BUILD CARD HTML ====================
-    function buildCardHTML(brand, category, playersList, tagline, posX, posY) {
-        var cfg = categoryConfig[category];
-        var logoText = brand === 'pcl' ? 'PCL <span>EUROPE</span>' : 'WPC <span>SERIES</span>';
-        var isDoubles = category !== 'singles';
-        
-        // Calculate transform for photo positioning
-        // posX: 0=show left edge, 50=center, 100=show right edge
-        // posY: 0=show top edge, 50=center, 100=show bottom edge
-        var translateX = -posX;
-        var translateY = -posY;
-        var transform = 'translate(' + translateX + '%, ' + translateY + '%)';
-        
-        var html = '';
-        
-        // Header
-        html += '<div class="header">';
-        html += '<div class="logo-text">' + logoText + '</div>';
-        html += '<div class="flag-container">';
-        html += '<span class="flag">' + teamData.flag + '</span>';
-        html += '<span class="country-name">' + teamData.country + '</span>';
-        html += '</div>';
-        html += '<span class="age-category">' + teamData.age + '</span>';
-        html += '</div>';
-        
-        // Category badge
-        html += '<div class="category-badge">' + cfg.label + '</div>';
-        
-        // Photos
-        if (isDoubles && playersList.length === 2) {
-            html += '<div class="doubles-photos">';
-            for (var i = 0; i < 2; i++) {
-                var p = playersList[i];
-                html += '<div class="player-photo">';
-                if (p.photo) {
-                    html += '<div class="photo-inner" style="transform:' + transform + '">';
-                    html += '<img src="' + p.photo + '">';
-                    html += '</div>';
-                } else {
-                    html += '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
-                }
-                html += '</div>';
-            }
-            html += '</div>';
-        } else if (playersList.length >= 1) {
-            var p = playersList[0];
-            html += '<div class="photo-container">';
+    if (isDoubles) {
+        html += '<div class="doubles-photos">';
+        for (var i = 0; i < 2; i++) {
+            var p = pList[i];
             if (p.photo) {
-                html += '<div class="photo-inner" style="transform:' + transform + '">';
-                html += '<img src="' + p.photo + '">';
-                html += '</div>';
+                html += '<div class="player-photo" style="background-image:url(\'' + p.photo + '\');background-position:' + bgPos + ';"></div>';
             } else {
-                html += '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
+                html += '<div class="player-photo"><div class="photo-placeholder"><i class="bi bi-person"></i></div></div>';
             }
-            html += '</div>';
-        } else {
-            html += '<div class="photo-container">';
-            html += '<div class="photo-placeholder"><i class="bi bi-person"></i></div>';
-            html += '</div>';
         }
-        
-        // Info section
-        html += '<div class="info-section">';
-        
-        if (isDoubles && playersList.length === 2) {
-            html += '<div class="shirt-name">' + playersList[0].shirt + ' & ' + playersList[1].shirt + '</div>';
-            html += '<div class="full-name">' + playersList[0].name + ' & ' + playersList[1].name + '</div>';
-            if (tagline) html += '<div class="tagline">' + tagline + '</div>';
-            html += '<div class="social">';
-            if (playersList[0].instagram) html += '<span><i class="bi bi-instagram"></i> @' + playersList[0].instagram + '</span>';
-            if (playersList[1].instagram) html += '<span><i class="bi bi-instagram"></i> @' + playersList[1].instagram + '</span>';
-            html += '</div>';
-        } else if (playersList.length >= 1) {
-            var p = playersList[0];
-            html += '<div class="shirt-name">' + p.shirt + '</div>';
-            html += '<div class="full-name">' + p.name + '</div>';
-            if (tagline) html += '<div class="tagline">' + tagline + '</div>';
-            html += '<div class="social">';
-            if (p.instagram) html += '<span><i class="bi bi-instagram"></i> @' + p.instagram + '</span>';
-            if (p.dupr !== '-') html += '<span>DUPR: ' + p.dupr + '</span>';
-            html += '</div>';
-        } else {
-            html += '<div class="shirt-name">SELECT PLAYER</div>';
-            html += '<div class="full-name">Choose a player from the left</div>';
-        }
-        
         html += '</div>';
-        
-        return html;
+        html += '<div class="info-section">' +
+            '<div class="shirt-name">' + pList[0].shirt + ' & ' + pList[1].shirt + '</div>' +
+            '<div class="full-name">' + pList[0].name + ' & ' + pList[1].name + '</div>' +
+            (tagline ? '<div class="tagline">' + tagline + '</div>' : '') +
+            '<div class="social">' +
+            (pList[0].instagram ? '<span><i class="bi bi-instagram"></i> @' + pList[0].instagram + '</span>' : '') +
+            (pList[1].instagram ? '<span><i class="bi bi-instagram"></i> @' + pList[1].instagram + '</span>' : '') +
+            '</div></div>';
+    } else if (pList.length >= 1) {
+        var p = pList[0];
+        if (p.photo) {
+            html += '<div class="photo-circle" style="background-image:url(\'' + p.photo + '\');background-position:' + bgPos + ';"></div>';
+        } else {
+            html += '<div class="photo-circle"><div class="photo-placeholder"><i class="bi bi-person"></i></div></div>';
+        }
+        html += '<div class="info-section">' +
+            '<div class="shirt-name">' + p.shirt + '</div>' +
+            '<div class="full-name">' + p.name + '</div>' +
+            (tagline ? '<div class="tagline">' + tagline + '</div>' : '') +
+            '<div class="social">' +
+            (p.instagram ? '<span><i class="bi bi-instagram"></i> @' + p.instagram + '</span>' : '') +
+            (p.dupr !== '-' ? '<span>DUPR: ' + p.dupr + '</span>' : '') +
+            '</div></div>';
+    } else {
+        html += '<div class="photo-circle"><div class="photo-placeholder"><i class="bi bi-person"></i></div></div>' +
+            '<div class="info-section"><div class="shirt-name">SELECT</div><div class="full-name">Choose a player</div></div>';
     }
+    return html;
+}
+
+function updatePreview() {
+    var brand = document.getElementById('brandSelect').value;
+    var tagline = document.getElementById('taglineInput').value;
+    var posX = document.getElementById('posX').value;
+    var posY = document.getElementById('posY').value;
+    document.getElementById('posXVal').textContent = posX;
+    document.getElementById('posYVal').textContent = posY;
     
-    // ==================== PREVIEW UPDATE ====================
-    function updatePreview() {
+    var cfg = categoryConfig[currentCategory];
+    var isDoubles = currentCategory !== 'singles' && selectedPlayers.length === 2;
+    
+    document.getElementById('previewTitle').textContent = (brand === 'pcl' ? 'PCL Europe' : 'WPC Series') + ' - ' + cfg.label;
+    
+    var preview = document.getElementById('cardPreview');
+    preview.className = 'player-card-' + brand + (isDoubles ? ' doubles-card' : '');
+    preview.innerHTML = buildCard(brand, currentCategory, selectedPlayers, tagline, posX, posY);
+}
+
+async function downloadCard() {
+    var cfg = categoryConfig[currentCategory];
+    if (selectedPlayers.length < cfg.min) { alert('Select ' + cfg.min + ' player(s)'); return; }
+    
+    var card = document.getElementById('cardPreview');
+    var clone = card.cloneNode(true);
+    clone.style.cssText = 'transform:none;position:fixed;left:-9999px;width:1080px;height:1080px;';
+    document.body.appendChild(clone);
+    
+    try {
+        var canvas = await html2canvas(clone, { width: 1080, height: 1080, scale: 1, useCORS: true, allowTaint: true });
         var brand = document.getElementById('brandSelect').value;
-        var tagline = document.getElementById('taglineInput').value;
-        var posX = parseInt(document.getElementById('photoX').value);
-        var posY = parseInt(document.getElementById('photoY').value);
-        var cfg = categoryConfig[currentCategory];
-        var isDoubles = currentCategory !== 'singles';
-        
-        // Update title
-        var brandName = brand === 'pcl' ? 'PCL Europe' : 'WPC Series';
-        document.getElementById('previewTitle').textContent = brandName + ' - ' + cfg.label;
-        
-        // Update card
-        var preview = document.getElementById('cardPreview');
-        var cardClass = 'player-card-' + brand;
-        if (isDoubles && selectedPlayers.length === 2) {
-            cardClass += ' doubles-card';
-        }
-        preview.className = cardClass;
-        preview.innerHTML = buildCardHTML(brand, currentCategory, selectedPlayers, tagline, posX, posY);
+        var names = selectedPlayers.map(function(p) { return p.shirt; }).join('_');
+        var link = document.createElement('a');
+        link.download = brand.toUpperCase() + '_' + currentCategory + '_' + names + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    } finally {
+        document.body.removeChild(clone);
     }
+}
+
+async function downloadTeamZip() {
+    if (players.length === 0) { alert('No players'); return; }
     
-    // ==================== DOWNLOAD SINGLE CARD ====================
-    async function downloadCard() {
-        var cfg = categoryConfig[currentCategory];
-        if (selectedPlayers.length < cfg.min) {
-            alert('Please select ' + cfg.min + ' player(s) for ' + cfg.label);
-            return;
-        }
-        
-        var card = document.getElementById('cardPreview');
-        var clone = card.cloneNode(true);
-        clone.style.cssText = 'transform:none;position:fixed;left:-9999px;width:1080px;height:1080px;';
-        document.body.appendChild(clone);
+    var zip = new JSZip();
+    var brand = document.getElementById('teamBrand').value;
+    var tagline = document.getElementById('teamTagline').value;
+    var posX = document.getElementById('teamPosX').value;
+    var posY = document.getElementById('teamPosY').value;
+    
+    for (var i = 0; i < players.length; i++) {
+        var p = players[i];
+        var temp = document.createElement('div');
+        temp.className = 'player-card-' + brand;
+        temp.innerHTML = buildCard(brand, 'singles', [p], tagline, posX, posY);
+        temp.style.cssText = 'position:fixed;left:-9999px;width:1080px;height:1080px;';
+        document.body.appendChild(temp);
         
         try {
-            var canvas = await html2canvas(clone, { 
-                width: 1080, 
-                height: 1080, 
-                scale: 1, 
-                useCORS: true,
-                allowTaint: true,
-                backgroundColor: null
-            });
-            
-            var brand = document.getElementById('brandSelect').value;
-            var names = '';
-            for (var i = 0; i < selectedPlayers.length; i++) {
-                if (i > 0) names += '_';
-                names += selectedPlayers[i].shirt;
-            }
-            
-            var link = document.createElement('a');
-            link.download = brand.toUpperCase() + '_' + currentCategory + '_' + names + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
+            var canvas = await html2canvas(temp, { width: 1080, height: 1080, scale: 1, useCORS: true, allowTaint: true });
+            var data = canvas.toDataURL('image/png').split(',')[1];
+            var num = String(i + 1).padStart(2, '0');
+            zip.file(num + '_' + p.shirt + '.png', data, { base64: true });
         } finally {
-            document.body.removeChild(clone);
+            document.body.removeChild(temp);
         }
     }
     
-    // ==================== DOWNLOAD TEAM ZIP ====================
-    async function downloadTeamZip() {
-        if (players.length === 0) {
-            alert('No players in team');
-            return;
-        }
-        
-        var zip = new JSZip();
-        var brand = document.getElementById('teamBrandSelect').value;
-        var tagline = document.getElementById('teamTagline').value;
-        var posX = parseInt(document.getElementById('teamPhotoX').value);
-        var posY = parseInt(document.getElementById('teamPhotoY').value);
-        
-        for (var i = 0; i < players.length; i++) {
-            var p = players[i];
-            
-            var temp = document.createElement('div');
-            temp.className = 'player-card-' + brand;
-            temp.innerHTML = buildCardHTML(brand, 'singles', [p], tagline, posX, posY);
-            temp.style.cssText = 'position:fixed;left:-9999px;width:1080px;height:1080px;';
-            document.body.appendChild(temp);
-            
-            try {
-                var canvas = await html2canvas(temp, { 
-                    width: 1080, 
-                    height: 1080, 
-                    scale: 1, 
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: null
-                });
-                var data = canvas.toDataURL('image/png').split(',')[1];
-                var num = String(i + 1);
-                if (num.length < 2) num = '0' + num;
-                zip.file(num + '_' + p.shirt + '.png', data, { base64: true });
-            } finally {
-                document.body.removeChild(temp);
-            }
-        }
-        
-        var blob = await zip.generateAsync({ type: 'blob' });
-        var link = document.createElement('a');
-        link.download = brand.toUpperCase() + '_' + teamData.country + '_' + teamData.age + '_team.zip';
-        link.href = URL.createObjectURL(blob);
-        link.click();
-    }
+    var blob = await zip.generateAsync({ type: 'blob' });
+    var link = document.createElement('a');
+    link.download = brand.toUpperCase() + '_' + teamData.country + '_' + teamData.age + '.zip';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+}
 </script>
 {% endblock %}
