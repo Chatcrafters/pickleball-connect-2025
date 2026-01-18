@@ -1,8 +1,8 @@
 // Málaga - Palacio Martín Carpena (Blueprint Style)
 venues.malaga = {
     name: 'PALACIO MARTÍN CARPENA • MÁLAGA',
-    taglineWPC: 'WPC Open Málaga 2026',
-    taglinePCL: 'PCL Open Málaga 2026',
+    taglineWPC: 'WPC Malaga Open 2026',
+    taglinePCL: 'PCL Malaga Open 2026',
     badge: 'Málaga',
     svg: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" fill="none" stroke="white" stroke-linecap="round" stroke-linejoin="round">' +
         '<path d="M 100 220 Q 400 40 700 220" stroke-width="1.5"/>' +
