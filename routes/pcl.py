@@ -643,6 +643,44 @@ def team_player_cards(team_id):
                          registrations=registrations)
 
 
+@pcl.route('/media/<int:tournament_id>')
+def media_page(tournament_id):
+    """Public media page with all player photos for social media manager"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    # Get all teams with their registrations
+    teams_data = []
+    total_players = 0
+    players_with_photos = 0
+    
+    for team in tournament.teams:
+        all_players = team.registrations.all()
+        total_players += len(all_players)
+        
+        # Count players with photos
+        for p in all_players:
+            if p.photo_filename:
+                players_with_photos += 1
+        
+        # Include all players (with or without photos) but sort by photo first
+        players_sorted = sorted(all_players, key=lambda x: (0 if x.photo_filename else 1, x.first_name))
+        
+        if players_sorted:
+            teams_data.append({
+                'team': team,
+                'players': players_sorted
+            })
+    
+    # Sort teams by country name
+    teams_data.sort(key=lambda x: x['team'].country_name)
+    
+    return render_template('pcl/media_page.html',
+                         tournament=tournament,
+                         teams_data=teams_data,
+                         total_players=total_players,
+                         players_with_photos=players_with_photos)
+
+
 @pcl.route('/admin/team/<int:team_id>/add-captain', methods=['POST'])
 def add_captain(team_id):
     """Admin adds a captain to a team"""
