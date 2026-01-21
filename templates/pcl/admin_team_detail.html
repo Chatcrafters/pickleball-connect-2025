@@ -32,7 +32,7 @@
                             <i class="bi bi-person-fill text-dark"></i>
                         </div>
                         {% endif %}
-                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;">👑</span>
+                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;">ðŸ‘‘</span>
                     </div>
                     {% endfor %}
                 </div>
@@ -41,12 +41,17 @@
             <p class="text-muted">{{ team.tournament.name }}</p>
         </div>
         <div class="col-md-4 text-end">
-            <a href="{{ url_for('pcl.player_cards', team_id=team.id) }}" class="btn btn-warning">
-    <i class="bi bi-card-image"></i> Player Cards
-</a>
-<a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
-    <i class="bi bi-download"></i> Export CSV
-</a>
+            <a href="{{ url_for('pcl.team_player_cards', team_id=team.id) }}" class="btn btn-success">
+                <i class="bi bi-person-badge"></i> Player Cards
+            </a>
+            <a href="{{ url_for('pcl.export_team_data', team_id=team.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-download"></i> Export CSV
+            </a>
+            <form action="{{ url_for('pcl.recheck_team_status', team_id=team.id) }}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-outline-warning" title="Recalculate complete/incomplete status for all players">
+                    <i class="bi bi-arrow-clockwise"></i> Recheck Status
+                </button>
+            </form>
             <form action="{{ url_for('pcl.delete_team', team_id=team.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this team? All registrations will be removed!');">
                 <button type="submit" class="btn btn-outline-danger">
                     <i class="bi bi-trash"></i> Delete Team
@@ -89,14 +94,14 @@
                             <!-- Status Badges -->
                             <div class="mb-2">
                                 {% if captain.status == 'complete' %}
-                                <span class="badge bg-success">✓ Profile Complete</span>
+                                <span class="badge bg-success">âœ“ Profile Complete</span>
                                 {% else %}
-                                <span class="badge bg-warning">⚠ Profile Incomplete</span>
+                                <span class="badge bg-warning">âš  Profile Incomplete</span>
                                 {% endif %}
                                 
                                 {% if captain.whatsapp_sent_at %}
                                 <span class="badge bg-info" title="Sent: {{ captain.whatsapp_sent_at.strftime('%d.%m.%Y %H:%M') }}">
-                                    📱 WhatsApp Sent
+                                    ðŸ“± WhatsApp Sent
                                 </span>
                                 {% endif %}
                             </div>
@@ -176,17 +181,17 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Gender *</label>
                                 <select class="form-select" name="gender" required>
-                                    <option value="male">👨 Male</option>
-                                    <option value="female">👩 Female</option>
+                                    <option value="male">ðŸ‘¨ Male</option>
+                                    <option value="female">ðŸ‘© Female</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Language</label>
                                 <select class="form-select" name="language">
-                                    <option value="EN">🇬🇧 English</option>
-                                    <option value="DE">🇩🇪 Deutsch</option>
-                                    <option value="ES">🇪🇸 Español</option>
-                                    <option value="FR">🇫🇷 Français</option>
+                                    <option value="EN">ðŸ‡¬ðŸ‡§ English</option>
+                                    <option value="DE">ðŸ‡©ðŸ‡ª Deutsch</option>
+                                    <option value="ES">ðŸ‡ªðŸ‡¸ EspaÃ±ol</option>
+                                    <option value="FR">ðŸ‡«ðŸ‡· FranÃ§ais</option>
                                 </select>
                             </div>
                         </div>
@@ -194,7 +199,7 @@
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" name="is_playing" id="isPlaying" checked>
                             <label class="form-check-label" for="isPlaying">
-                                👟 Also plays in team (counts as player)
+                                ðŸ‘Ÿ Also plays in team (counts as player)
                             </label>
                         </div>
                         
@@ -247,8 +252,8 @@
             <div class="card text-center {% if stats.men >= team.min_men %}border-success border-3{% else %}border-warning border-3{% endif %}">
                 <div class="card-body">
                     <h3>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
-                    <p class="mb-0">👨 Men</p>
-                    <small class="text-muted">{% if stats.men >= team.min_men %}✅ OK{% else %}⚠️ Need {{ team.min_men - stats.men }}{% endif %}</small>
+                    <p class="mb-0">ðŸ‘¨ Men</p>
+                    <small class="text-muted">{% if stats.men >= team.min_men %}âœ… OK{% else %}âš ï¸ Need {{ team.min_men - stats.men }}{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -256,8 +261,8 @@
             <div class="card text-center {% if stats.women >= team.min_women %}border-success border-3{% else %}border-warning border-3{% endif %}">
                 <div class="card-body">
                     <h3>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
-                    <p class="mb-0">👩 Women</p>
-                    <small class="text-muted">{% if stats.women >= team.min_women %}✅ OK{% else %}⚠️ Need {{ team.min_women - stats.women }}{% endif %}</small>
+                    <p class="mb-0">ðŸ‘© Women</p>
+                    <small class="text-muted">{% if stats.women >= team.min_women %}âœ… OK{% else %}âš ï¸ Need {{ team.min_women - stats.women }}{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -266,7 +271,7 @@
                 <div class="card-body">
                     <h3>{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h3>
 <p class="mb-0">Complete</p>
-<small>{% if stats.is_complete %}✅ Ready{% else %}{{ stats.total - (stats.men_complete + stats.women_complete) }} incomplete{% endif %}</small>
+<small>{% if stats.is_complete %}âœ… Ready{% else %}{{ stats.total - (stats.men_complete + stats.women_complete) }} incomplete{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -278,7 +283,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">👨 Men ({{ stats.men }})</h5>
+                    <h5 class="mb-0">ðŸ‘¨ Men ({{ stats.men }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.men_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
@@ -308,7 +313,7 @@
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning">👑</span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning">ðŸ‘‘</span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
@@ -321,9 +326,9 @@
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success">✓</span>
+                                        <span class="badge bg-success">âœ“</span>
                                         {% else %}
-                                        <span class="badge bg-warning">⚠</span>
+                                        <span class="badge bg-warning">âš </span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -357,7 +362,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">👩 Women ({{ stats.women }})</h5>
+                    <h5 class="mb-0">ðŸ‘© Women ({{ stats.women }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.women_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
@@ -387,7 +392,7 @@
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning">👑</span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning">ðŸ‘‘</span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
@@ -400,9 +405,9 @@
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success">✓</span>
+                                        <span class="badge bg-success">âœ“</span>
                                         {% else %}
-                                        <span class="badge bg-warning">⚠</span>
+                                        <span class="badge bg-warning">âš </span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -450,10 +455,10 @@
                 <div class="col-md-6">
                     <h6>Required Profile Fields:</h6>
                     <ul class="mb-0">
-                        <li>✓ Profile Photo</li>
-                        <li>✓ Bio</li>
-                        <li>✓ Shirt Name & Size</li>
-                        <li>○ Social Media (optional)</li>
+                        <li>âœ“ Profile Photo</li>
+                        <li>âœ“ Bio</li>
+                        <li>âœ“ Shirt Name & Size</li>
+                        <li>â—‹ Social Media (optional)</li>
                     </ul>
                 </div>
             </div>
@@ -472,33 +477,11 @@
 <script>
 function copyCaptainLink() {
     const linkInput = document.getElementById('captainLink');
-    const text = linkInput.value;
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
     
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(() => {
-            showCopySuccess();
-        }).catch(() => {
-            fallbackCopy(linkInput);
-        });
-    } else {
-        fallbackCopy(linkInput);
-    }
-}
-
-function fallbackCopy(input) {
-    input.select();
-    input.setSelectionRange(0, 99999);
-    try {
-        document.execCommand('copy');
-        showCopySuccess();
-    } catch (err) {
-        alert('Copy failed. Please select and copy manually: Ctrl+C');
-    }
-}
-
-function showCopySuccess() {
-    const btn = document.querySelector('[onclick="copyCaptainLink()"]');
-    if (btn) {
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+        const btn = event.target.closest('button');
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
         btn.classList.remove('btn-outline-secondary');
@@ -509,17 +492,21 @@ function showCopySuccess() {
             btn.classList.remove('btn-success');
             btn.classList.add('btn-outline-secondary');
         }, 2000);
-    }
+    }).catch(err => {
+        alert('Failed to copy link');
+    });
 }
 
 function sendCaptainLink(captainId, name, phone) {
     if(confirm('Send Captain Dashboard link to ' + name + ' (' + phone + ')?')) {
+        // This would need a route - for now just show info
         alert('Feature coming: Will send dashboard link via WhatsApp Content Template');
     }
 }
 
 function sendProfileLink(captainId, name, phone) {
     if(confirm('Send Profile Completion link to ' + name + ' (' + phone + ')?')) {
+        // This would need a route - for now just show info
         alert('Feature coming: Will send profile link via WhatsApp');
     }
 }

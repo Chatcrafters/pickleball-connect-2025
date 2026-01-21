@@ -162,83 +162,83 @@ TRANSLATIONS = {
     'DE': {
         'page_title': 'PCL Spieler-Registrierung',
         'team': 'Team',
-        'personal_info': 'Persönliche Informationen',
+        'personal_info': 'PersÃ¶nliche Informationen',
         'first_name': 'Vorname',
         'last_name': 'Nachname',
         'email': 'E-Mail',
         'phone': 'Telefon',
-        'phone_help': 'Mit Ländervorwahl (+49, +34, etc.)',
+        'phone_help': 'Mit LÃ¤ndervorwahl (+49, +34, etc.)',
         'gender': 'Geschlecht',
-        'male': 'Männlich',
+        'male': 'MÃ¤nnlich',
         'female': 'Weiblich',
         'birth_year': 'Geburtsjahr',
         'role': 'Rolle',
         'player': 'Spieler',
-        'captain': 'Kapitän',
+        'captain': 'KapitÃ¤n',
         'shirt_info': 'Shirt-Informationen',
         'shirt_name': 'Name auf dem Shirt',
         'shirt_name_help': 'So erscheint dein Name auf dem Trikot (max 15 Zeichen)',
-        'shirt_size': 'Shirt-Größe',
+        'shirt_size': 'Shirt-GrÃ¶ÃŸe',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
         'upload_photo': 'Foto hochladen',
         'bio': 'Kurze Bio',
-        'bio_placeholder': 'Erzähl uns von dir und deiner Pickleball-Reise...',
-        'bio_help': 'Erzähl uns von dir (50-500 Zeichen)',
+        'bio_placeholder': 'ErzÃ¤hl uns von dir und deiner Pickleball-Reise...',
+        'bio_help': 'ErzÃ¤hl uns von dir (50-500 Zeichen)',
         'social_media': 'Social Media',
         'optional_info': 'Optionale Informationen',
         'video_url': 'Video-URL (Highlight-Video)',
         'dupr_rating': 'DUPR Rating',
         'language': 'Bevorzugte Sprache',
-        'privacy_accept': 'Ich stimme der Datenverarbeitung für die PCL-Registrierung zu',
+        'privacy_accept': 'Ich stimme der Datenverarbeitung fÃ¼r die PCL-Registrierung zu',
         'submit': 'Registrieren',
         'update': 'Registrierung aktualisieren',
         'required': 'Pflicht',
         'optional': 'Optional',
-        'select': 'Auswählen',
+        'select': 'AuswÃ¤hlen',
         'success_title': 'Registrierung erfolgreich!',
-        'success_message': 'Danke für deine Registrierung zur PCL.',
-        'missing_fields': 'Bitte fülle alle Pflichtfelder aus',
-        'captain_dashboard': 'Kapitän Dashboard',
+        'success_message': 'Danke fÃ¼r deine Registrierung zur PCL.',
+        'missing_fields': 'Bitte fÃ¼lle alle Pflichtfelder aus',
+        'captain_dashboard': 'KapitÃ¤n Dashboard',
         'team_status': 'Team-Status',
-        'registration_link': 'Registrierungslink für Spieler',
+        'registration_link': 'Registrierungslink fÃ¼r Spieler',
         'copy_link': 'Link kopieren',
         'link_copied': 'Link kopiert!',
         'players_registered': 'Spieler',
-        'men': 'Männer',
+        'men': 'MÃ¤nner',
         'women': 'Frauen',
-        'complete': 'Vollständig',
-        'incomplete': 'Unvollständig',
+        'complete': 'VollstÃ¤ndig',
+        'incomplete': 'UnvollstÃ¤ndig',
         'photo_missing': 'Foto fehlt',
         'deadline': 'Deadline',
-        'days_left': 'Tage übrig',
+        'days_left': 'Tage Ã¼brig',
         'send_reminder': 'Erinnerung senden',
         'export_data': 'Team-Daten exportieren',
         'missing': 'Fehlt',
         'no_players': 'Noch keine Spieler',
         'requirements': 'Anforderungen',
-        'team_size': 'Teamgröße',
+        'team_size': 'TeamgrÃ¶ÃŸe',
         'required_per_player': 'Pro Spieler erforderlich',
-        'captain_link_warning': 'Dieser Link ist nur für dich als Kapitän. Nicht teilen!',
+        'captain_link_warning': 'Dieser Link ist nur fÃ¼r dich als KapitÃ¤n. Nicht teilen!',
         # Quick Add specific
-        'quick_add_title': 'Spieler schnell hinzufügen',
-        'quick_add_player': 'Spieler hinzufügen',
-        'quick_add_info': 'Der Spieler vervollständigt sein Profil über den WhatsApp-Link',
-        'add_player': 'Spieler hinzufügen',
-        'back_to_dashboard': 'Zurück zum Dashboard',
+        'quick_add_title': 'Spieler schnell hinzufÃ¼gen',
+        'quick_add_player': 'Spieler hinzufÃ¼gen',
+        'quick_add_info': 'Der Spieler vervollstÃ¤ndigt sein Profil Ã¼ber den WhatsApp-Link',
+        'add_player': 'Spieler hinzufÃ¼gen',
+        'back_to_dashboard': 'ZurÃ¼ck zum Dashboard',
         'send_link_now': 'WhatsApp-Link sofort senden',
-        'send_link_help': 'Spieler erhält Link zur Profil-Vervollständigung',
-        'phone_invalid': 'Bitte gültige Telefonnummer mit Ländervorwahl eingeben',
+        'send_link_help': 'Spieler erhÃ¤lt Link zur Profil-VervollstÃ¤ndigung',
+        'phone_invalid': 'Bitte gÃ¼ltige Telefonnummer mit LÃ¤ndervorwahl eingeben',
         'quick_actions': 'Schnellaktionen',
         'send_all_links': 'Alle Links senden',
-        'send_all_confirm': 'Links an alle unvollständigen Spieler senden?',
-        'player_added': 'Spieler erfolgreich hinzugefügt!',
-        'player_added_whatsapp': 'Spieler hinzugefügt und WhatsApp gesendet!',
+        'send_all_confirm': 'Links an alle unvollstÃ¤ndigen Spieler senden?',
+        'player_added': 'Spieler erfolgreich hinzugefÃ¼gt!',
+        'player_added_whatsapp': 'Spieler hinzugefÃ¼gt und WhatsApp gesendet!',
         'whatsapp_sent': 'WhatsApp gesendet!',
         'whatsapp_failed': 'WhatsApp konnte nicht gesendet werden',
         # Complete Profile specific
-        'complete_profile_title': 'Profil vervollständigen',
+        'complete_profile_title': 'Profil vervollstÃ¤ndigen',
         'hello': 'Hallo',
         'profile_progress': 'Profil-Fortschritt',
         'save_profile': 'Profil speichern',
@@ -249,32 +249,32 @@ TRANSLATIONS = {
     'ES': {
         'page_title': 'Registro de Jugadores PCL',
         'team': 'Equipo',
-        'personal_info': 'Información Personal',
+        'personal_info': 'InformaciÃ³n Personal',
         'first_name': 'Nombre',
         'last_name': 'Apellido',
-        'email': 'Correo electrónico',
-        'phone': 'Teléfono',
-        'phone_help': 'Con código de país (+34, +49, etc.)',
-        'gender': 'Género',
+        'email': 'Correo electrÃ³nico',
+        'phone': 'TelÃ©fono',
+        'phone_help': 'Con cÃ³digo de paÃ­s (+34, +49, etc.)',
+        'gender': 'GÃ©nero',
         'male': 'Masculino',
         'female': 'Femenino',
-        'birth_year': 'Año de nacimiento',
+        'birth_year': 'AÃ±o de nacimiento',
         'role': 'Rol',
         'player': 'Jugador',
-        'captain': 'Capitán',
-        'shirt_info': 'Información de la Camiseta',
+        'captain': 'CapitÃ¡n',
+        'shirt_info': 'InformaciÃ³n de la Camiseta',
         'shirt_name': 'Nombre en la camiseta',
-        'shirt_name_help': 'Así aparecerá tu nombre (máx 15 caracteres)',
+        'shirt_name_help': 'AsÃ­ aparecerÃ¡ tu nombre (mÃ¡x 15 caracteres)',
         'shirt_size': 'Talla de camiseta',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
-        'photo_help': 'Obligatorio. JPG, PNG, máx 5MB. Formato cuadrado recomendado.',
+        'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
         'upload_photo': 'Subir foto',
-        'bio': 'Biografía breve',
-        'bio_placeholder': 'Cuéntanos sobre ti y tu viaje en pickleball...',
-        'bio_help': 'Cuéntanos sobre ti (50-500 caracteres)',
+        'bio': 'BiografÃ­a breve',
+        'bio_placeholder': 'CuÃ©ntanos sobre ti y tu viaje en pickleball...',
+        'bio_help': 'CuÃ©ntanos sobre ti (50-500 caracteres)',
         'social_media': 'Redes Sociales',
-        'optional_info': 'Información Opcional',
+        'optional_info': 'InformaciÃ³n Opcional',
         'video_url': 'URL del Video (Highlights)',
         'dupr_rating': 'Rating DUPR',
         'language': 'Idioma preferido',
@@ -284,101 +284,101 @@ TRANSLATIONS = {
         'required': 'Obligatorio',
         'optional': 'Opcional',
         'select': 'Seleccionar',
-        'success_title': '¡Registro completado!',
+        'success_title': 'Â¡Registro completado!',
         'success_message': 'Gracias por registrarte en PCL.',
         'missing_fields': 'Por favor completa todos los campos obligatorios',
-        'captain_dashboard': 'Panel del Capitán',
+        'captain_dashboard': 'Panel del CapitÃ¡n',
         'team_status': 'Estado del Equipo',
         'registration_link': 'Enlace de registro para jugadores',
         'copy_link': 'Copiar enlace',
-        'link_copied': '¡Enlace copiado!',
+        'link_copied': 'Â¡Enlace copiado!',
         'players_registered': 'Jugadores',
         'men': 'Hombres',
         'women': 'Mujeres',
         'complete': 'Completo',
         'incomplete': 'Incompleto',
         'photo_missing': 'Falta foto',
-        'deadline': 'Fecha límite',
-        'days_left': 'días restantes',
+        'deadline': 'Fecha lÃ­mite',
+        'days_left': 'dÃ­as restantes',
         'send_reminder': 'Enviar recordatorio',
         'export_data': 'Exportar datos del equipo',
         'missing': 'Falta',
-        'no_players': 'Sin jugadores todavía',
+        'no_players': 'Sin jugadores todavÃ­a',
         'requirements': 'Requisitos',
-        'team_size': 'Tamaño del equipo',
+        'team_size': 'TamaÃ±o del equipo',
         'required_per_player': 'Requerido por jugador',
-        'captain_link_warning': '¡Este enlace es solo para ti como capitán. No compartir!',
+        'captain_link_warning': 'Â¡Este enlace es solo para ti como capitÃ¡n. No compartir!',
         # Quick Add specific
-        'quick_add_title': 'Añadir jugador rápido',
-        'quick_add_player': 'Añadir jugador',
-        'quick_add_info': 'El jugador completará su perfil a través del enlace de WhatsApp',
-        'add_player': 'Añadir jugador',
+        'quick_add_title': 'AÃ±adir jugador rÃ¡pido',
+        'quick_add_player': 'AÃ±adir jugador',
+        'quick_add_info': 'El jugador completarÃ¡ su perfil a travÃ©s del enlace de WhatsApp',
+        'add_player': 'AÃ±adir jugador',
         'back_to_dashboard': 'Volver al panel',
         'send_link_now': 'Enviar enlace WhatsApp ahora',
-        'send_link_help': 'El jugador recibirá un enlace para completar su perfil',
-        'phone_invalid': 'Por favor ingresa un número válido con código de país',
-        'quick_actions': 'Acciones rápidas',
+        'send_link_help': 'El jugador recibirÃ¡ un enlace para completar su perfil',
+        'phone_invalid': 'Por favor ingresa un nÃºmero vÃ¡lido con cÃ³digo de paÃ­s',
+        'quick_actions': 'Acciones rÃ¡pidas',
         'send_all_links': 'Enviar todos los enlaces',
-        'send_all_confirm': '¿Enviar enlaces a todos los jugadores incompletos?',
-        'player_added': '¡Jugador añadido exitosamente!',
-        'player_added_whatsapp': '¡Jugador añadido y WhatsApp enviado!',
-        'whatsapp_sent': '¡WhatsApp enviado!',
+        'send_all_confirm': 'Â¿Enviar enlaces a todos los jugadores incompletos?',
+        'player_added': 'Â¡Jugador aÃ±adido exitosamente!',
+        'player_added_whatsapp': 'Â¡Jugador aÃ±adido y WhatsApp enviado!',
+        'whatsapp_sent': 'Â¡WhatsApp enviado!',
         'whatsapp_failed': 'No se pudo enviar WhatsApp',
         # Complete Profile specific
         'complete_profile_title': 'Completa tu perfil',
         'hello': 'Hola',
         'profile_progress': 'Progreso del perfil',
         'save_profile': 'Guardar perfil',
-        'profile_saved': '¡Perfil guardado exitosamente!',
-        'data_protection': 'Tus datos están almacenados de forma segura',
+        'profile_saved': 'Â¡Perfil guardado exitosamente!',
+        'data_protection': 'Tus datos estÃ¡n almacenados de forma segura',
         'contact': 'Contacto',
     },
     'FR': {
         'page_title': 'Inscription Joueur PCL',
-        'team': 'Équipe',
+        'team': 'Ã‰quipe',
         'personal_info': 'Informations Personnelles',
-        'first_name': 'Prénom',
+        'first_name': 'PrÃ©nom',
         'last_name': 'Nom',
         'email': 'E-mail',
-        'phone': 'Téléphone',
+        'phone': 'TÃ©lÃ©phone',
         'phone_help': 'Avec indicatif pays (+33, +49, etc.)',
         'gender': 'Genre',
         'male': 'Homme',
         'female': 'Femme',
-        'birth_year': 'Année de naissance',
-        'role': 'Rôle',
+        'birth_year': 'AnnÃ©e de naissance',
+        'role': 'RÃ´le',
         'player': 'Joueur',
         'captain': 'Capitaine',
         'shirt_info': 'Informations Maillot',
         'shirt_name': 'Nom sur le maillot',
-        'shirt_name_help': 'Comment votre nom apparaîtra (max 15 caractères)',
+        'shirt_name_help': 'Comment votre nom apparaÃ®tra (max 15 caractÃ¨res)',
         'shirt_size': 'Taille du maillot',
         'profile': 'Profil',
         'photo': 'Photo de profil',
-        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carré recommandé.',
-        'upload_photo': 'Télécharger photo',
+        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
+        'upload_photo': 'TÃ©lÃ©charger photo',
         'bio': 'Courte bio',
         'bio_placeholder': 'Parlez-nous de vous et de votre parcours pickleball...',
-        'bio_help': 'Parlez-nous de vous (50-500 caractères)',
-        'social_media': 'Réseaux Sociaux',
+        'bio_help': 'Parlez-nous de vous (50-500 caractÃ¨res)',
+        'social_media': 'RÃ©seaux Sociaux',
         'optional_info': 'Informations Optionnelles',
-        'video_url': 'URL Vidéo (Highlights)',
+        'video_url': 'URL VidÃ©o (Highlights)',
         'dupr_rating': 'Rating DUPR',
-        'language': 'Langue préférée',
-        'privacy_accept': "J'accepte le traitement des données pour l'inscription PCL",
+        'language': 'Langue prÃ©fÃ©rÃ©e',
+        'privacy_accept': "J'accepte le traitement des donnÃ©es pour l'inscription PCL",
         'submit': "S'inscrire",
-        'update': "Mettre à jour l'inscription",
+        'update': "Mettre Ã  jour l'inscription",
         'required': 'Obligatoire',
         'optional': 'Optionnel',
-        'select': 'Sélectionner',
-        'success_title': 'Inscription réussie!',
-        'success_message': 'Merci pour votre inscription à PCL.',
+        'select': 'SÃ©lectionner',
+        'success_title': 'Inscription rÃ©ussie!',
+        'success_message': 'Merci pour votre inscription Ã  PCL.',
         'missing_fields': 'Veuillez remplir tous les champs obligatoires',
         'captain_dashboard': 'Tableau de bord Capitaine',
-        'team_status': "Statut de l'équipe",
+        'team_status': "Statut de l'Ã©quipe",
         'registration_link': "Lien d'inscription pour les joueurs",
         'copy_link': 'Copier le lien',
-        'link_copied': 'Lien copié!',
+        'link_copied': 'Lien copiÃ©!',
         'players_registered': 'Joueurs',
         'men': 'Hommes',
         'women': 'Femmes',
@@ -388,36 +388,36 @@ TRANSLATIONS = {
         'deadline': 'Date limite',
         'days_left': 'jours restants',
         'send_reminder': 'Envoyer un rappel',
-        'export_data': "Exporter les données de l'équipe",
+        'export_data': "Exporter les donnÃ©es de l'Ã©quipe",
         'missing': 'Manquant',
         'no_players': 'Pas encore de joueurs',
         'requirements': 'Exigences',
-        'team_size': "Taille de l'équipe",
+        'team_size': "Taille de l'Ã©quipe",
         'required_per_player': 'Requis par joueur',
         'captain_link_warning': 'Ce lien est uniquement pour vous en tant que capitaine. Ne pas partager!',
         # Quick Add specific
         'quick_add_title': 'Ajouter un joueur rapidement',
         'quick_add_player': 'Ajouter un joueur',
-        'quick_add_info': 'Le joueur complétera son profil via le lien WhatsApp',
+        'quick_add_info': 'Le joueur complÃ©tera son profil via le lien WhatsApp',
         'add_player': 'Ajouter joueur',
         'back_to_dashboard': 'Retour au tableau de bord',
         'send_link_now': 'Envoyer le lien WhatsApp maintenant',
-        'send_link_help': 'Le joueur recevra un lien pour compléter son profil',
-        'phone_invalid': 'Veuillez entrer un numéro valide avec indicatif pays',
+        'send_link_help': 'Le joueur recevra un lien pour complÃ©ter son profil',
+        'phone_invalid': 'Veuillez entrer un numÃ©ro valide avec indicatif pays',
         'quick_actions': 'Actions rapides',
         'send_all_links': 'Envoyer tous les liens',
-        'send_all_confirm': 'Envoyer les liens à tous les joueurs incomplets?',
-        'player_added': 'Joueur ajouté avec succès!',
-        'player_added_whatsapp': 'Joueur ajouté et WhatsApp envoyé!',
-        'whatsapp_sent': 'WhatsApp envoyé!',
+        'send_all_confirm': 'Envoyer les liens Ã  tous les joueurs incomplets?',
+        'player_added': 'Joueur ajoutÃ© avec succÃ¨s!',
+        'player_added_whatsapp': 'Joueur ajoutÃ© et WhatsApp envoyÃ©!',
+        'whatsapp_sent': 'WhatsApp envoyÃ©!',
         'whatsapp_failed': "Impossible d'envoyer WhatsApp",
         # Complete Profile specific
-        'complete_profile_title': 'Complétez votre profil',
+        'complete_profile_title': 'ComplÃ©tez votre profil',
         'hello': 'Bonjour',
         'profile_progress': 'Progression du profil',
         'save_profile': 'Enregistrer le profil',
-        'profile_saved': 'Profil enregistré avec succès!',
-        'data_protection': 'Vos données sont stockées en toute sécurité',
+        'profile_saved': 'Profil enregistrÃ© avec succÃ¨s!',
+        'data_protection': 'Vos donnÃ©es sont stockÃ©es en toute sÃ©curitÃ©',
         'contact': 'Contact',
     }
 }
@@ -438,88 +438,88 @@ def get_profile_completion_message(registration, profile_url, lang='EN'):
     tournament = team.tournament
     
     messages = {
-        'EN': f"""🏓 PCL {tournament.name}
+        'EN': f"""ðŸ“ PCL {tournament.name}
 
-Hi {registration.first_name}! 👋
+Hi {registration.first_name}! ðŸ‘‹
 
 You've been added to Team {team.country_flag} {team.country_name} ({team.age_category}).
 
 Please complete your profile:
-👉 {profile_url}
+ðŸ‘‰ {profile_url}
 
 Required:
-✓ Profile photo
-✓ Shirt name & size
-✓ Short bio
+âœ“ Profile photo
+âœ“ Shirt name & size
+âœ“ Short bio
 
-⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+â° Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
 
 Questions? Contact your team captain.
 
-See you on the court! 🎾
+See you on the court! ðŸŽ¾
 WPC Series Europe""",
 
-        'DE': f"""🏓 PCL {tournament.name}
+        'DE': f"""ðŸ“ PCL {tournament.name}
 
-Hallo {registration.first_name}! 👋
+Hallo {registration.first_name}! ðŸ‘‹
 
-Du wurdest zu Team {team.country_flag} {team.country_name} ({team.age_category}) hinzugefügt.
+Du wurdest zu Team {team.country_flag} {team.country_name} ({team.age_category}) hinzugefÃ¼gt.
 
-Bitte vervollständige dein Profil:
-👉 {profile_url}
+Bitte vervollstÃ¤ndige dein Profil:
+ðŸ‘‰ {profile_url}
 
 Erforderlich:
-✓ Profilbild
-✓ Shirt-Name & Größe
-✓ Kurze Bio
+âœ“ Profilbild
+âœ“ Shirt-Name & GrÃ¶ÃŸe
+âœ“ Kurze Bio
 
-⏰ Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+â° Deadline: {tournament.registration_deadline.strftime('%d.%m.%Y')}
 
-Fragen? Kontaktiere deinen Team-Kapitän.
+Fragen? Kontaktiere deinen Team-KapitÃ¤n.
 
-Bis bald auf dem Court! 🎾
+Bis bald auf dem Court! ðŸŽ¾
 WPC Series Europe""",
 
-        'ES': f"""🏓 PCL {tournament.name}
+        'ES': f"""ðŸ“ PCL {tournament.name}
 
-¡Hola {registration.first_name}! 👋
+Â¡Hola {registration.first_name}! ðŸ‘‹
 
-Has sido añadido al equipo {team.country_flag} {team.country_name} ({team.age_category}).
+Has sido aÃ±adido al equipo {team.country_flag} {team.country_name} ({team.age_category}).
 
 Por favor completa tu perfil:
-👉 {profile_url}
+ðŸ‘‰ {profile_url}
 
 Requerido:
-✓ Foto de perfil
-✓ Nombre y talla de camiseta
-✓ Breve biografía
+âœ“ Foto de perfil
+âœ“ Nombre y talla de camiseta
+âœ“ Breve biografÃ­a
 
-⏰ Fecha límite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+â° Fecha lÃ­mite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
 
-¿Preguntas? Contacta a tu capitán.
+Â¿Preguntas? Contacta a tu capitÃ¡n.
 
-¡Nos vemos en la cancha! 🎾
+Â¡Nos vemos en la cancha! ðŸŽ¾
 WPC Series Europe""",
 
-        'FR': f"""🏓 PCL {tournament.name}
+        'FR': f"""ðŸ“ PCL {tournament.name}
 
-Bonjour {registration.first_name}! 👋
+Bonjour {registration.first_name}! ðŸ‘‹
 
-Vous avez été ajouté à l'équipe {team.country_flag} {team.country_name} ({team.age_category}).
+Vous avez Ã©tÃ© ajoutÃ© Ã  l'Ã©quipe {team.country_flag} {team.country_name} ({team.age_category}).
 
-Veuillez compléter votre profil:
-👉 {profile_url}
+Veuillez complÃ©ter votre profil:
+ðŸ‘‰ {profile_url}
 
 Requis:
-✓ Photo de profil
-✓ Nom et taille du maillot
-✓ Courte bio
+âœ“ Photo de profil
+âœ“ Nom et taille du maillot
+âœ“ Courte bio
 
-⏰ Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
+â° Date limite: {tournament.registration_deadline.strftime('%d.%m.%Y')}
 
 Questions? Contactez votre capitaine.
 
-À bientôt sur le court! 🎾
+Ã€ bientÃ´t sur le court! ðŸŽ¾
 WPC Series Europe"""
     }
     
@@ -589,7 +589,7 @@ def add_team(tournament_id):
             tournament_id=tournament.id,
             country_code=country_code,
             country_name=request.form['country_name'],
-            country_flag=COUNTRY_FLAGS.get(country_code, '🏳️'),
+            country_flag=COUNTRY_FLAGS.get(country_code, 'ðŸ³ï¸'),
             age_category=request.form['age_category'],
             min_men=int(request.form.get('min_men', 2)),
             max_men=int(request.form.get('max_men', 4)),
@@ -628,6 +628,19 @@ def admin_team_detail(team_id):
                          women=women,
                          captains=captains,
                          stats=stats)
+
+
+@pcl.route('/admin/team/<int:team_id>/cards')
+def team_player_cards(team_id):
+    """Player card generator for a team - shows ALL registrations"""
+    team = PCLTeam.query.get_or_404(team_id)
+    
+    # Get ALL registrations (not just complete ones)
+    registrations = team.registrations.all()
+    
+    return render_template('pcl/player_cards.html',
+                         team=team,
+                         registrations=registrations)
 
 
 @pcl.route('/admin/team/<int:team_id>/add-captain', methods=['POST'])
@@ -736,15 +749,6 @@ def export_team_data(team_id):
         download_name=f'pcl_{team.country_code}_{team.age_category}_players.csv'
     )
 
-@pcl.route('/admin/team/<int:team_id>/cards')
-def player_cards(team_id):
-    """Player Card Generator for Instagram"""
-    team = PCLTeam.query.get_or_404(team_id)
-    registrations = team.registrations.filter(PCLRegistration.is_playing != False).all()
-    
-    return render_template('pcl/player_cards.html',
-                         team=team,
-                         registrations=registrations)
 
 @pcl.route('/admin/export-shirts/<int:tournament_id>')
 def export_shirt_list(tournament_id):
@@ -820,54 +824,54 @@ def captain_dashboard(token):
     
     # Share messages for WhatsApp
     share_messages = {
-        'EN': f"""Hello Team! 🎾
+        'EN': f"""Hello Team! ðŸŽ¾
 
 Please complete your PCL profile for {team.country_name} {team.age_category} at {team.tournament.name}:
 
 {registration_url}?lang=EN
 
 Required:
-✔ Profile photo
-✔ Short bio
-✔ Shirt name & size
+âœ” Profile photo
+âœ” Short bio
+âœ” Shirt name & size
 
-Thank you! 🏆""",
-        'DE': f"""Hallo Team! 🎾
+Thank you! ðŸ†""",
+        'DE': f"""Hallo Team! ðŸŽ¾
 
-Bitte vervollständigt euer PCL Profil für {team.country_name} {team.age_category} bei {team.tournament.name}:
+Bitte vervollstÃ¤ndigt euer PCL Profil fÃ¼r {team.country_name} {team.age_category} bei {team.tournament.name}:
 
 {registration_url}?lang=DE
 
-Benötigt werden:
-✔ Profilbild
-✔ Kurze Bio
-✔ Shirt Name & Größe
+BenÃ¶tigt werden:
+âœ” Profilbild
+âœ” Kurze Bio
+âœ” Shirt Name & GrÃ¶ÃŸe
 
-Danke! 🏆""",
-        'ES': f"""¡Hola Equipo! 🎾
+Danke! ðŸ†""",
+        'ES': f"""Â¡Hola Equipo! ðŸŽ¾
 
 Por favor completa tu perfil PCL para {team.country_name} {team.age_category} en {team.tournament.name}:
 
 {registration_url}?lang=ES
 
 Requerido:
-✔ Foto de perfil
-✔ Biografía breve
-✔ Nombre y talla de camiseta
+âœ” Foto de perfil
+âœ” BiografÃ­a breve
+âœ” Nombre y talla de camiseta
 
-¡Gracias! 🏆""",
-        'FR': f"""Bonjour l'équipe! 🎾
+Â¡Gracias! ðŸ†""",
+        'FR': f"""Bonjour l'Ã©quipe! ðŸŽ¾
 
-Veuillez compléter votre profil PCL pour {team.country_name} {team.age_category} à {team.tournament.name}:
+Veuillez complÃ©ter votre profil PCL pour {team.country_name} {team.age_category} Ã  {team.tournament.name}:
 
 {registration_url}?lang=FR
 
 Requis:
-✔ Photo de profil
-✔ Courte bio
-✔ Nom et taille du maillot
+âœ” Photo de profil
+âœ” Courte bio
+âœ” Nom et taille du maillot
 
-Merci! 🏆"""
+Merci! ðŸ†"""
     }
     
     share_message = share_messages.get(lang, share_messages['EN'])
@@ -875,10 +879,10 @@ Merci! 🏆"""
     
     # Individual player message
     player_messages = {
-        'EN': f"Hi! 🎾 Please complete your PCL profile for {team.country_name} {team.age_category}: {registration_url}?lang=EN",
-        'DE': f"Hallo! 🎾 Bitte vervollständige dein PCL Profil für {team.country_name} {team.age_category}: {registration_url}?lang=DE",
-        'ES': f"¡Hola! 🎾 Por favor completa tu perfil PCL para {team.country_name} {team.age_category}: {registration_url}?lang=ES",
-        'FR': f"Salut! 🎾 Veuillez compléter votre profil PCL pour {team.country_name} {team.age_category}: {registration_url}?lang=FR"
+        'EN': f"Hi! ðŸŽ¾ Please complete your PCL profile for {team.country_name} {team.age_category}: {registration_url}?lang=EN",
+        'DE': f"Hallo! ðŸŽ¾ Bitte vervollstÃ¤ndige dein PCL Profil fÃ¼r {team.country_name} {team.age_category}: {registration_url}?lang=DE",
+        'ES': f"Â¡Hola! ðŸŽ¾ Por favor completa tu perfil PCL para {team.country_name} {team.age_category}: {registration_url}?lang=ES",
+        'FR': f"Salut! ðŸŽ¾ Veuillez complÃ©ter votre profil PCL pour {team.country_name} {team.age_category}: {registration_url}?lang=FR"
     }
     player_message_encoded = quote(player_messages.get(lang, player_messages['EN']))
     
@@ -1161,9 +1165,9 @@ def send_all_profile_links(token):
         return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
     
     if sent_count > 0:
-        flash(f'✅ {sent_count} {t["whatsapp_sent"]}', 'success')
+        flash(f'âœ… {sent_count} {t["whatsapp_sent"]}', 'success')
     if error_count > 0:
-        flash(f'⚠️ {error_count} {t["whatsapp_failed"]}', 'warning')
+        flash(f'âš ï¸ {error_count} {t["whatsapp_failed"]}', 'warning')
     if sent_count == 0 and error_count == 0:
         flash('No incomplete players with phone numbers found.', 'info')
     
@@ -1196,7 +1200,7 @@ def delete_player(token, registration_id):
     try:
         db.session.delete(registration)
         db.session.commit()
-        flash(f'{player_name} wurde gelöscht.', 'success')
+        flash(f'{player_name} wurde gelÃ¶scht.', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error: {str(e)}', 'danger')
@@ -1422,6 +1426,53 @@ def admin_edit_registration(registration_id):
                          team=team)
 
 
+@pcl.route('/admin/team/<int:team_id>/recheck-status', methods=['POST'])
+def recheck_team_status(team_id):
+    """Recheck completeness status for all registrations in a team"""
+    team = PCLTeam.query.get_or_404(team_id)
+    
+    updated = 0
+    for reg in team.registrations.all():
+        old_status = reg.status
+        reg.check_completeness()
+        if old_status != reg.status:
+            updated += 1
+    
+    try:
+        db.session.commit()
+        flash(f'Status rechecked for {team.registrations.count()} players. {updated} updated.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+
+
+@pcl.route('/admin/tournament/<int:tournament_id>/recheck-all-status', methods=['POST'])
+def recheck_tournament_status(tournament_id):
+    """Recheck completeness status for all registrations in a tournament"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    total = 0
+    updated = 0
+    for team in tournament.teams:
+        for reg in team.registrations.all():
+            total += 1
+            old_status = reg.status
+            reg.check_completeness()
+            if old_status != reg.status:
+                updated += 1
+    
+    try:
+        db.session.commit()
+        flash(f'Status rechecked for {total} players. {updated} updated.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    
+    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
+
+
 # ============================================================================
 # DELETE ROUTES
 # ============================================================================
@@ -1470,88 +1521,88 @@ def delete_registration(registration_id):
 def get_captain_invitation_message(team, captain_name, captain_url, language='EN'):
     """Get captain invitation message in specified language"""
     messages = {
-        'EN': f"""🏆 PCL {team.tournament.name} - Team Captain Invitation
+        'EN': f"""ðŸ† PCL {team.tournament.name} - Team Captain Invitation
 
-Hi {captain_name}! 👋
+Hi {captain_name}! ðŸ‘‹
 
 You have been selected as Captain for {team.country_flag} {team.country_name} {team.age_category}!
 
-📋 Your responsibilities:
-• Register your team players
-• Ensure all profiles are complete
-• Coordinate with your team
+ðŸ“‹ Your responsibilities:
+â€¢ Register your team players
+â€¢ Ensure all profiles are complete
+â€¢ Coordinate with your team
 
-🔗 Your secret Captain Dashboard:
+ðŸ”— Your secret Captain Dashboard:
 {captain_url}
 
-⚠️ Keep this link private - only you should have access!
+âš ï¸ Keep this link private - only you should have access!
 
-📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Let's go! 🎾
+Let's go! ðŸŽ¾
 WPC Series Europe""",
         
-        'DE': f"""🏆 PCL {team.tournament.name} - Team-Kapitän Einladung
+        'DE': f"""ðŸ† PCL {team.tournament.name} - Team-KapitÃ¤n Einladung
 
-Hallo {captain_name}! 👋
+Hallo {captain_name}! ðŸ‘‹
 
-Du wurdest als Kapitän für {team.country_flag} {team.country_name} {team.age_category} ausgewählt!
+Du wurdest als KapitÃ¤n fÃ¼r {team.country_flag} {team.country_name} {team.age_category} ausgewÃ¤hlt!
 
-📋 Deine Aufgaben:
-• Team-Spieler registrieren
-• Alle Profile vervollständigen
-• Mit deinem Team koordinieren
+ðŸ“‹ Deine Aufgaben:
+â€¢ Team-Spieler registrieren
+â€¢ Alle Profile vervollstÃ¤ndigen
+â€¢ Mit deinem Team koordinieren
 
-🔗 Dein geheimes Kapitän-Dashboard:
+ðŸ”— Dein geheimes KapitÃ¤n-Dashboard:
 {captain_url}
 
-⚠️ Behalte diesen Link privat - nur du solltest Zugriff haben!
+âš ï¸ Behalte diesen Link privat - nur du solltest Zugriff haben!
 
-📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Los geht's! 🎾
+Los geht's! ðŸŽ¾
 WPC Series Europe""",
         
-        'ES': f"""🏆 PCL {team.tournament.name} - Invitación Capitán
+        'ES': f"""ðŸ† PCL {team.tournament.name} - InvitaciÃ³n CapitÃ¡n
 
-¡Hola {captain_name}! 👋
+Â¡Hola {captain_name}! ðŸ‘‹
 
-Has sido seleccionado como Capitán de {team.country_flag} {team.country_name} {team.age_category}!
+Has sido seleccionado como CapitÃ¡n de {team.country_flag} {team.country_name} {team.age_category}!
 
-📋 Tus responsabilidades:
-• Registrar los jugadores del equipo
-• Asegurar que todos los perfiles estén completos
-• Coordinar con tu equipo
+ðŸ“‹ Tus responsabilidades:
+â€¢ Registrar los jugadores del equipo
+â€¢ Asegurar que todos los perfiles estÃ©n completos
+â€¢ Coordinar con tu equipo
 
-🔗 Tu Panel de Capitán secreto:
+ðŸ”— Tu Panel de CapitÃ¡n secreto:
 {captain_url}
 
-⚠️ ¡Mantén este enlace privado!
+âš ï¸ Â¡MantÃ©n este enlace privado!
 
-📅 Fecha límite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Fecha lÃ­mite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-¡Vamos! 🎾
+Â¡Vamos! ðŸŽ¾
 WPC Series Europe""",
         
-        'FR': f"""🏆 PCL {team.tournament.name} - Invitation Capitaine
+        'FR': f"""ðŸ† PCL {team.tournament.name} - Invitation Capitaine
 
-Bonjour {captain_name}! 👋
+Bonjour {captain_name}! ðŸ‘‹
 
-Vous avez été sélectionné comme Capitaine de {team.country_flag} {team.country_name} {team.age_category}!
+Vous avez Ã©tÃ© sÃ©lectionnÃ© comme Capitaine de {team.country_flag} {team.country_name} {team.age_category}!
 
-📋 Vos responsabilités:
-• Inscrire les joueurs de l'équipe
-• S'assurer que tous les profils sont complets
-• Coordonner avec votre équipe
+ðŸ“‹ Vos responsabilitÃ©s:
+â€¢ Inscrire les joueurs de l'Ã©quipe
+â€¢ S'assurer que tous les profils sont complets
+â€¢ Coordonner avec votre Ã©quipe
 
-🔗 Votre Tableau de bord Capitaine secret:
+ðŸ”— Votre Tableau de bord Capitaine secret:
 {captain_url}
 
-⚠️ Gardez ce lien privé!
+âš ï¸ Gardez ce lien privÃ©!
 
-📅 Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-C'est parti! 🎾
+C'est parti! ðŸŽ¾
 WPC Series Europe"""
     }
     
@@ -1561,80 +1612,80 @@ WPC Series Europe"""
 def get_captain_reminder_message(team, captain_name, captain_url, stats, language='EN'):
     """Get captain reminder message in specified language"""
     messages = {
-        'EN': f"""⏰ PCL {team.tournament.name} - Reminder!
+        'EN': f"""â° PCL {team.tournament.name} - Reminder!
 
 Hi {captain_name}!
 
 Your team {team.country_flag} {team.country_name} {team.age_category} is not yet complete.
 
-📊 Current status:
-👨 Men: {stats['men']}/{team.min_men}-{team.max_men}
-👩 Women: {stats['women']}/{team.min_women}-{team.max_women}
-✓ Complete profiles: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+ðŸ“Š Current status:
+ðŸ‘¨ Men: {stats['men']}/{team.min_men}-{team.max_men}
+ðŸ‘© Women: {stats['women']}/{team.min_women}-{team.max_women}
+âœ“ Complete profiles: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-🔗 Captain Dashboard:
+ðŸ”— Captain Dashboard:
 {captain_url}
 
-📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Please complete your team! 🎾
+Please complete your team! ðŸŽ¾
 WPC Series Europe""",
         
-        'DE': f"""⏰ PCL {team.tournament.name} - Erinnerung!
+        'DE': f"""â° PCL {team.tournament.name} - Erinnerung!
 
 Hallo {captain_name}!
 
-Dein Team {team.country_flag} {team.country_name} {team.age_category} ist noch nicht vollständig.
+Dein Team {team.country_flag} {team.country_name} {team.age_category} ist noch nicht vollstÃ¤ndig.
 
-📊 Aktueller Status:
-👨 Männer: {stats['men']}/{team.min_men}-{team.max_men}
-👩 Frauen: {stats['women']}/{team.min_women}-{team.max_women}
-✓ Vollständige Profile: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+ðŸ“Š Aktueller Status:
+ðŸ‘¨ MÃ¤nner: {stats['men']}/{team.min_men}-{team.max_men}
+ðŸ‘© Frauen: {stats['women']}/{team.min_women}-{team.max_women}
+âœ“ VollstÃ¤ndige Profile: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-🔗 Kapitän-Dashboard:
+ðŸ”— KapitÃ¤n-Dashboard:
 {captain_url}
 
-📅 Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Deadline: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Bitte vervollständige dein Team! 🎾
+Bitte vervollstÃ¤ndige dein Team! ðŸŽ¾
 WPC Series Europe""",
         
-        'ES': f"""⏰ PCL {team.tournament.name} - ¡Recordatorio!
+        'ES': f"""â° PCL {team.tournament.name} - Â¡Recordatorio!
 
-¡Hola {captain_name}!
+Â¡Hola {captain_name}!
 
-Tu equipo {team.country_flag} {team.country_name} {team.age_category} aún no está completo.
+Tu equipo {team.country_flag} {team.country_name} {team.age_category} aÃºn no estÃ¡ completo.
 
-📊 Estado actual:
-👨 Hombres: {stats['men']}/{team.min_men}-{team.max_men}
-👩 Mujeres: {stats['women']}/{team.min_women}-{team.max_women}
-✓ Perfiles completos: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+ðŸ“Š Estado actual:
+ðŸ‘¨ Hombres: {stats['men']}/{team.min_men}-{team.max_men}
+ðŸ‘© Mujeres: {stats['women']}/{team.min_women}-{team.max_women}
+âœ“ Perfiles completos: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-🔗 Panel de Capitán:
+ðŸ”— Panel de CapitÃ¡n:
 {captain_url}
 
-📅 Fecha límite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Fecha lÃ­mite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-¡Por favor completa tu equipo! 🎾
+Â¡Por favor completa tu equipo! ðŸŽ¾
 WPC Series Europe""",
         
-        'FR': f"""⏰ PCL {team.tournament.name} - Rappel!
+        'FR': f"""â° PCL {team.tournament.name} - Rappel!
 
 Bonjour {captain_name}!
 
-Votre équipe {team.country_flag} {team.country_name} {team.age_category} n'est pas encore complète.
+Votre Ã©quipe {team.country_flag} {team.country_name} {team.age_category} n'est pas encore complÃ¨te.
 
-📊 Statut actuel:
-👨 Hommes: {stats['men']}/{team.min_men}-{team.max_men}
-👩 Femmes: {stats['women']}/{team.min_women}-{team.max_women}
-✓ Profils complets: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
+ðŸ“Š Statut actuel:
+ðŸ‘¨ Hommes: {stats['men']}/{team.min_men}-{team.max_men}
+ðŸ‘© Femmes: {stats['women']}/{team.min_women}-{team.max_women}
+âœ“ Profils complets: {stats['men_complete'] + stats['women_complete']}/{stats['total']}
 
-🔗 Tableau de bord Capitaine:
+ðŸ”— Tableau de bord Capitaine:
 {captain_url}
 
-📅 Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
+ðŸ“… Date limite: {team.tournament.registration_deadline.strftime('%d.%m.%Y %H:%M')}
 
-Veuillez compléter votre équipe! 🎾
+Veuillez complÃ©ter votre Ã©quipe! ðŸŽ¾
 WPC Series Europe"""
     }
     

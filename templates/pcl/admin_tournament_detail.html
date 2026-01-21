@@ -27,6 +27,11 @@
             <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id) }}" class="btn btn-outline-primary">
                 <i class="bi bi-download"></i> Export Shirts
             </a>
+            <form action="{{ url_for('pcl.recheck_tournament_status', tournament_id=tournament.id) }}" method="POST" class="d-inline">
+                <button type="submit" class="btn btn-outline-warning" title="Recalculate status for all players in all teams">
+                    <i class="bi bi-arrow-clockwise"></i> Recheck All
+                </button>
+            </form>
         </div>
     </div>
 
@@ -150,7 +155,7 @@
                             </td>
                             <td class="text-center">
                                 {% if team_stats.is_complete %}
-                                <span class="badge bg-success">âœ“ Complete</span>
+                                <span class="badge bg-success">Ã¢Å“â€œ Complete</span>
                                 {% else %}
                                 <span class="badge bg-warning">Incomplete</span>
                                 {% endif %}
@@ -226,7 +231,7 @@
                             </td>
                             <td class="text-center">
                                 {% if team_stats.is_complete %}
-                                <span class="badge bg-success">âœ“ Complete</span>
+                                <span class="badge bg-success">Ã¢Å“â€œ Complete</span>
                                 {% else %}
                                 <span class="badge bg-warning">Incomplete</span>
                                 {% endif %}
