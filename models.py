@@ -276,11 +276,10 @@ class PCLTeam(db.Model):
     
     def get_stats(self):
         """Get team registration statistics"""
-        registrations = self.registrations.all()
-        # Only count players who are actually playing (not captain-only)
-        playing = [r for r in registrations if r.is_playing != False]
-        men = [r for r in playing if r.gender == 'male']
-        women = [r for r in playing if r.gender == 'female']
+        # Use direct query to avoid lazy loading issues
+        registrations = PCLRegistration.query.filter_by(team_id=self.id).all()
+        men = [r for r in registrations if r.gender == 'male']
+        women = [r for r in registrations if r.gender == 'female']
         captains = [r for r in registrations if r.is_captain]
         
         men_complete = len([r for r in men if r.status == 'complete'])
@@ -324,8 +323,6 @@ class PCLRegistration(db.Model):
     
     # Role
     is_captain = db.Column(db.Boolean, default=False)
-    is_captain = db.Column(db.Boolean, default=False)
-    is_playing = db.Column(db.Boolean, default=True)  # Captain may not play
     
     # Shirt info (can be filled later)
     shirt_name = db.Column(db.String(50), nullable=True)
@@ -347,12 +344,6 @@ class PCLRegistration(db.Model):
     
     # Registration status
     status = db.Column(db.String(20), default='incomplete')
-    
-    # WhatsApp Tracking
-    whatsapp_sent_at = db.Column(db.DateTime, nullable=True)
-    
-    # Additional photos for social media (JSON array of URLs)
-    additional_photos = db.Column(db.Text, nullable=True)
     
     # ========== NEW: Profile completion token ==========
     profile_token = db.Column(db.String(64), unique=True, nullable=True)
@@ -419,7 +410,7 @@ class PCLRegistration(db.Model):
         """Get translated list of missing fields"""
         translations = {
             'EN': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Shirt Name', 'shirt_size': 'Shirt Size'},
-            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Shirt-Name', 'shirt_size': 'Shirt-Größe'},
+            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Shirt-Name', 'shirt_size': 'Shirt-GrÃ¶ÃŸe'},
             'ES': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Nombre camiseta', 'shirt_size': 'Talla'},
             'FR': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Nom maillot', 'shirt_size': 'Taille'}
         }
@@ -522,7 +513,7 @@ WEAKNESS_CATEGORIES = [
     ('third_shot_drop', 'Third Shot Drop'),
     ('serve', 'Serve / Aufschlag'),
     ('return', 'Return'),
-    ('backhand', 'Backhand / Rückhand'),
+    ('backhand', 'Backhand / RÃ¼ckhand'),
     ('forehand', 'Forehand / Vorhand'),
     ('volley', 'Volley'),
     ('footwork', 'Footwork'),
@@ -535,76 +526,76 @@ SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
 
 COUNTRY_FLAGS = {
     # Western Europe
-    'GER': '🇩🇪',
-    'FRA': '🇫🇷',
-    'NED': '🇳🇱',
-    'BEL': '🇧🇪',
-    'LUX': '🇱🇺',
-    'AUT': '🇦🇹',
-    'SUI': '🇨🇭',
+    'GER': 'ðŸ‡©ðŸ‡ª',
+    'FRA': 'ðŸ‡«ðŸ‡·',
+    'NED': 'ðŸ‡³ðŸ‡±',
+    'BEL': 'ðŸ‡§ðŸ‡ª',
+    'LUX': 'ðŸ‡±ðŸ‡º',
+    'AUT': 'ðŸ‡¦ðŸ‡¹',
+    'SUI': 'ðŸ‡¨ðŸ‡­',
     
     # Southern Europe
-    'ESP': '🇪🇸',
-    'POR': '🇵🇹',
-    'ITA': '🇮🇹',
-    'GRE': '🇬🇷',
-    'MLT': '🇲🇹',
-    'CYP': '🇨🇾',
-    'AND': '🇦🇩',
-    'MON': '🇲🇨',
-    'SMR': '🇸🇲',
-    'VAT': '🇻🇦',
+    'ESP': 'ðŸ‡ªðŸ‡¸',
+    'POR': 'ðŸ‡µðŸ‡¹',
+    'ITA': 'ðŸ‡®ðŸ‡¹',
+    'GRE': 'ðŸ‡¬ðŸ‡·',
+    'MLT': 'ðŸ‡²ðŸ‡¹',
+    'CYP': 'ðŸ‡¨ðŸ‡¾',
+    'AND': 'ðŸ‡¦ðŸ‡©',
+    'MON': 'ðŸ‡²ðŸ‡¨',
+    'SMR': 'ðŸ‡¸ðŸ‡²',
+    'VAT': 'ðŸ‡»ðŸ‡¦',
     
     # Northern Europe
-    'ENG': '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-    'SCO': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
-    'WAL': '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
-    'NIR': '🇬🇧',
-    'GBR': '🇬🇧',
-    'IRL': '🇮🇪',
-    'SWE': '🇸🇪',
-    'NOR': '🇳🇴',
-    'DEN': '🇩🇰',
-    'FIN': '🇫🇮',
-    'ISL': '🇮🇸',
+    'ENG': 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿',
+    'SCO': 'ðŸ´ó §ó ¢ó ³ó £ó ´ó ¿',
+    'WAL': 'ðŸ´ó §ó ¢ó ·ó ¬ó ³ó ¿',
+    'NIR': 'ðŸ‡¬ðŸ‡§',
+    'GBR': 'ðŸ‡¬ðŸ‡§',
+    'IRL': 'ðŸ‡®ðŸ‡ª',
+    'SWE': 'ðŸ‡¸ðŸ‡ª',
+    'NOR': 'ðŸ‡³ðŸ‡´',
+    'DEN': 'ðŸ‡©ðŸ‡°',
+    'FIN': 'ðŸ‡«ðŸ‡®',
+    'ISL': 'ðŸ‡®ðŸ‡¸',
     
     # Central Europe
-    'POL': '🇵🇱',
-    'CZE': '🇨🇿',
-    'SVK': '🇸🇰',
-    'HUN': '🇭🇺',
-    'SLO': '🇸🇮',
-    'CRO': '🇭🇷',
+    'POL': 'ðŸ‡µðŸ‡±',
+    'CZE': 'ðŸ‡¨ðŸ‡¿',
+    'SVK': 'ðŸ‡¸ðŸ‡°',
+    'HUN': 'ðŸ‡­ðŸ‡º',
+    'SLO': 'ðŸ‡¸ðŸ‡®',
+    'CRO': 'ðŸ‡­ðŸ‡·',
     
     # Eastern Europe
-    'RUS': '🇷🇺',
-    'UKR': '🇺🇦',
-    'BLR': '🇧🇾',
-    'MDA': '🇲🇩',
-    'ROM': '🇷🇴',
-    'BUL': '🇧🇬',
+    'RUS': 'ðŸ‡·ðŸ‡º',
+    'UKR': 'ðŸ‡ºðŸ‡¦',
+    'BLR': 'ðŸ‡§ðŸ‡¾',
+    'MDA': 'ðŸ‡²ðŸ‡©',
+    'ROM': 'ðŸ‡·ðŸ‡´',
+    'BUL': 'ðŸ‡§ðŸ‡¬',
     
     # Baltic States
-    'EST': '🇪🇪',
-    'LAT': '🇱🇻',
-    'LTU': '🇱🇹',
+    'EST': 'ðŸ‡ªðŸ‡ª',
+    'LAT': 'ðŸ‡±ðŸ‡»',
+    'LTU': 'ðŸ‡±ðŸ‡¹',
     
     # Balkans
-    'SRB': '🇷🇸',
-    'MNE': '🇲🇪',
-    'BIH': '🇧🇦',
-    'MKD': '🇲🇰',
-    'ALB': '🇦🇱',
-    'KOS': '🇽🇰',
+    'SRB': 'ðŸ‡·ðŸ‡¸',
+    'MNE': 'ðŸ‡²ðŸ‡ª',
+    'BIH': 'ðŸ‡§ðŸ‡¦',
+    'MKD': 'ðŸ‡²ðŸ‡°',
+    'ALB': 'ðŸ‡¦ðŸ‡±',
+    'KOS': 'ðŸ‡½ðŸ‡°',
     
     # Other
-    'TUR': '🇹🇷',
-    'GEO': '🇬🇪',
-    'ARM': '🇦🇲',
-    'AZE': '🇦🇿',
+    'TUR': 'ðŸ‡¹ðŸ‡·',
+    'GEO': 'ðŸ‡¬ðŸ‡ª',
+    'ARM': 'ðŸ‡¦ðŸ‡²',
+    'AZE': 'ðŸ‡¦ðŸ‡¿',
     
     # Special
-    'ASIA': '🌏',
-    'EUR': '🇪🇺',
-    'WORLD': '🌍',
+    'ASIA': 'ðŸŒ',
+    'EUR': 'ðŸ‡ªðŸ‡º',
+    'WORLD': 'ðŸŒ',
 }

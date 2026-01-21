@@ -617,10 +617,31 @@ def admin_team_detail(team_id):
     """Admin view of a specific team with captain management"""
     team = PCLTeam.query.get_or_404(team_id)
     
-    men = team.registrations.filter_by(gender='male').all()
-    women = team.registrations.filter_by(gender='female').all()
-    captains = team.registrations.filter_by(is_captain=True).all()
-    stats = team.get_stats()
+    # Use direct queries to avoid lazy loading issues
+    men = PCLRegistration.query.filter_by(team_id=team_id, gender='male').all()
+    women = PCLRegistration.query.filter_by(team_id=team_id, gender='female').all()
+    captains = PCLRegistration.query.filter_by(team_id=team_id, is_captain=True).all()
+    
+    # Calculate stats directly
+    men_complete = len([r for r in men if r.status == 'complete'])
+    women_complete = len([r for r in women if r.status == 'complete'])
+    
+    stats = {
+        'total': len(men) + len(women),
+        'men': len(men),
+        'women': len(women),
+        'captains': len(captains),
+        'men_complete': men_complete,
+        'women_complete': women_complete,
+        'men_with_photo': len([r for r in men if r.photo_filename]),
+        'women_with_photo': len([r for r in women if r.photo_filename]),
+        'is_complete': (
+            len(men) >= team.min_men and 
+            len(women) >= team.min_women and
+            men_complete >= team.min_men and
+            women_complete >= team.min_women
+        )
+    }
     
     return render_template('pcl/admin_team_detail.html', 
                          team=team,
@@ -832,8 +853,8 @@ def captain_dashboard(token):
     
     t = get_translations(lang)
     
-    # Find captain in this team (to get phone number)
-    current_captain = team.registrations.filter_by(is_captain=True).first()
+    # Find captain in this team (to get phone number) - use direct query
+    current_captain = PCLRegistration.query.filter_by(team_id=team.id, is_captain=True).first()
     
     # Find ALL teams where this person is captain (by phone number)
     other_teams = []
@@ -851,9 +872,31 @@ def captain_dashboard(token):
                 if other_team and other_team not in other_teams:
                     other_teams.append(other_team)
     
-    stats = team.get_stats()
-    men = team.registrations.filter_by(gender='male').all()
-    women = team.registrations.filter_by(gender='female').all()
+    # Use direct queries for players
+    men = PCLRegistration.query.filter_by(team_id=team.id, gender='male').all()
+    women = PCLRegistration.query.filter_by(team_id=team.id, gender='female').all()
+    captains = PCLRegistration.query.filter_by(team_id=team.id, is_captain=True).all()
+    
+    # Calculate stats directly
+    men_complete = len([r for r in men if r.status == 'complete'])
+    women_complete = len([r for r in women if r.status == 'complete'])
+    
+    stats = {
+        'total': len(men) + len(women),
+        'men': len(men),
+        'women': len(women),
+        'captains': len(captains),
+        'men_complete': men_complete,
+        'women_complete': women_complete,
+        'men_with_photo': len([r for r in men if r.photo_filename]),
+        'women_with_photo': len([r for r in women if r.photo_filename]),
+        'is_complete': (
+            len(men) >= team.min_men and 
+            len(women) >= team.min_women and
+            men_complete >= team.min_men and
+            women_complete >= team.min_women
+        )
+    }
     
     days_left = (team.tournament.registration_deadline - datetime.now()).days
     
@@ -954,7 +997,26 @@ def quick_add_player(token):
         lang = 'EN'
     
     t = get_translations(lang)
-    stats = team.get_stats()
+    
+    # Calculate stats directly
+    men = PCLRegistration.query.filter_by(team_id=team.id, gender='male').all()
+    women = PCLRegistration.query.filter_by(team_id=team.id, gender='female').all()
+    men_complete = len([r for r in men if r.status == 'complete'])
+    women_complete = len([r for r in women if r.status == 'complete'])
+    
+    stats = {
+        'total': len(men) + len(women),
+        'men': len(men),
+        'women': len(women),
+        'men_complete': men_complete,
+        'women_complete': women_complete,
+        'is_complete': (
+            len(men) >= team.min_men and 
+            len(women) >= team.min_women and
+            men_complete >= team.min_men and
+            women_complete >= team.min_women
+        )
+    }
     
     # Check deadline
     if datetime.now() > team.tournament.registration_deadline:
