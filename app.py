@@ -9,6 +9,7 @@ from routes.admin import admin
 from routes.webhook import webhook
 from dotenv import load_dotenv
 from routes.pcl import pcl
+from routes.auth import auth
 
 # Load environment variables from .env
 load_dotenv()
@@ -21,8 +22,14 @@ if database_url:
 
 app = Flask(__name__)
 
-# Configuration for Supabase
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+# Configuration - SECRET_KEY must be set in environment
+secret_key = os.environ.get('SECRET_KEY')
+if not secret_key:
+    raise RuntimeError(
+        "SECRET_KEY environment variable is required! "
+        "Set it in your .env file or environment."
+    )
+app.config['SECRET_KEY'] = secret_key
 
 # Supabase PostgreSQL Database URL
 if database_url and database_url.startswith('postgres://'):
@@ -47,6 +54,7 @@ app.register_blueprint(messages, url_prefix='/messages')
 app.register_blueprint(admin, url_prefix='/admin')
 app.register_blueprint(webhook, url_prefix='/webhook')
 app.register_blueprint(pcl, url_prefix='/pcl')
+app.register_blueprint(auth, url_prefix='/auth')
 
 # Create tables on first run
 with app.app_context():

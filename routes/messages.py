@@ -6,9 +6,17 @@ messages = Blueprint('messages', __name__)
 
 @messages.route('/')
 def message_history():
-    """Show message history"""
-    messages = Message.query.order_by(Message.sent_at.desc()).all()
-    return render_template('message_history.html', messages=messages)
+    """Show message history with pagination"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    per_page = min(per_page, 100)  # Max 100 per page
+
+    pagination = Message.query.order_by(Message.sent_at.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template('message_history.html',
+                          messages=pagination.items,
+                          pagination=pagination)
 
 @messages.route('/send-bulk', methods=['GET', 'POST'])
 def send_bulk_message():

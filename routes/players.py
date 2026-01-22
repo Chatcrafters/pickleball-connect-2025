@@ -6,9 +6,17 @@ players = Blueprint('players', __name__)
 
 @players.route('/')
 def player_list():
-    """List all players"""
-    players = Player.query.order_by(Player.last_name).all()
-    return render_template('player_list.html', players=players)
+    """List all players with pagination"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    per_page = min(per_page, 100)  # Max 100 per page
+
+    pagination = Player.query.order_by(Player.last_name).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template('player_list.html',
+                          players=pagination.items,
+                          pagination=pagination)
 
 @players.route('/<int:player_id>')
 def player_detail(player_id):

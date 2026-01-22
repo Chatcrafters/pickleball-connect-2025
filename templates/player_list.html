@@ -64,7 +64,7 @@
             </div>
         </div>
         <div class="col-md-3 text-end">
-            <span class="badge bg-primary fs-6">{{ players|length }} Spieler</span>
+            <span class="badge bg-primary fs-6">{{ pagination.total if pagination else players|length }} Spieler</span>
         </div>
     </div>
 
@@ -162,9 +162,11 @@
         </table>
     </div>
 
+    {% include 'partials/pagination.html' %}
+
     {% if not players %}
     <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> Noch keine Spieler vorhanden. 
+        <i class="bi bi-info-circle"></i> Noch keine Spieler vorhanden.
         <a href="{{ url_for('players.add_player') }}">Ersten Spieler hinzufügen</a>
     </div>
     {% endif %}

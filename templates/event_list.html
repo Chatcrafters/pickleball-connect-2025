@@ -53,9 +53,11 @@
         {% endfor %}
     </div>
 
+    {% include 'partials/pagination.html' %}
+
     {% if not events %}
     <div class="alert alert-info">
-        <i class="bi bi-info-circle"></i> Noch keine Events vorhanden. 
+        <i class="bi bi-info-circle"></i> Noch keine Events vorhanden.
         <a href="{{ url_for('events.create_event') }}">Erstes Event erstellen</a>
     </div>
     {% endif %}

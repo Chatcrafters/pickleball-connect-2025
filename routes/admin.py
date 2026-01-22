@@ -1,31 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db, Player, Event
 from datetime import datetime, date
+from utils.auth import admin_required
 
 admin = Blueprint('admin', __name__)
 
-@admin.route('/events/<int:event_id>/edit-advanced', methods=['GET', 'POST'])
-def edit_event_advanced(event_id):
-    """Extended event editing with more fields"""
-    event = Event.query.get_or_404(event_id)
-    
-    if request.method == 'POST':
-        event.name = request.form['name']
-        event.start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d').date()
-        event.end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date() if request.form.get('end_date') else None
-        event.location = request.form['location']
-        event.description = request.form.get('description')
-        
-        try:
-            db.session.commit()
-            flash(f'Event "{event.name}" updated!', 'success')
-            return redirect(url_for('events.event_detail', event_id=event.id))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error: {str(e)}', 'danger')
-    
-    return render_template('admin/edit_event.html', event=event)
 @admin.route('/players/import', methods=['GET', 'POST'])
+@admin_required
 def import_players():
     """Import players from CSV/Excel"""
     if request.method == 'POST':
@@ -44,6 +25,7 @@ def import_players():
     return render_template('admin/import_players.html')
 
 @admin.route('/players/download-example-csv')
+@admin_required
 def download_example_csv():
     """Download example CSV file"""
     from flask import make_response
@@ -60,6 +42,7 @@ John,Smith,+441234567890,john@example.com,3.0,London,UK,EN"""
     return response
 
 @admin.route('/events/<int:event_id>/invite', methods=['GET'])
+@admin_required
 def invite_players(event_id):
     """Show player invitation interface"""
     event = Event.query.get_or_404(event_id)
@@ -75,6 +58,7 @@ def invite_players(event_id):
                          available_players=available_players)
 
 @admin.route('/events/<int:event_id>/send-invitations', methods=['GET'])
+@admin_required
 def send_invitations_page(event_id):
     """Show send invitations interface"""
     event = Event.query.get_or_404(event_id)

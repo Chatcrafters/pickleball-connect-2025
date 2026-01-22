@@ -22,24 +22,24 @@ class Player(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
-    phone = db.Column(db.String(20), unique=True, nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=False, index=True)  # Indexed for WhatsApp lookups
     email = db.Column(db.String(120), unique=True, nullable=True)
     skill_level = db.Column(db.String(10), nullable=True)
     city = db.Column(db.String(100), nullable=True)
     country = db.Column(db.String(100), nullable=True)
     preferred_language = db.Column(db.String(10), default='EN')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Coaching fields
     coaching_notes = db.Column(db.Text, nullable=True)
     last_coaching_contact = db.Column(db.DateTime, nullable=True)
-    
+
     # Weakness tracking
     weaknesses = db.Column(db.Text, nullable=True)
     strengths = db.Column(db.Text, nullable=True)
-    
+
     # Profile update token
-    update_token = db.Column(db.String(64), unique=True, nullable=True)
+    update_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # Indexed for token lookups
     
     # Relationships
     invited_events = db.relationship('Event', secondary=event_players, back_populates='invited_players')
@@ -93,12 +93,12 @@ class Event(db.Model):
     """Base event model - for tournaments, workshops, clinics"""
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    start_date = db.Column(db.Date, nullable=False)
+    start_date = db.Column(db.Date, nullable=False, index=True)  # Indexed for date filtering
     end_date = db.Column(db.Date, nullable=True)
     location = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Event type
     event_type = db.Column(db.String(50), default='tournament')
     
@@ -247,8 +247,8 @@ class PCLTeam(db.Model):
     max_women = db.Column(db.Integer, default=4)
     
     # Secret token for captain access
-    captain_token = db.Column(db.String(64), unique=True, nullable=False)
-    
+    captain_token = db.Column(db.String(64), unique=True, nullable=False, index=True)  # Indexed for token lookups
+
     # Status
     status = db.Column(db.String(20), default='incomplete')
     
@@ -306,9 +306,9 @@ class PCLTeam(db.Model):
 class PCLRegistration(db.Model):
     """Player registration for PCL - contains all PCL-specific data"""
     __tablename__ = 'pcl_registration'
-    
+
     id = db.Column(db.Integer, primary_key=True)
-    team_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False)
+    team_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False, index=True)  # Indexed for team queries
     player_id = db.Column(db.Integer, db.ForeignKey('player.id'), nullable=True)
     
     # Personal info (required)
@@ -343,10 +343,10 @@ class PCLRegistration(db.Model):
     dupr_rating = db.Column(db.String(10), nullable=True)
     
     # Registration status
-    status = db.Column(db.String(20), default='incomplete')
-    
+    status = db.Column(db.String(20), default='incomplete', index=True)  # Indexed for status filtering
+
     # ========== NEW: Profile completion token ==========
-    profile_token = db.Column(db.String(64), unique=True, nullable=True)
+    profile_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # Indexed for token lookups
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

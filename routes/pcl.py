@@ -5,11 +5,11 @@ from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
 from utils.whatsapp import send_whatsapp_message
+from utils.auth import admin_required
 import os
 import csv
 import io
 import json
-from urllib.parse import quote
 
 pcl = Blueprint('pcl', __name__)
 
@@ -531,6 +531,7 @@ WPC Series Europe"""
 # ============================================================================
 
 @pcl.route('/admin')
+@admin_required
 def admin_dashboard():
     """PCL Admin Dashboard - Overview of all tournaments"""
     tournaments = PCLTournament.query.order_by(PCLTournament.start_date.desc()).all()
@@ -538,6 +539,7 @@ def admin_dashboard():
 
 
 @pcl.route('/admin/tournament/create', methods=['GET', 'POST'])
+@admin_required
 def create_tournament():
     """Create a new PCL tournament"""
     if request.method == 'POST':
@@ -563,6 +565,7 @@ def create_tournament():
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>')
+@admin_required
 def admin_tournament_detail(tournament_id):
     """Admin view of a tournament with all teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -578,6 +581,7 @@ def admin_tournament_detail(tournament_id):
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/add-team', methods=['GET', 'POST'])
+@admin_required
 def add_team(tournament_id):
     """Add a team to a tournament"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -613,6 +617,7 @@ def add_team(tournament_id):
 
 
 @pcl.route('/admin/team/<int:team_id>')
+@admin_required
 def admin_team_detail(team_id):
     """Admin view of a specific team with captain management"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -652,6 +657,7 @@ def admin_team_detail(team_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/cards')
+@admin_required
 def team_player_cards(team_id):
     """Player card generator for a team - shows ALL registrations"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -703,6 +709,7 @@ def media_page(tournament_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/add-captain', methods=['POST'])
+@admin_required
 def add_captain(team_id):
     """Admin adds a captain to a team"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -773,6 +780,7 @@ def add_captain(team_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/export')
+@admin_required
 def export_team_data(team_id):
     """Export team data as CSV"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -805,6 +813,7 @@ def export_team_data(team_id):
 
 
 @pcl.route('/admin/export-shirts/<int:tournament_id>')
+@admin_required
 def export_shirt_list(tournament_id):
     """Export shirt list for all teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -1468,6 +1477,7 @@ def edit_registration(registration_id):
 # ============================================================================
 
 @pcl.route('/admin/registration/<int:registration_id>/edit', methods=['GET', 'POST'])
+@admin_required
 def admin_edit_registration(registration_id):
     """Admin edit registration"""
     registration = PCLRegistration.query.get_or_404(registration_id)
@@ -1521,6 +1531,7 @@ def admin_edit_registration(registration_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/recheck-status', methods=['POST'])
+@admin_required
 def recheck_team_status(team_id):
     """Recheck completeness status for all registrations in a team"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1543,6 +1554,7 @@ def recheck_team_status(team_id):
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/recheck-all-status', methods=['POST'])
+@admin_required
 def recheck_tournament_status(tournament_id):
     """Recheck completeness status for all registrations in a tournament"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -1572,6 +1584,7 @@ def recheck_tournament_status(tournament_id):
 # ============================================================================
 
 @pcl.route('/admin/team/<int:team_id>/delete', methods=['POST'])
+@admin_required
 def delete_team(team_id):
     """Delete a team and all its registrations"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1591,6 +1604,7 @@ def delete_team(team_id):
 
 
 @pcl.route('/admin/registration/<int:registration_id>/delete', methods=['POST'])
+@admin_required
 def delete_registration(registration_id):
     """Delete a single player registration"""
     registration = PCLRegistration.query.get_or_404(registration_id)
@@ -1787,6 +1801,7 @@ WPC Series Europe"""
 
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-invite', methods=['GET', 'POST'])
+@admin_required
 def send_captain_invite(team_id):
     """Send captain invitation via WhatsApp"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1821,6 +1836,7 @@ def send_captain_invite(team_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-reminder', methods=['POST'])
+@admin_required
 def send_captain_reminder(team_id):
     """Send captain reminder via WhatsApp"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1850,6 +1866,7 @@ def send_captain_reminder(team_id):
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/send-all-reminders', methods=['POST'])
+@admin_required
 def send_all_captain_reminders(tournament_id):
     """Send reminders to all captains with incomplete teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)

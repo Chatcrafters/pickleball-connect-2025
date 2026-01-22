@@ -7,9 +7,17 @@ events = Blueprint('events', __name__)
 
 @events.route('/')
 def event_list():
-    """List all events"""
-    events = Event.query.order_by(Event.start_date.desc()).all()
-    return render_template('event_list.html', events=events)
+    """List all events with pagination"""
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    per_page = min(per_page, 50)  # Max 50 per page
+
+    pagination = Event.query.order_by(Event.start_date.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    return render_template('event_list.html',
+                          events=pagination.items,
+                          pagination=pagination)
 
 @events.route('/<int:event_id>')
 def event_detail(event_id):
