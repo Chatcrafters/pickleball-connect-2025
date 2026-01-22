@@ -466,7 +466,10 @@ function copyCaptainLink() {
     linkInput.select();
     linkInput.setSelectionRange(0, 99999);
     
-    navigator.clipboard.writeText(linkInput.value).then(() => {
+    // Try modern clipboard API first, fallback to execCommand
+    const textToCopy = linkInput.value;
+    
+    function showSuccess() {
         const btn = event.target.closest('button');
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
@@ -478,9 +481,23 @@ function copyCaptainLink() {
             btn.classList.remove('btn-success');
             btn.classList.add('btn-outline-secondary');
         }, 2000);
-    }).catch(err => {
-        alert('Failed to copy link');
-    });
+    }
+    
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(showSuccess).catch(() => {
+            // Fallback
+            document.execCommand('copy');
+            showSuccess();
+        });
+    } else {
+        // Fallback for older browsers or non-HTTPS
+        try {
+            document.execCommand('copy');
+            showSuccess();
+        } catch (err) {
+            alert('Please copy manually: Ctrl+C');
+        }
+    }
 }
 
 function sendCaptainLink(captainId, name, phone) {
