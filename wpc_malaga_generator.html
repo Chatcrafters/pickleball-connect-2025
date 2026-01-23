@@ -37,7 +37,6 @@
             align-items: start;
         }
         
-        /* Controls */
         .controls {
             background: rgba(255,255,255,0.05);
             border-radius: 16px;
@@ -95,7 +94,6 @@
         .file-upload .icon { font-size: 2.2rem; margin-bottom: 6px; }
         .file-upload p { color: #888; font-size: 0.78rem; margin: 0; line-height: 1.4; }
         .file-upload.has-file { border-color: #6ba55a; background: rgba(107, 165, 90, 0.15); }
-        .file-upload.processing { border-color: #f4a03a; background: rgba(244, 160, 58, 0.15); }
         
         .btn {
             width: 100%;
@@ -113,11 +111,9 @@
         
         .btn-primary { background: linear-gradient(135deg, #4a7c3f, #6ba55a); color: white; }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(107, 165, 90, 0.3); }
-        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
         .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
         .btn-secondary:hover { background: rgba(255,255,255,0.2); }
         
-        /* Preview */
         .preview-panel { display: flex; flex-direction: column; align-items: center; }
         
         .preview-container {
@@ -139,12 +135,11 @@
         .card-background {
             position: absolute;
             top: 0; left: 0;
-            width: 100%;
-            height: 100%;
+            width: 1080px;
+            height: 1080px;
             object-fit: cover;
         }
         
-        /* Header */
         .card-header {
             position: absolute;
             top: 32px;
@@ -159,17 +154,12 @@
         .wpc-logo {
             width: 95px;
             height: 95px;
-            background: transparent;
             border-radius: 5px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
             flex-shrink: 0;
             overflow: hidden;
         }
         
-        .wpc-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .wpc-logo img { width: 95px; height: 95px; object-fit: contain; }
         
         .tournament-info { flex: 1; padding-top: 3px; }
         
@@ -192,7 +182,6 @@
             text-shadow: 1px 1px 0 white, -1px -1px 0 white;
         }
         
-        /* Signed */
         .signed-text {
             position: absolute;
             top: 195px;
@@ -217,13 +206,12 @@
             box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
         
-        /* Player */
         .player-container {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 1080px;
+            height: 1080px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -233,8 +221,9 @@
         
         .player-image {
             position: absolute;
+            max-width: none;
+            max-height: none;
             filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
-            transform-origin: center center;
         }
         
         .player-placeholder {
@@ -253,7 +242,6 @@
         .player-placeholder .icon { font-size: 65px; margin-bottom: 12px; }
         .player-placeholder p { font-size: 16px; font-weight: 600; }
         
-        /* Footer */
         .card-footer {
             position: absolute;
             bottom: 32px;
@@ -279,7 +267,6 @@
         
         .flag-stripe { flex: 1; }
         
-        /* Flags */
         .flag-esp .stripe1 { background: #c60b1e; flex: 1; }
         .flag-esp .stripe2 { background: #ffc400; flex: 2; }
         .flag-esp .stripe3 { background: #c60b1e; flex: 1; }
@@ -353,7 +340,6 @@
                          3px 3px 0 white, -3px -3px 0 white;
         }
         
-        /* DUPR */
         .dupr-section { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
         
         .dupr-row { display: flex; align-items: center; gap: 10px; }
@@ -376,11 +362,12 @@
             text-align: center;
         }
         
-        /* Preview Scale */
-        .preview-scale { transform: scale(0.52); transform-origin: top center; }
+        .preview-scale { 
+            transform: scale(0.52); 
+            transform-origin: top center; 
+        }
         .preview-info { margin-top: -260px; text-align: center; color: #666; font-size: 0.85rem; }
         
-        /* Processing */
         .processing-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -422,7 +409,6 @@
             transition: width 0.3s;
         }
         
-        /* Responsive */
         @media (max-width: 1300px) {
             .main-layout { grid-template-columns: 1fr; }
             .controls { position: relative; top: 0; }
@@ -430,7 +416,6 @@
             .preview-info { margin-top: -340px; }
         }
         
-        /* Status badge */
         .status-badge {
             display: inline-block;
             padding: 3px 8px;
@@ -438,10 +423,9 @@
             font-size: 0.7rem;
             font-weight: 600;
             margin-left: 8px;
+            background: #4a7c3f;
+            color: white;
         }
-        
-        .status-badge.ready { background: #4a7c3f; color: white; }
-        .status-badge.loading { background: #f4a03a; color: #1a1a2e; }
     </style>
 </head>
 <body>
@@ -450,7 +434,6 @@
         <p class="subtitle">Signed Card Generator - Automatisches Freistellen</p>
         
         <div class="main-layout">
-            <!-- Controls -->
             <div class="controls">
                 <div class="control-section">
                     <h3>📍 Tournament</h3>
@@ -462,23 +445,22 @@
                 </div>
                 
                 <div class="control-section">
-                    <h3>📷 Player Photo <span class="status-badge ready" id="bgRemovalStatus">Upload PNG</span></h3>
+                    <h3>📷 Player Photo <span class="status-badge">MANUAL PNG ✓</span></h3>
                     <div class="file-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
                         <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)">
                         <div class="icon">📷</div>
                         <p id="uploadText">Spielerfoto hochladen<br><small>Am besten: PNG mit transparentem Hintergrund</small></p>
                     </div>
                     
-                    <!-- Zoom & Position Controls -->
                     <div id="imageControls" style="display: none; margin-top: 12px;">
                         <label>🔍 Zoom: <span id="zoomValue">100</span>%</label>
-                        <input type="range" id="zoomSlider" min="50" max="250" value="100" oninput="updateImageTransform()" style="width: 100%; margin-bottom: 8px;">
+                        <input type="range" id="zoomSlider" min="50" max="300" value="100" oninput="updateImageTransform()" style="width: 100%; margin-bottom: 8px;">
                         
                         <label>↔️ Horizontal: <span id="posXValue">0</span>px</label>
-                        <input type="range" id="posXSlider" min="-300" max="300" value="0" oninput="updateImageTransform()" style="width: 100%; margin-bottom: 8px;">
+                        <input type="range" id="posXSlider" min="-400" max="400" value="0" oninput="updateImageTransform()" style="width: 100%; margin-bottom: 8px;">
                         
                         <label>↕️ Vertikal: <span id="posYValue">0</span>px</label>
-                        <input type="range" id="posYSlider" min="-300" max="300" value="0" oninput="updateImageTransform()" style="width: 100%;">
+                        <input type="range" id="posYSlider" min="-400" max="400" value="0" oninput="updateImageTransform()" style="width: 100%;">
                     </div>
                     
                     <div style="margin-top: 10px; padding: 10px; background: rgba(244,160,58,0.15); border-radius: 8px; font-size: 0.75rem;">
@@ -532,16 +514,7 @@
                     </div>
                 </div>
                 
-                <div class="control-section">
-                    <h3>🖼️ Background Template</h3>
-                    <div class="file-upload has-file" id="bgUpload" onclick="document.getElementById('bgInput').click()">
-                        <input type="file" id="bgInput" accept="image/*" onchange="handleBackground(event)">
-                        <div class="icon">✅</div>
-                        <p>Málaga Template geladen<br><small>Klick für anderes Template</small></p>
-                    </div>
-                </div>
-                
-                <button class="btn btn-primary" id="downloadBtn" onclick="downloadCard()">
+                <button class="btn btn-primary" onclick="downloadCard()">
                     ⬇️ Download Card (1080×1080)
                 </button>
                 
@@ -550,18 +523,15 @@
                 </button>
             </div>
             
-            <!-- Preview -->
             <div class="preview-panel">
                 <div class="preview-container">
                     <div class="preview-scale">
                         <div class="wpc-signed-card" id="cardPreview">
-                            <!-- Background -->
-                            <img class="card-background" id="cardBackground" src="" alt="">
+                            <img class="card-background" id="cardBackground" src="wpc_background.png" alt="">
                             
-                            <!-- Header -->
                             <div class="card-header">
                                 <div class="wpc-logo">
-                                    <img src="wpc_logo.jpeg" alt="WPC" style="width: 100%; height: 100%; object-fit: contain; border-radius: 3px;">
+                                    <img id="logoImg" src="wpc_logo.jpeg" alt="WPC">
                                 </div>
                                 <div class="tournament-info">
                                     <div class="tournament-name" id="cardTournament">WPC Málaga Open 2026</div>
@@ -569,10 +539,8 @@
                                 </div>
                             </div>
                             
-                            <!-- Signed -->
                             <div class="signed-text">signed</div>
                             
-                            <!-- Player -->
                             <div class="player-container">
                                 <div class="player-placeholder" id="playerPlaceholder">
                                     <div class="icon">👤</div>
@@ -581,7 +549,6 @@
                                 <img class="player-image" id="playerImage" style="display: none;">
                             </div>
                             
-                            <!-- Footer -->
                             <div class="card-footer">
                                 <div class="player-info">
                                     <div class="country-flag flag-esp" id="cardFlag">
@@ -615,7 +582,6 @@
         </div>
     </div>
     
-    <!-- Processing Overlay -->
     <div class="processing-overlay" id="processingOverlay">
         <div class="spinner"></div>
         <p id="processingText">Verarbeite...</p>
@@ -624,37 +590,10 @@
         </div>
     </div>
     
-    <!-- Background Removal Library -->
-    <script src="https://unpkg.com/@anthropic-ai/sdk@latest/dist/browser.js" onerror="console.log('SDK not needed')"></script>
     <script>
-        // Background removal will use a simpler approach or manual upload
-        window.bgRemovalReady = true;
-        
-        // Update status immediately
-        document.addEventListener('DOMContentLoaded', function() {
-            const status = document.getElementById('bgRemovalStatus');
-            if (status) {
-                status.textContent = 'Manual PNG ✓';
-                status.className = 'status-badge ready';
-            }
-        });
-    </script>
-    
-    <script>
-        let currentBackground = '';
         let currentPlayerImage = '';
-        let originalPlayerImage = '';
         
-        // Load default background
         document.addEventListener('DOMContentLoaded', function() {
-            const bgImg = document.getElementById('cardBackground');
-            bgImg.src = 'wpc_background.png';
-            bgImg.onerror = function() {
-                // Fallback gradient if image not found
-                this.style.display = 'none';
-                document.getElementById('cardPreview').style.background = 
-                    'linear-gradient(to bottom, #f5f5f0 0%, #f5f5f0 18%, #4a7c3f 22%, #3d6a32 78%, #f5f5f0 82%, #f5f5f0 100%)';
-            };
             updateCard();
         });
         
@@ -665,186 +604,109 @@
             document.getElementById('cardLastName').textContent = document.getElementById('lastName').value.toUpperCase();
             document.getElementById('cardSingles').textContent = document.getElementById('duprSingles').value;
             document.getElementById('cardDoubles').textContent = document.getElementById('duprDoubles').value;
-            
-            const country = document.getElementById('country').value;
-            document.getElementById('cardFlag').className = 'country-flag flag-' + country;
-            
-            if (currentBackground) {
-                document.getElementById('cardBackground').src = currentBackground;
-                document.getElementById('cardBackground').style.display = 'block';
-            }
-            
-            if (currentPlayerImage) {
-                document.getElementById('playerPlaceholder').style.display = 'none';
-                document.getElementById('playerImage').style.display = 'block';
-                document.getElementById('playerImage').src = currentPlayerImage;
-            }
+            document.getElementById('cardFlag').className = 'country-flag flag-' + document.getElementById('country').value;
         }
         
-        async function handlePhoto(event) {
+        function handlePhoto(event) {
             const file = event.target.files[0];
             if (!file) return;
-            
-            const upload = document.getElementById('photoUpload');
-            const uploadText = document.getElementById('uploadText');
-            
-            // Check if it's a PNG with transparency
-            const isPNG = file.type === 'image/png';
             
             showProcessing('Lade Bild...');
             setProgress(50);
             
-            try {
-                const imageUrl = await readFileAsDataURL(file);
-                currentPlayerImage = imageUrl;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentPlayerImage = e.target.result;
                 
-                upload.classList.remove('processing');
-                upload.classList.add('has-file');
+                const playerImg = document.getElementById('playerImage');
+                playerImg.src = currentPlayerImage;
+                playerImg.style.display = 'block';
+                playerImg.style.transform = 'translate(0px, 0px) scale(1)';
+                document.getElementById('playerPlaceholder').style.display = 'none';
                 
-                if (isPNG) {
-                    uploadText.innerHTML = '✅ ' + file.name + '<br><small>PNG geladen! Klick zum Ändern</small>';
-                } else {
-                    uploadText.innerHTML = '⚠️ ' + file.name + '<br><small>Tipp: Nutze remove.bg für transparente PNGs</small>';
-                }
-                
-                // Show image controls
-                document.getElementById('imageControls').style.display = 'block';
-                
-                // Reset sliders
                 document.getElementById('zoomSlider').value = 100;
                 document.getElementById('posXSlider').value = 0;
                 document.getElementById('posYSlider').value = 0;
+                document.getElementById('imageControls').style.display = 'block';
                 
+                document.getElementById('photoUpload').classList.add('has-file');
+                document.getElementById('uploadText').innerHTML = '✅ ' + file.name + '<br><small>Klick zum Ändern</small>';
+                
+                updateImageTransform();
                 setProgress(100);
                 hideProcessing();
-                updateCard();
-                updateImageTransform();
-                
-            } catch (error) {
-                console.error('Photo loading error:', error);
-                hideProcessing();
-                alert('Fehler beim Laden des Bildes.');
-            }
+            };
+            reader.readAsDataURL(file);
         }
         
         function updateImageTransform() {
-            const zoom = document.getElementById('zoomSlider').value;
-            const posX = document.getElementById('posXSlider').value;
-            const posY = document.getElementById('posYSlider').value;
+            const zoom = parseInt(document.getElementById('zoomSlider').value);
+            const posX = parseInt(document.getElementById('posXSlider').value);
+            const posY = parseInt(document.getElementById('posYSlider').value);
             
             document.getElementById('zoomValue').textContent = zoom;
             document.getElementById('posXValue').textContent = posX;
             document.getElementById('posYValue').textContent = posY;
             
             const playerImg = document.getElementById('playerImage');
-            if (playerImg) {
+            if (playerImg && currentPlayerImage) {
                 const scale = zoom / 100;
                 playerImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
             }
         }
         
-        function readFileAsDataURL(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-        }
-        
-        function handleBackground(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                currentBackground = e.target.result;
-                document.getElementById('bgUpload').classList.add('has-file');
-                updateCard();
-            };
-            reader.readAsDataURL(file);
-        }
-        
         async function downloadCard() {
-            showProcessing('Generiere hochauflösendes Bild...');
-            setProgress(20);
-
-            const card = document.getElementById('cardPreview');
-
+            showProcessing('Generiere 1080×1080 PNG...');
+            setProgress(10);
+            
             try {
-                // Clone the card for export
-                const clone = card.cloneNode(true);
-                clone.id = 'cardClone';
-
-                // Style the clone for full-size rendering (no transform)
-                clone.style.cssText = `
-                    position: absolute;
-                    left: -9999px;
-                    top: 0;
-                    width: 1080px;
-                    height: 1080px;
-                    transform: none;
-                    z-index: -1;
-                `;
-
-                // Add clone to body
-                document.body.appendChild(clone);
-
-                // Apply the same transform to the cloned player image
-                const clonePlayerImg = clone.querySelector('#playerImage');
-                const originalPlayerImg = document.getElementById('playerImage');
-                if (clonePlayerImg && originalPlayerImg) {
-                    clonePlayerImg.style.transform = originalPlayerImg.style.transform;
-                }
-
-                setProgress(40);
-
-                // Wait for images to load in clone
-                const images = clone.querySelectorAll('img');
-                await Promise.all(Array.from(images).map(img => {
-                    if (img.complete) return Promise.resolve();
-                    return new Promise((resolve) => {
-                        img.onload = resolve;
-                        img.onerror = resolve;
-                    });
-                }));
-
-                setProgress(60);
-
-                // Render the clone with html2canvas
-                const canvas = await html2canvas(clone, {
+                const previewScale = document.querySelector('.preview-scale');
+                const card = document.getElementById('cardPreview');
+                const playerImg = document.getElementById('playerImage');
+                
+                // Store original styles
+                const originalPreviewTransform = previewScale.style.transform;
+                const originalPlayerTransform = playerImg ? playerImg.style.transform : '';
+                
+                // Remove preview scaling
+                previewScale.style.transform = 'none';
+                
+                // Wait for reflow
+                await new Promise(r => setTimeout(r, 100));
+                setProgress(30);
+                
+                // Render
+                const canvas = await html2canvas(card, {
+                    width: 1080,
+                    height: 1080,
                     scale: 1,
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#f5f5f0',
-                    width: 1080,
-                    height: 1080,
                     logging: false
                 });
-
-                setProgress(85);
-
-                // Remove clone from DOM
-                document.body.removeChild(clone);
-
-                // Download the image
+                
+                setProgress(80);
+                
+                // Restore preview scaling
+                previewScale.style.transform = originalPreviewTransform || 'scale(0.52)';
+                
+                // Download
                 const link = document.createElement('a');
-                const firstName = document.getElementById('firstName').value || 'player';
+                const firstName = document.getElementById('firstName').value || 'Player';
                 const lastName = document.getElementById('lastName').value || '';
                 link.download = `WPC_Signed_${firstName}_${lastName}.png`;
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
-
+                
                 setProgress(100);
                 setTimeout(hideProcessing, 300);
-
+                
             } catch (error) {
                 console.error('Export error:', error);
-                // Clean up clone if it exists
-                const clone = document.getElementById('cardClone');
-                if (clone) document.body.removeChild(clone);
+                document.querySelector('.preview-scale').style.transform = 'scale(0.52)';
                 hideProcessing();
-                alert('Fehler beim Exportieren. Bitte versuche es erneut.');
+                alert('Export fehlgeschlagen: ' + error.message);
             }
         }
         
@@ -858,19 +720,20 @@
             document.getElementById('duprDoubles').value = '5.688';
             
             currentPlayerImage = '';
-            originalPlayerImage = '';
+            
+            const playerImg = document.getElementById('playerImage');
+            playerImg.style.display = 'none';
+            playerImg.src = '';
+            playerImg.style.transform = '';
             document.getElementById('playerPlaceholder').style.display = 'flex';
-            document.getElementById('playerImage').style.display = 'none';
-            
-            const upload = document.getElementById('photoUpload');
-            upload.classList.remove('has-file', 'processing');
-            document.getElementById('uploadText').innerHTML = 'Spielerfoto hochladen<br><small>Am besten: PNG mit transparentem Hintergrund</small>';
-            
-            // Hide and reset image controls
             document.getElementById('imageControls').style.display = 'none';
+            
             document.getElementById('zoomSlider').value = 100;
             document.getElementById('posXSlider').value = 0;
             document.getElementById('posYSlider').value = 0;
+            
+            document.getElementById('photoUpload').classList.remove('has-file');
+            document.getElementById('uploadText').innerHTML = 'Spielerfoto hochladen<br><small>Am besten: PNG mit transparentem Hintergrund</small>';
             
             updateCard();
         }
@@ -878,10 +741,6 @@
         function showProcessing(text) {
             document.getElementById('processingText').textContent = text;
             document.getElementById('processingOverlay').classList.add('active');
-        }
-        
-        function updateProcessingText(text) {
-            document.getElementById('processingText').textContent = text;
         }
         
         function setProgress(percent) {
