@@ -791,11 +791,10 @@
                 document.body.appendChild(clone);
 
                 // Apply the same transform to the cloned player image
+                const clonePlayerImg = clone.querySelector('#playerImage');
                 const originalPlayerImg = document.getElementById('playerImage');
-                const clonedPlayerImg = clone.querySelector('.player-image');
-                if (clonedPlayerImg && originalPlayerImg) {
-                    // Copy the exact transform from the original
-                    clonedPlayerImg.style.transform = originalPlayerImg.style.transform;
+                if (clonePlayerImg && originalPlayerImg) {
+                    clonePlayerImg.style.transform = originalPlayerImg.style.transform;
                 }
 
                 setProgress(40);
