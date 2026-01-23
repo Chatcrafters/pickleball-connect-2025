@@ -195,7 +195,7 @@
                                     <input type="file" id="photo" name="photo" accept="image/*" 
                                            class="d-none" required onchange="previewProfilePhoto(this)">
                                     <br>
-                                    <small class="text-muted">{{ t.photo_help if t.photo_help else 'JPG, PNG, max 5MB' }}</small>
+                                    <small class="text-muted">JPG, PNG ({{ t.auto_compressed if t.auto_compressed else 'wird automatisch komprimiert' }})</small>
                                 </div>
                             </div>
                         </div>
@@ -321,57 +321,121 @@
     </div>
 </div>
 
-<script>
-// Store files to upload
-let additionalFiles = [];
+<!-- Image Compressor -->
+<script src="{{ url_for('static', filename='js/image-compressor.js') }}"></script>
 
-// Profile photo preview
-function previewProfilePhoto(input) {
-    if (input.files && input.files[0]) {
+<script>
+// Store compressed files to upload
+let additionalFiles = [];
+let compressedProfilePhoto = null;
+
+// Profile photo with compression
+document.getElementById('photo').addEventListener('change', async function() {
+    if (!this.files || !this.files[0]) return;
+
+    const file = this.files[0];
+    const preview = document.getElementById('photoPreview');
+    const placeholder = document.getElementById('photoPlaceholder');
+    const label = this.previousElementSibling || this.parentElement.querySelector('label');
+    const originalText = label ? label.innerHTML : '';
+
+    // Show loading state
+    if (label) {
+        label.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Komprimiere...';
+    }
+
+    try {
+        // Compress image (max 1MB, 1200px)
+        compressedProfilePhoto = await ImageCompressor.compress(file, {
+            maxWidth: 1200,
+            maxHeight: 1200,
+            maxSizeMB: 1
+        });
+
+        // Show preview
         const reader = new FileReader();
         reader.onload = function(e) {
-            const preview = document.getElementById('photoPreview');
-            const placeholder = document.getElementById('photoPlaceholder');
-            
             preview.src = e.target.result;
             preview.classList.remove('d-none');
             placeholder.classList.add('d-none');
         }
-        reader.readAsDataURL(input.files[0]);
-    }
-}
+        reader.readAsDataURL(compressedProfilePhoto);
 
-// Handle additional photos selection
-function handleAdditionalPhotos(input) {
+        console.log(`Profile photo: ${(file.size/1024/1024).toFixed(2)}MB -> ${(compressedProfilePhoto.size/1024/1024).toFixed(2)}MB`);
+    } catch (error) {
+        console.error('Compression failed:', error);
+        // Use original file
+        compressedProfilePhoto = file;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.src = e.target.result;
+            preview.classList.remove('d-none');
+            placeholder.classList.add('d-none');
+        }
+        reader.readAsDataURL(file);
+    } finally {
+        if (label) {
+            label.innerHTML = originalText;
+        }
+    }
+});
+
+// Handle additional photos selection with compression
+async function handleAdditionalPhotos(input) {
     if (!input.files) return;
-    
+
     const grid = document.getElementById('additionalPhotosGrid');
     const addBtn = document.getElementById('addPhotoBtn');
     const currentCount = grid.querySelectorAll('.additional-photo-item').length;
     const maxPhotos = 5;
     const filesToAdd = Math.min(input.files.length, maxPhotos - currentCount);
-    
+
+    // Show loading indicator
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'additional-photo-item d-flex align-items-center justify-content-center';
+    loadingDiv.id = 'loadingIndicator';
+    loadingDiv.innerHTML = '<span class="spinner-border spinner-border-sm text-success"></span>';
+    grid.insertBefore(loadingDiv, addBtn);
+
     for (let i = 0; i < filesToAdd; i++) {
         const file = input.files[i];
-        additionalFiles.push(file);
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const div = document.createElement('div');
-            div.className = 'additional-photo-item';
-            div.dataset.fileIndex = additionalFiles.length - 1;
-            div.innerHTML = `
-                <img src="${e.target.result}" alt="Photo">
-                <button type="button" class="delete-btn" onclick="removeAdditionalPhoto(this)">
-                    <i class="bi bi-x"></i>
-                </button>
-            `;
-            grid.insertBefore(div, addBtn);
-            updatePhotoCount();
+
+        try {
+            // Compress each image
+            const compressedFile = await ImageCompressor.compress(file, {
+                maxWidth: 1200,
+                maxHeight: 1200,
+                maxSizeMB: 1
+            });
+
+            additionalFiles.push(compressedFile);
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.className = 'additional-photo-item';
+                div.dataset.fileIndex = additionalFiles.length - 1;
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Photo">
+                    <button type="button" class="delete-btn" onclick="removeAdditionalPhoto(this)">
+                        <i class="bi bi-x"></i>
+                    </button>
+                `;
+                grid.insertBefore(div, addBtn);
+                updatePhotoCount();
+            }
+            reader.readAsDataURL(compressedFile);
+
+            console.log(`Additional photo: ${(file.size/1024/1024).toFixed(2)}MB -> ${(compressedFile.size/1024/1024).toFixed(2)}MB`);
+        } catch (error) {
+            console.error('Compression failed for file:', file.name, error);
         }
-        reader.readAsDataURL(file);
     }
-    
+
+    // Remove loading indicator
+    const loading = document.getElementById('loadingIndicator');
+    if (loading) loading.remove();
+
     // Clear input so same file can be selected again
     input.value = '';
 }
@@ -380,12 +444,12 @@ function handleAdditionalPhotos(input) {
 function removeAdditionalPhoto(btn) {
     const item = btn.closest('.additional-photo-item');
     const fileIndex = parseInt(item.dataset.fileIndex);
-    
+
     // Mark file as removed (set to null)
     if (!isNaN(fileIndex)) {
         additionalFiles[fileIndex] = null;
     }
-    
+
     item.remove();
     updatePhotoCount();
 }
@@ -394,7 +458,7 @@ function removeAdditionalPhoto(btn) {
 function updatePhotoCount() {
     const count = document.querySelectorAll('.additional-photo-item').length;
     document.getElementById('photoCount').textContent = count;
-    
+
     const addBtn = document.getElementById('addPhotoBtn');
     if (count >= 5) {
         addBtn.style.display = 'none';
@@ -403,16 +467,23 @@ function updatePhotoCount() {
     }
 }
 
-// Before form submit, add files to FormData
+// Before form submit, add compressed files to FormData
 document.getElementById('registrationForm').addEventListener('submit', function(e) {
-    // Create new file input with selected files
-    const dataTransfer = new DataTransfer();
+    // Replace profile photo input with compressed file
+    if (compressedProfilePhoto) {
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(compressedProfilePhoto);
+        document.getElementById('photo').files = dataTransfer.files;
+    }
+
+    // Add compressed additional photos
+    const additionalDataTransfer = new DataTransfer();
     additionalFiles.forEach(file => {
         if (file) {
-            dataTransfer.items.add(file);
+            additionalDataTransfer.items.add(file);
         }
     });
-    document.getElementById('additionalPhotosInput').files = dataTransfer.files;
+    document.getElementById('additionalPhotosInput').files = additionalDataTransfer.files;
 });
 
 // Bio character counter

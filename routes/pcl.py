@@ -16,7 +16,7 @@ pcl = Blueprint('pcl', __name__)
 # Configuration for file uploads
 UPLOAD_FOLDER = 'static/uploads/pcl'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+MAX_FILE_SIZE = 1 * 1024 * 1024  # 1MB (client compresses to this)
 
 # Content Template SIDs for Captain Invitations (approved by Meta)
 CAPTAIN_INVITATION_TEMPLATES = {
@@ -94,7 +94,8 @@ TRANSLATIONS = {
         'shirt_size': 'Shirt Size',
         'profile': 'Profile',
         'photo': 'Profile Photo',
-        'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
+        'photo_help': 'Required. JPG, PNG. Auto-compressed. Square format recommended.',
+        'auto_compressed': 'auto-compressed',
         'upload_photo': 'Upload Photo',
         'bio': 'Short Bio',
         'bio_placeholder': 'Tell us about yourself, your pickleball journey...',
@@ -181,7 +182,8 @@ TRANSLATIONS = {
         'shirt_size': 'Shirt-GrÃ¶ÃŸe',
         'profile': 'Profil',
         'photo': 'Profilbild',
-        'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
+        'photo_help': 'Pflichtfeld. JPG, PNG. Wird automatisch komprimiert. Quadratisches Format empfohlen.',
+        'auto_compressed': 'wird automatisch komprimiert',
         'upload_photo': 'Foto hochladen',
         'bio': 'Kurze Bio',
         'bio_placeholder': 'ErzÃ¤hl uns von dir und deiner Pickleball-Reise...',
@@ -268,7 +270,8 @@ TRANSLATIONS = {
         'shirt_size': 'Talla de camiseta',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
-        'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
+        'photo_help': 'Obligatorio. JPG, PNG. Se comprime automáticamente. Formato cuadrado recomendado.',
+        'auto_compressed': 'se comprime automáticamente',
         'upload_photo': 'Subir foto',
         'bio': 'BiografÃ­a breve',
         'bio_placeholder': 'CuÃ©ntanos sobre ti y tu viaje en pickleball...',
@@ -355,7 +358,8 @@ TRANSLATIONS = {
         'shirt_size': 'Taille du maillot',
         'profile': 'Profil',
         'photo': 'Photo de profil',
-        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
+        'photo_help': 'Obligatoire. JPG, PNG. Compression automatique. Format carré recommandé.',
+        'auto_compressed': 'compression automatique',
         'upload_photo': 'TÃ©lÃ©charger photo',
         'bio': 'Courte bio',
         'bio_placeholder': 'Parlez-nous de vous et de votre parcours pickleball...',
