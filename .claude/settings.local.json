@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit:*)",
+      "Bash(git add:*)",
+      "Bash(git push)",
+      "Bash(start wpc_malaga_standalone.html)",
+      "Bash(copy \"C:\\\\Users\\\\Sergio Caro\\\\Downloads\\\\wpc_malaga_generator\\(8\\).html\" wpc_malaga_generator.html)"
+    ]
+  }
+}

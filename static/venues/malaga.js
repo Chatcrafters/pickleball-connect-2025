@@ -45,4 +45,3 @@ venues.malaga = {
         '<line x1="20" y1="340" x2="340" y2="340" stroke-width="1"/>' +
         '<line x1="460" y1="340" x2="780" y2="340" stroke-width="1"/>' +
         '</svg>'
-};

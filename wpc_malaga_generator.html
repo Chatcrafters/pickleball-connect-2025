@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WPC Málaga Open 2026 - Signed Card Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1500px; margin: 0 auto; }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+            background: linear-gradient(90deg, #4a7c3f, #6ba55a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle { text-align: center; color: #888; margin-bottom: 25px; }
+        
+        .main-layout {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 35px;
+            align-items: start;
+        }
+        
+        /* Controls */
+        .controls {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .control-section {
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .control-section:last-child { border-bottom: none; margin-bottom: 0; }
+        
+        .control-section h3 {
+            color: #6ba55a;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        
+        label { display: block; font-size: 0.75rem; color: #aaa; margin-bottom: 3px; }
+        
+        input[type="text"], select {
+            width: 100%;
+            padding: 9px 11px;
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        input:focus, select:focus { outline: none; border-color: #6ba55a; }
+        
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        
+        .file-upload {
+            border: 2px dashed rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 18px 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(0,0,0,0.2);
+        }
+        
+        .file-upload:hover { border-color: #6ba55a; background: rgba(107, 165, 90, 0.1); }
+        .file-upload input { display: none; }
+        .file-upload .icon { font-size: 2.2rem; margin-bottom: 6px; }
+        .file-upload p { color: #888; font-size: 0.78rem; margin: 0; line-height: 1.4; }
+        .file-upload.has-file { border-color: #6ba55a; background: rgba(107, 165, 90, 0.15); }
+        .file-upload.processing { border-color: #f4a03a; background: rgba(244, 160, 58, 0.15); }
+        
+        .btn {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 8px;
+        }
+        
+        .btn-primary { background: linear-gradient(135deg, #4a7c3f, #6ba55a); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(107, 165, 90, 0.3); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: white; }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        
+        /* Preview */
+        .preview-panel { display: flex; flex-direction: column; align-items: center; }
+        
+        .preview-container {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        
+        /* THE CARD */
+        .wpc-signed-card {
+            width: 1080px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+            background: #f5f5f0;
+        }
+        
+        .card-background {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* Header */
+        .card-header {
+            position: absolute;
+            top: 32px;
+            left: 42px;
+            right: 42px;
+            display: flex;
+            align-items: flex-start;
+            gap: 18px;
+            z-index: 10;
+        }
+        
+        .wpc-logo {
+            width: 95px;
+            height: 95px;
+            background: transparent;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        
+        .wpc-logo img { width: 100%; height: 100%; object-fit: contain; }
+        
+        .tournament-info { flex: 1; padding-top: 3px; }
+        
+        .tournament-name {
+            font-size: 50px;
+            font-weight: 900;
+            color: #3d6a32;
+            line-height: 1.05;
+            text-shadow: 2px 2px 0 white, -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white,
+                         3px 3px 0 white, -3px -3px 0 white;
+        }
+        
+        .tournament-venue {
+            font-size: 17px;
+            font-weight: 700;
+            color: #3d6a32;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 6px;
+            text-shadow: 1px 1px 0 white, -1px -1px 0 white;
+        }
+        
+        /* Signed */
+        .signed-text {
+            position: absolute;
+            top: 195px;
+            right: 55px;
+            font-family: 'Dancing Script', cursive;
+            font-size: 65px;
+            color: white;
+            transform: rotate(-10deg);
+            z-index: 15;
+            text-shadow: 3px 3px 8px rgba(0,0,0,0.5);
+        }
+        
+        .signed-text::after {
+            content: '';
+            position: absolute;
+            bottom: 0px;
+            left: -10px;
+            right: -35px;
+            height: 3px;
+            background: white;
+            transform: rotate(-5deg);
+            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        /* Player */
+        .player-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .player-image {
+            position: absolute;
+            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+            transform-origin: center center;
+        }
+        
+        .player-placeholder {
+            width: 420px;
+            height: 520px;
+            background: rgba(61, 106, 50, 0.08);
+            border: 3px dashed rgba(61, 106, 50, 0.25);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(61, 106, 50, 0.4);
+        }
+        
+        .player-placeholder .icon { font-size: 65px; margin-bottom: 12px; }
+        .player-placeholder p { font-size: 16px; font-weight: 600; }
+        
+        /* Footer */
+        .card-footer {
+            position: absolute;
+            bottom: 32px;
+            left: 42px;
+            right: 42px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        
+        .player-info { display: flex; align-items: center; gap: 16px; }
+        
+        .country-flag {
+            width: 52px;
+            height: 78px;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .flag-stripe { flex: 1; }
+        
+        /* Flags */
+        .flag-esp .stripe1 { background: #c60b1e; flex: 1; }
+        .flag-esp .stripe2 { background: #ffc400; flex: 2; }
+        .flag-esp .stripe3 { background: #c60b1e; flex: 1; }
+        
+        .flag-ger .stripe1 { background: #000; }
+        .flag-ger .stripe2 { background: #dd0000; }
+        .flag-ger .stripe3 { background: #ffcc00; }
+        
+        .flag-fra { flex-direction: row; }
+        .flag-fra .stripe1 { background: #002395; }
+        .flag-fra .stripe2 { background: #fff; }
+        .flag-fra .stripe3 { background: #ed2939; }
+        
+        .flag-ita { flex-direction: row; }
+        .flag-ita .stripe1 { background: #009246; }
+        .flag-ita .stripe2 { background: #fff; }
+        .flag-ita .stripe3 { background: #ce2b37; }
+        
+        .flag-gbr .stripe1 { background: #012169; }
+        .flag-gbr .stripe2 { background: #fff; }
+        .flag-gbr .stripe3 { background: #c8102e; }
+        
+        .flag-usa .stripe1 { background: #b22234; }
+        .flag-usa .stripe2 { background: #fff; }
+        .flag-usa .stripe3 { background: #3c3b6e; }
+        
+        .flag-ned .stripe1 { background: #ae1c28; }
+        .flag-ned .stripe2 { background: #fff; }
+        .flag-ned .stripe3 { background: #21468b; }
+        
+        .flag-bel { flex-direction: row; }
+        .flag-bel .stripe1 { background: #000; }
+        .flag-bel .stripe2 { background: #ffd90c; }
+        .flag-bel .stripe3 { background: #f31830; }
+        
+        .flag-aut .stripe1 { background: #ed2939; }
+        .flag-aut .stripe2 { background: #fff; }
+        .flag-aut .stripe3 { background: #ed2939; }
+        
+        .flag-sui .stripe1 { background: #ff0000; }
+        .flag-sui .stripe2 { background: #fff; }
+        .flag-sui .stripe3 { background: #ff0000; }
+        
+        .flag-por { flex-direction: row; }
+        .flag-por .stripe1 { background: #006600; flex: 2; }
+        .flag-por .stripe2 { background: #ff0000; flex: 3; }
+        .flag-por .stripe3 { display: none; }
+        
+        .flag-pol .stripe1 { background: #fff; }
+        .flag-pol .stripe2 { background: #dc143c; }
+        .flag-pol .stripe3 { display: none; }
+        
+        .flag-mex .stripe1 { background: #006847; }
+        .flag-mex .stripe2 { background: #fff; }
+        .flag-mex .stripe3 { background: #ce1126; }
+        
+        .flag-arg .stripe1 { background: #74acdf; }
+        .flag-arg .stripe2 { background: #fff; }
+        .flag-arg .stripe3 { background: #74acdf; }
+        
+        .player-name { line-height: 0.92; }
+        
+        .player-name .first,
+        .player-name .last {
+            font-size: 65px;
+            font-weight: 900;
+            color: #3d6a32;
+            text-transform: uppercase;
+            display: block;
+            text-shadow: 2px 2px 0 white, -2px -2px 0 white, 2px -2px 0 white, -2px 2px 0 white,
+                         3px 3px 0 white, -3px -3px 0 white;
+        }
+        
+        /* DUPR */
+        .dupr-section { display: flex; flex-direction: column; gap: 5px; align-items: flex-end; }
+        
+        .dupr-row { display: flex; align-items: center; gap: 10px; }
+        
+        .dupr-label {
+            font-size: 26px;
+            font-weight: 800;
+            color: #3d6a32;
+            text-shadow: 1px 1px 0 white, -1px -1px 0 white;
+        }
+        
+        .dupr-value {
+            background: #3d6a32;
+            color: white;
+            padding: 5px 14px;
+            border-radius: 5px;
+            font-size: 26px;
+            font-weight: 800;
+            min-width: 95px;
+            text-align: center;
+        }
+        
+        /* Preview Scale */
+        .preview-scale { transform: scale(0.52); transform-origin: top center; }
+        .preview-info { margin-top: -260px; text-align: center; color: #666; font-size: 0.85rem; }
+        
+        /* Processing */
+        .processing-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.88);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+        
+        .processing-overlay.active { display: flex; }
+        
+        .spinner {
+            width: 55px;
+            height: 55px;
+            border: 4px solid rgba(255,255,255,0.1);
+            border-top-color: #6ba55a;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 18px;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .progress-bar {
+            width: 280px;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a7c3f, #6ba55a);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1300px) {
+            .main-layout { grid-template-columns: 1fr; }
+            .controls { position: relative; top: 0; }
+            .preview-scale { transform: scale(0.38); }
+            .preview-info { margin-top: -340px; }
+        }
+        
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        
+        .status-badge.ready { background: #4a7c3f; color: white; }
+        .status-badge.loading { background: #f4a03a; color: #1a1a2e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏓 WPC Málaga Open 2026</h1>
+        <p class="subtitle">Signed Card Generator - Automatisches Freistellen</p>
+        
+        <div class="main-layout">
+            <!-- Controls -->
+            <div class="controls">
+                <div class="control-section">
+                    <h3>📍 Tournament</h3>
+                    <label>Tournament Name</label>
+                    <input type="text" id="tournamentName" value="WPC Málaga Open 2026" oninput="updateCard()">
+                    
+                    <label>Venue</label>
+                    <input type="text" id="venue" value="Palacio Martín Carpena · Málaga" oninput="updateCard()">
+                </div>
+                
+                <div class="control-section">
+                    <h3>📷 Player Photo <span class="status-badge ready" id="bgRemovalStatus">Upload PNG</span></h3>
+                    <div class="file-upload" id="photoUpload" onclick="document.getElementById('photoInput').click()">
+                        <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)">
+                        <div class="icon">📷</div>
+                        <p id="uploadText">Spielerfoto hochladen<br><small>Am besten: PNG mit transparentem Hintergrund</small></p>
+                    </div>
+                    
+                    <!-- Zoom & Position Controls -->
+                    <div id="imageControls" style="display: none; margin-top: 12px;">
+                        <label>🔍 Zoom: <span id="zoomValue">100</span>%</label>
+                        <input type="range" id="zoomSlider" min="50" max="250" value="100" oninput="updateImageTransform()" style="width: 100%; margin-bottom: 8px;">
+                        
+                        <label>↔️ Horizontal: <span id="posXValue">0</span>px</label>
+                        <input type="range" id="posXSlider" min="-300" max="300" value="0" oninput="updateImageTransform()" style="width: 100%; margin-bottom: 8px;">
+                        
+                        <label>↕️ Vertikal: <span id="posYValue">0</span>px</label>
+                        <input type="range" id="posYSlider" min="-300" max="300" value="0" oninput="updateImageTransform()" style="width: 100%;">
+                    </div>
+                    
+                    <div style="margin-top: 10px; padding: 10px; background: rgba(244,160,58,0.15); border-radius: 8px; font-size: 0.75rem;">
+                        <strong style="color: #ffd700;">💡 Tipp:</strong> <span style="color: #f4a03a;">Nutze <a href="https://www.remove.bg" target="_blank" style="color: #ffd700;">remove.bg</a> um den Hintergrund zu entfernen!</span>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>👤 Player Details</h3>
+                    <div class="row">
+                        <div>
+                            <label>First Name</label>
+                            <input type="text" id="firstName" value="MAURO" oninput="updateCard()">
+                        </div>
+                        <div>
+                            <label>Last Name</label>
+                            <input type="text" id="lastName" value="GARCIA" oninput="updateCard()">
+                        </div>
+                    </div>
+                    
+                    <label>Country</label>
+                    <select id="country" onchange="updateCard()">
+                        <option value="esp">🇪🇸 Spain</option>
+                        <option value="ger">🇩🇪 Germany</option>
+                        <option value="fra">🇫🇷 France</option>
+                        <option value="ita">🇮🇹 Italy</option>
+                        <option value="gbr">🇬🇧 United Kingdom</option>
+                        <option value="usa">🇺🇸 USA</option>
+                        <option value="ned">🇳🇱 Netherlands</option>
+                        <option value="bel">🇧🇪 Belgium</option>
+                        <option value="aut">🇦🇹 Austria</option>
+                        <option value="sui">🇨🇭 Switzerland</option>
+                        <option value="por">🇵🇹 Portugal</option>
+                        <option value="pol">🇵🇱 Poland</option>
+                        <option value="mex">🇲🇽 Mexico</option>
+                        <option value="arg">🇦🇷 Argentina</option>
+                    </select>
+                </div>
+                
+                <div class="control-section">
+                    <h3>📊 DUPR Ratings</h3>
+                    <div class="row">
+                        <div>
+                            <label>Singles</label>
+                            <input type="text" id="duprSingles" value="5.545" oninput="updateCard()">
+                        </div>
+                        <div>
+                            <label>Doubles</label>
+                            <input type="text" id="duprDoubles" value="5.688" oninput="updateCard()">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="control-section">
+                    <h3>🖼️ Background Template</h3>
+                    <div class="file-upload has-file" id="bgUpload" onclick="document.getElementById('bgInput').click()">
+                        <input type="file" id="bgInput" accept="image/*" onchange="handleBackground(event)">
+                        <div class="icon">✅</div>
+                        <p>Málaga Template geladen<br><small>Klick für anderes Template</small></p>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="downloadBtn" onclick="downloadCard()">
+                    ⬇️ Download Card (1080×1080)
+                </button>
+                
+                <button class="btn btn-secondary" onclick="resetCard()">
+                    🔄 Reset
+                </button>
+            </div>
+            
+            <!-- Preview -->
+            <div class="preview-panel">
+                <div class="preview-container">
+                    <div class="preview-scale">
+                        <div class="wpc-signed-card" id="cardPreview">
+                            <!-- Background -->
+                            <img class="card-background" id="cardBackground" src="" alt="">
+                            
+                            <!-- Header -->
+                            <div class="card-header">
+                                <div class="wpc-logo">
+                                    <img src="wpc_logo.jpeg" alt="WPC" style="width: 100%; height: 100%; object-fit: contain; border-radius: 3px;">
+                                </div>
+                                <div class="tournament-info">
+                                    <div class="tournament-name" id="cardTournament">WPC Málaga Open 2026</div>
+                                    <div class="tournament-venue" id="cardVenue">Palacio Martín Carpena · Málaga</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Signed -->
+                            <div class="signed-text">signed</div>
+                            
+                            <!-- Player -->
+                            <div class="player-container">
+                                <div class="player-placeholder" id="playerPlaceholder">
+                                    <div class="icon">👤</div>
+                                    <p>Spielerfoto hochladen</p>
+                                </div>
+                                <img class="player-image" id="playerImage" style="display: none;">
+                            </div>
+                            
+                            <!-- Footer -->
+                            <div class="card-footer">
+                                <div class="player-info">
+                                    <div class="country-flag flag-esp" id="cardFlag">
+                                        <div class="flag-stripe stripe1"></div>
+                                        <div class="flag-stripe stripe2"></div>
+                                        <div class="flag-stripe stripe3"></div>
+                                    </div>
+                                    <div class="player-name">
+                                        <span class="first" id="cardFirstName">MAURO</span>
+                                        <span class="last" id="cardLastName">GARCIA</span>
+                                    </div>
+                                </div>
+                                <div class="dupr-section">
+                                    <div class="dupr-row">
+                                        <span class="dupr-label">SINGLES</span>
+                                        <span class="dupr-value" id="cardSingles">5.545</span>
+                                    </div>
+                                    <div class="dupr-row">
+                                        <span class="dupr-label">DOUBLES</span>
+                                        <span class="dupr-value" id="cardDoubles">5.688</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="preview-info">
+                    <p>Preview 52% • Export: 1080×1080px PNG</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Processing Overlay -->
+    <div class="processing-overlay" id="processingOverlay">
+        <div class="spinner"></div>
+        <p id="processingText">Verarbeite...</p>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+    
+    <!-- Background Removal Library -->
+    <script src="https://unpkg.com/@anthropic-ai/sdk@latest/dist/browser.js" onerror="console.log('SDK not needed')"></script>
+    <script>
+        // Background removal will use a simpler approach or manual upload
+        window.bgRemovalReady = true;
+        
+        // Update status immediately
+        document.addEventListener('DOMContentLoaded', function() {
+            const status = document.getElementById('bgRemovalStatus');
+            if (status) {
+                status.textContent = 'Manual PNG ✓';
+                status.className = 'status-badge ready';
+            }
+        });
+    </script>
+    
+    <script>
+        let currentBackground = '';
+        let currentPlayerImage = '';
+        let originalPlayerImage = '';
+        
+        // Load default background
+        document.addEventListener('DOMContentLoaded', function() {
+            const bgImg = document.getElementById('cardBackground');
+            bgImg.src = 'wpc_background.png';
+            bgImg.onerror = function() {
+                // Fallback gradient if image not found
+                this.style.display = 'none';
+                document.getElementById('cardPreview').style.background = 
+                    'linear-gradient(to bottom, #f5f5f0 0%, #f5f5f0 18%, #4a7c3f 22%, #3d6a32 78%, #f5f5f0 82%, #f5f5f0 100%)';
+            };
+            updateCard();
+        });
+        
+        function updateCard() {
+            document.getElementById('cardTournament').textContent = document.getElementById('tournamentName').value;
+            document.getElementById('cardVenue').textContent = document.getElementById('venue').value;
+            document.getElementById('cardFirstName').textContent = document.getElementById('firstName').value.toUpperCase();
+            document.getElementById('cardLastName').textContent = document.getElementById('lastName').value.toUpperCase();
+            document.getElementById('cardSingles').textContent = document.getElementById('duprSingles').value;
+            document.getElementById('cardDoubles').textContent = document.getElementById('duprDoubles').value;
+            
+            const country = document.getElementById('country').value;
+            document.getElementById('cardFlag').className = 'country-flag flag-' + country;
+            
+            if (currentBackground) {
+                document.getElementById('cardBackground').src = currentBackground;
+                document.getElementById('cardBackground').style.display = 'block';
+            }
+            
+            if (currentPlayerImage) {
+                document.getElementById('playerPlaceholder').style.display = 'none';
+                document.getElementById('playerImage').style.display = 'block';
+                document.getElementById('playerImage').src = currentPlayerImage;
+            }
+        }
+        
+        async function handlePhoto(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const upload = document.getElementById('photoUpload');
+            const uploadText = document.getElementById('uploadText');
+            
+            // Check if it's a PNG with transparency
+            const isPNG = file.type === 'image/png';
+            
+            showProcessing('Lade Bild...');
+            setProgress(50);
+            
+            try {
+                const imageUrl = await readFileAsDataURL(file);
+                currentPlayerImage = imageUrl;
+                
+                upload.classList.remove('processing');
+                upload.classList.add('has-file');
+                
+                if (isPNG) {
+                    uploadText.innerHTML = '✅ ' + file.name + '<br><small>PNG geladen! Klick zum Ändern</small>';
+                } else {
+                    uploadText.innerHTML = '⚠️ ' + file.name + '<br><small>Tipp: Nutze remove.bg für transparente PNGs</small>';
+                }
+                
+                // Show image controls
+                document.getElementById('imageControls').style.display = 'block';
+                
+                // Reset sliders
+                document.getElementById('zoomSlider').value = 100;
+                document.getElementById('posXSlider').value = 0;
+                document.getElementById('posYSlider').value = 0;
+                
+                setProgress(100);
+                hideProcessing();
+                updateCard();
+                updateImageTransform();
+                
+            } catch (error) {
+                console.error('Photo loading error:', error);
+                hideProcessing();
+                alert('Fehler beim Laden des Bildes.');
+            }
+        }
+        
+        function updateImageTransform() {
+            const zoom = document.getElementById('zoomSlider').value;
+            const posX = document.getElementById('posXSlider').value;
+            const posY = document.getElementById('posYSlider').value;
+            
+            document.getElementById('zoomValue').textContent = zoom;
+            document.getElementById('posXValue').textContent = posX;
+            document.getElementById('posYValue').textContent = posY;
+            
+            const playerImg = document.getElementById('playerImage');
+            if (playerImg) {
+                const scale = zoom / 100;
+                playerImg.style.transform = `translate(${posX}px, ${posY}px) scale(${scale})`;
+            }
+        }
+        
+        function readFileAsDataURL(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        function handleBackground(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentBackground = e.target.result;
+                document.getElementById('bgUpload').classList.add('has-file');
+                updateCard();
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        async function downloadCard() {
+            showProcessing('Generiere hochauflösendes Bild...');
+            setProgress(30);
+            
+            const card = document.getElementById('cardPreview');
+            
+            try {
+                const canvas = await html2canvas(card, {
+                    scale: 1,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#f5f5f0',
+                    width: 1080,
+                    height: 1080
+                });
+                
+                setProgress(80);
+                
+                const link = document.createElement('a');
+                const firstName = document.getElementById('firstName').value || 'player';
+                const lastName = document.getElementById('lastName').value || '';
+                link.download = `WPC_Signed_${firstName}_${lastName}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                
+                setProgress(100);
+                setTimeout(hideProcessing, 300);
+                
+            } catch (error) {
+                console.error('Export error:', error);
+                hideProcessing();
+                alert('Fehler beim Exportieren. Bitte versuche es erneut.');
+            }
+        }
+        
+        function resetCard() {
+            document.getElementById('tournamentName').value = 'WPC Málaga Open 2026';
+            document.getElementById('venue').value = 'Palacio Martín Carpena · Málaga';
+            document.getElementById('firstName').value = 'MAURO';
+            document.getElementById('lastName').value = 'GARCIA';
+            document.getElementById('country').value = 'esp';
+            document.getElementById('duprSingles').value = '5.545';
+            document.getElementById('duprDoubles').value = '5.688';
+            
+            currentPlayerImage = '';
+            originalPlayerImage = '';
+            document.getElementById('playerPlaceholder').style.display = 'flex';
+            document.getElementById('playerImage').style.display = 'none';
+            
+            const upload = document.getElementById('photoUpload');
+            upload.classList.remove('has-file', 'processing');
+            document.getElementById('uploadText').innerHTML = 'Spielerfoto hochladen<br><small>Am besten: PNG mit transparentem Hintergrund</small>';
+            
+            // Hide and reset image controls
+            document.getElementById('imageControls').style.display = 'none';
+            document.getElementById('zoomSlider').value = 100;
+            document.getElementById('posXSlider').value = 0;
+            document.getElementById('posYSlider').value = 0;
+            
+            updateCard();
+        }
+        
+        function showProcessing(text) {
+            document.getElementById('processingText').textContent = text;
+            document.getElementById('processingOverlay').classList.add('active');
+        }
+        
+        function updateProcessingText(text) {
+            document.getElementById('processingText').textContent = text;
+        }
+        
+        function setProgress(percent) {
+            document.getElementById('progressFill').style.width = percent + '%';
+        }
+        
+        function hideProcessing() {
+            document.getElementById('processingOverlay').classList.remove('active');
+            setProgress(0);
+        }
+    </script>
+</body>
+</html>
