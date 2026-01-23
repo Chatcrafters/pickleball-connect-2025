@@ -767,34 +767,75 @@
         
         async function downloadCard() {
             showProcessing('Generiere hochauflösendes Bild...');
-            setProgress(30);
-            
+            setProgress(20);
+
             const card = document.getElementById('cardPreview');
-            
+
             try {
-                const canvas = await html2canvas(card, {
+                // Clone the card for export
+                const clone = card.cloneNode(true);
+                clone.id = 'cardClone';
+
+                // Style the clone for full-size rendering (no transform)
+                clone.style.cssText = `
+                    position: absolute;
+                    left: -9999px;
+                    top: 0;
+                    width: 1080px;
+                    height: 1080px;
+                    transform: none;
+                    z-index: -1;
+                `;
+
+                // Add clone to body
+                document.body.appendChild(clone);
+
+                setProgress(40);
+
+                // Wait for images to load in clone
+                const images = clone.querySelectorAll('img');
+                await Promise.all(Array.from(images).map(img => {
+                    if (img.complete) return Promise.resolve();
+                    return new Promise((resolve) => {
+                        img.onload = resolve;
+                        img.onerror = resolve;
+                    });
+                }));
+
+                setProgress(60);
+
+                // Render the clone with html2canvas
+                const canvas = await html2canvas(clone, {
                     scale: 1,
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#f5f5f0',
                     width: 1080,
-                    height: 1080
+                    height: 1080,
+                    logging: false
                 });
-                
-                setProgress(80);
-                
+
+                setProgress(85);
+
+                // Remove clone from DOM
+                document.body.removeChild(clone);
+
+                // Download the image
                 const link = document.createElement('a');
                 const firstName = document.getElementById('firstName').value || 'player';
                 const lastName = document.getElementById('lastName').value || '';
                 link.download = `WPC_Signed_${firstName}_${lastName}.png`;
                 link.href = canvas.toDataURL('image/png', 1.0);
                 link.click();
-                
+
                 setProgress(100);
                 setTimeout(hideProcessing, 300);
-                
+
             } catch (error) {
                 console.error('Export error:', error);
+                // Clean up clone if it exists
+                const clone = document.getElementById('cardClone');
+                if (clone) document.body.removeChild(clone);
                 hideProcessing();
                 alert('Fehler beim Exportieren. Bitte versuche es erneut.');
             }
