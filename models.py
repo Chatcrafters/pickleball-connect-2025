@@ -341,7 +341,11 @@ class PCLRegistration(db.Model):
     # Optional extras
     video_url = db.Column(db.String(500), nullable=True)
     dupr_rating = db.Column(db.String(10), nullable=True)
-    
+    additional_photos = db.Column(db.Text, nullable=True)  # JSON array of photo URLs
+
+    # WhatsApp tracking
+    whatsapp_sent_at = db.Column(db.DateTime, nullable=True)
+
     # Registration status
     status = db.Column(db.String(20), default='incomplete', index=True)  # Indexed for status filtering
 
