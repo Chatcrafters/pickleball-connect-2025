@@ -523,7 +523,10 @@ def wallet_pass(token):
 @checkin.route('/checkin/wallet/<token>/apple')
 def apple_wallet_pass(token):
     """Generate and download Apple Wallet .pkpass file"""
+    import traceback
+
     if not is_apple_wallet_available():
+        print("ERROR: Apple Wallet not available")
         flash('Apple Wallet is not configured', 'error')
         return redirect(url_for('checkin.wallet_pass', token=token))
 
@@ -531,12 +534,18 @@ def apple_wallet_pass(token):
     tournament = participant.tournament
     checkin_record = TournamentCheckin.query.filter_by(participant_id=participant.id).first()
 
+    print(f"DEBUG: Generating Apple Wallet pass for {participant.first_name} {participant.last_name}")
+    print(f"DEBUG: Tournament: {tournament.name}, Checkin ID: {checkin_record.id if checkin_record else 'None'}")
+
     if not checkin_record:
+        print("ERROR: No checkin record found")
         return redirect(url_for('checkin.self_checkin', token=token))
 
     try:
         # Generate the .pkpass file
+        print("DEBUG: Calling generate_pkpass...")
         pkpass_buffer = generate_pkpass(participant, tournament, checkin_record)
+        print(f"DEBUG: Pass generated successfully, size: {pkpass_buffer.getbuffer().nbytes} bytes")
 
         # Send the file
         filename = f"WPC_{participant.first_name}_{participant.last_name}.pkpass"
@@ -547,6 +556,9 @@ def apple_wallet_pass(token):
             download_name=filename
         )
     except Exception as e:
+        error_traceback = traceback.format_exc()
+        print(f"ERROR generating Apple Wallet pass: {str(e)}")
+        print(f"TRACEBACK:\n{error_traceback}")
         flash(f'Error generating pass: {str(e)}', 'error')
         return redirect(url_for('checkin.wallet_pass', token=token))
 
