@@ -47,6 +47,9 @@
                     <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-sm btn-outline-secondary">
                         <i class="bi bi-pencil"></i> Bearbeiten
                     </a>
+                    <a href="{{ url_for('checkin.admin_checkin_dashboard', tournament_id=event.id) }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-qr-code"></i> Check-in
+                    </a>
                 </div>
             </div>
         </div>
