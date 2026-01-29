@@ -7,3 +7,4 @@ python-dotenv==1.0.0
 gunicorn==21.2.0
 qrcode[pil]==8.2
 flask-migrate==4.1.0
+cryptography==42.0.0
