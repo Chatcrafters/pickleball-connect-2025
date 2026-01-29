@@ -153,7 +153,8 @@ def create_manifest(files_dict):
         if isinstance(content, str):
             content = content.encode('utf-8')
         manifest[filename] = hashlib.sha1(content).hexdigest()
-    return json.dumps(manifest, indent=2)
+    # Use compact JSON without newlines to avoid line-ending issues
+    return json.dumps(manifest, separators=(',', ':'), sort_keys=True)
 
 
 def sign_manifest(manifest_data, cert_path, key_path, wwdr_path):
