@@ -556,15 +556,33 @@ def apple_wallet_pass(token):
 def api_debug_apple_wallet():
     """Debug endpoint to check Apple Wallet configuration"""
     import os
+    from wallet_pass import ENV_CERT, ENV_KEY, ENV_WWDR
+
+    # Check what the function actually sees
+    env_cert_value = os.environ.get(ENV_CERT)
+    env_key_value = os.environ.get(ENV_KEY)
+
     return jsonify({
         'APPLE_WALLET_AVAILABLE': is_apple_wallet_available(),
-        'env_vars': {
-            'APPLE_PASS_CERT': bool(os.environ.get('APPLE_PASS_CERT')),
-            'APPLE_PASS_KEY': bool(os.environ.get('APPLE_PASS_KEY')),
+        'wallet_pass_module_available': WALLET_PASS_MODULE_AVAILABLE,
+        'env_var_names': {
+            'ENV_CERT': ENV_CERT,
+            'ENV_KEY': ENV_KEY,
+            'ENV_WWDR': ENV_WWDR,
+        },
+        'env_vars_present': {
+            ENV_CERT: bool(env_cert_value),
+            ENV_KEY: bool(env_key_value),
             'APPLE_WWDR_CERT': bool(os.environ.get('APPLE_WWDR_CERT')),
         },
-        'cert_length': len(os.environ.get('APPLE_PASS_CERT', '')) if os.environ.get('APPLE_PASS_CERT') else 0,
-        'key_length': len(os.environ.get('APPLE_PASS_KEY', '')) if os.environ.get('APPLE_PASS_KEY') else 0,
+        'env_vars_lengths': {
+            ENV_CERT: len(env_cert_value) if env_cert_value else 0,
+            ENV_KEY: len(env_key_value) if env_key_value else 0,
+        },
+        'direct_check': {
+            'has_cert': bool(os.environ.get('APPLE_PASS_CERT')),
+            'has_key': bool(os.environ.get('APPLE_PASS_KEY')),
+        }
     })
 
 
