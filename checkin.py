@@ -25,9 +25,13 @@ except ImportError:
 try:
     from wallet_pass import generate_pkpass, is_apple_wallet_available
     APPLE_WALLET_AVAILABLE = is_apple_wallet_available()
-except ImportError:
+    print(f"DEBUG checkin.py: APPLE_WALLET_AVAILABLE = {APPLE_WALLET_AVAILABLE}")
+except ImportError as e:
     APPLE_WALLET_AVAILABLE = False
-    print("Warning: wallet_pass module not available")
+    print(f"Warning: wallet_pass module not available: {e}")
+except Exception as e:
+    APPLE_WALLET_AVAILABLE = False
+    print(f"Error loading wallet_pass: {e}")
 
 checkin = Blueprint('checkin', __name__)
 

@@ -383,7 +383,14 @@ def generate_pkpass(participant, tournament, checkin, base_url="https://pickleba
 def is_apple_wallet_available():
     """Check if certificates are available for Apple Wallet pass generation"""
     # Check environment variables first (Vercel/production)
-    if os.environ.get(ENV_CERT) and os.environ.get(ENV_KEY):
+    has_env_cert = bool(os.environ.get(ENV_CERT))
+    has_env_key = bool(os.environ.get(ENV_KEY))
+
+    print(f"DEBUG Apple Wallet: ENV_CERT ({ENV_CERT}) present: {has_env_cert}")
+    print(f"DEBUG Apple Wallet: ENV_KEY ({ENV_KEY}) present: {has_env_key}")
+
+    if has_env_cert and has_env_key:
+        print("DEBUG Apple Wallet: Using environment variables - AVAILABLE")
         return True
 
     # Check local files (development)
@@ -391,4 +398,13 @@ def is_apple_wallet_available():
     cert_path = os.path.join(app_root, CERT_PATH)
     key_path = os.path.join(app_root, KEY_PATH)
 
-    return os.path.exists(cert_path) and os.path.exists(key_path)
+    has_cert_file = os.path.exists(cert_path)
+    has_key_file = os.path.exists(key_path)
+
+    print(f"DEBUG Apple Wallet: cert file exists: {has_cert_file} ({cert_path})")
+    print(f"DEBUG Apple Wallet: key file exists: {has_key_file} ({key_path})")
+
+    available = has_cert_file and has_key_file
+    print(f"DEBUG Apple Wallet: Using files - {'AVAILABLE' if available else 'NOT AVAILABLE'}")
+
+    return available
