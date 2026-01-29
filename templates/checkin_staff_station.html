@@ -62,12 +62,6 @@
                     <strong id="pname"></strong> <span class="text-muted" id="pcountry"></span>
                 </div>
                 
-                <h6 class="text-danger">🚨 Emergency Contact</h6>
-                <div class="row mb-3">
-                    <div class="col-md-6"><input type="text" class="form-control" id="ec_name" placeholder="Contact Name *" required></div>
-                    <div class="col-md-6"><input type="tel" class="form-control" id="ec_phone" placeholder="Contact Phone *" required></div>
-                </div>
-                
                 <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Date of Birth *</label>
@@ -83,6 +77,18 @@
                             <option value="">Select</option>
                             {% for s in tshirt_sizes %}<option>{{ s }}</option>{% endfor %}
                         </select>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <a class="text-muted small" data-bs-toggle="collapse" href="#emergencySection" role="button">
+                        🚨 Emergency Contact (optional) ▼
+                    </a>
+                    <div class="collapse mt-2" id="emergencySection">
+                        <div class="row">
+                            <div class="col-md-6"><input type="text" class="form-control" id="ec_name" placeholder="Contact Name"></div>
+                            <div class="col-md-6"><input type="tel" class="form-control" id="ec_phone" placeholder="Contact Phone"></div>
+                        </div>
                     </div>
                 </div>
                 

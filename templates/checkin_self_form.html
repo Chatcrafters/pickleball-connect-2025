@@ -33,31 +33,41 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Check-in Form -->
     <form method="POST" id="checkinForm">
-        
-        <!-- Emergency Contact -->
+
+        <!-- Personal Info / Date of Birth -->
         <div class="card mb-4">
-            <div class="card-header bg-danger text-white">
-                <i class="bi bi-exclamation-triangle me-2"></i>{{ t.emergency_contact }}
-            </div>
+            <div class="card-header"><i class="bi bi-person me-2"></i>Personal Info</div>
             <div class="card-body">
-                <p class="text-muted small mb-3">{{ t.emergency_help }}</p>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ t.emergency_name }} *</label>
-                    <input type="text" name="emergency_contact_name" class="form-control" required placeholder="Maria Garcia">
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label">{{ t.emergency_phone }} *</label>
-                    <input type="tel" name="emergency_contact_phone" class="form-control" required placeholder="+34 612 345 678">
-                </div>
-                
                 <div class="mb-0">
                     <label class="form-label">{{ t.date_of_birth }} *</label>
                     <input type="date" name="date_of_birth" class="form-control" required max="2010-01-01">
+                </div>
+            </div>
+        </div>
+
+        <!-- Emergency Contact (Collapsible) -->
+        <div class="card mb-4">
+            <div class="card-header bg-light" style="cursor: pointer;" data-bs-toggle="collapse" data-bs-target="#emergencySection">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ t.emergency_contact }}
+                <span class="text-muted small ms-2">(optional)</span>
+                <i class="bi bi-chevron-down float-end"></i>
+            </div>
+            <div class="collapse" id="emergencySection">
+                <div class="card-body">
+                    <p class="text-muted small mb-3">{{ t.emergency_help }}</p>
+
+                    <div class="mb-3">
+                        <label class="form-label">{{ t.emergency_name }}</label>
+                        <input type="text" name="emergency_contact_name" class="form-control" placeholder="Maria Garcia">
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label">{{ t.emergency_phone }}</label>
+                        <input type="tel" name="emergency_contact_phone" class="form-control" placeholder="+34 612 345 678">
+                    </div>
                 </div>
             </div>
         </div>
