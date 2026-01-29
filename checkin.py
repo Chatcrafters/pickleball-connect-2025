@@ -7,7 +7,7 @@ Registriere in deiner App:
     app.register_blueprint(checkin)
 """
 
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, send_file
 from models import db, Event, SHIRT_SIZES
 from models import TournamentCheckinSettings, TournamentParticipant, TournamentCheckin, CheckinSyncQueue
 from datetime import datetime
@@ -21,6 +21,13 @@ try:
 except ImportError:
     QR_AVAILABLE = False
     print("Warning: qrcode not installed. Run: pip install qrcode[pil]")
+
+try:
+    from wallet_pass import generate_pkpass, is_apple_wallet_available
+    APPLE_WALLET_AVAILABLE = is_apple_wallet_available()
+except ImportError:
+    APPLE_WALLET_AVAILABLE = False
+    print("Warning: wallet_pass module not available")
 
 checkin = Blueprint('checkin', __name__)
 
@@ -500,7 +507,39 @@ def wallet_pass(token):
         tournament=tournament,
         checkin=checkin_record,
         qr_image=qr_image,
-        country_flags=country_flags)
+        country_flags=country_flags,
+        apple_wallet_available=APPLE_WALLET_AVAILABLE)
+
+
+@checkin.route('/checkin/wallet/<token>/apple')
+def apple_wallet_pass(token):
+    """Generate and download Apple Wallet .pkpass file"""
+    if not APPLE_WALLET_AVAILABLE:
+        flash('Apple Wallet is not configured', 'error')
+        return redirect(url_for('checkin.wallet_pass', token=token))
+
+    participant = TournamentParticipant.query.filter_by(checkin_token=token).first_or_404()
+    tournament = participant.tournament
+    checkin_record = TournamentCheckin.query.filter_by(participant_id=participant.id).first()
+
+    if not checkin_record:
+        return redirect(url_for('checkin.self_checkin', token=token))
+
+    try:
+        # Generate the .pkpass file
+        pkpass_buffer = generate_pkpass(participant, tournament, checkin_record)
+
+        # Send the file
+        filename = f"WPC_{participant.first_name}_{participant.last_name}.pkpass"
+        return send_file(
+            pkpass_buffer,
+            mimetype='application/vnd.apple.pkpass',
+            as_attachment=True,
+            download_name=filename
+        )
+    except Exception as e:
+        flash(f'Error generating pass: {str(e)}', 'error')
+        return redirect(url_for('checkin.wallet_pass', token=token))
 
 
 # ============================================================================

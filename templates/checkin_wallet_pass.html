@@ -292,6 +292,24 @@
             color: white;
         }
 
+        .apple-wallet-btn {
+            display: flex;
+            justify-content: center;
+            width: 100%;
+            padding: 8px;
+            background: #000;
+            border-radius: 12px;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .apple-wallet-btn:hover {
+            opacity: 0.9;
+        }
+
+        .apple-wallet-btn:active {
+            transform: scale(0.98);
+        }
+
         /* Animations */
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
@@ -375,6 +393,17 @@
             <div class="pass-id">PASS ID: {{ participant.id }}-{{ checkin.id }}</div>
         </div>
     </div>
+
+    <!-- Apple Wallet Button -->
+    {% if apple_wallet_available %}
+    <div class="action-buttons" style="margin-top: 20px;">
+        <a href="{{ url_for('checkin.apple_wallet_pass', token=participant.checkin_token) }}"
+           class="apple-wallet-btn">
+            <img src="https://developer.apple.com/wallet/add-to-apple-wallet-guidelines/images/add-to-apple-wallet-logo.svg"
+                 alt="Add to Apple Wallet" style="height: 44px;">
+        </a>
+    </div>
+    {% endif %}
 
     <!-- Action Buttons -->
     <div class="action-buttons">
