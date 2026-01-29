@@ -7,6 +7,7 @@ import json
 import hashlib
 import zipfile
 import os
+import base64
 from io import BytesIO
 from datetime import datetime
 from cryptography.hazmat.primitives import hashes, serialization
@@ -19,10 +20,15 @@ TEAM_ID = "22LC4K2G55"
 PASS_TYPE_ID = "pass.eu.pickleballconnect.wpc"
 ORGANIZATION_NAME = "World Pickleball Championship"
 
-# Paths to certificates (relative to app root)
+# Paths to certificates (relative to app root) - used in development
 CERT_PATH = "certificates/wpc_pass_cert.pem"
 KEY_PATH = "certificates/wpc_pass.key"
 WWDR_PATH = "certificates/AppleWWDRCAG4.pem"  # Apple WWDR certificate
+
+# Environment variable names for production (Vercel)
+ENV_CERT = "APPLE_PASS_CERT"
+ENV_KEY = "APPLE_PASS_KEY"
+ENV_WWDR = "APPLE_WWDR_CERT"
 
 # Colors
 WPC_GREEN = "#2E9E4B"
@@ -157,23 +163,57 @@ def create_manifest(files_dict):
     return json.dumps(manifest, separators=(',', ':'), sort_keys=True)
 
 
-def sign_manifest(manifest_data, cert_path, key_path, wwdr_path):
+def load_certificate_data():
+    """
+    Load certificate data from environment variables (production) or files (development).
+    Returns tuple of (cert_data, key_data, wwdr_data) as bytes.
+    """
+    # Check for environment variables first (Vercel/production)
+    cert_b64 = os.environ.get(ENV_CERT)
+    key_b64 = os.environ.get(ENV_KEY)
+    wwdr_b64 = os.environ.get(ENV_WWDR)
+
+    if cert_b64 and key_b64:
+        # Production: decode from Base64 environment variables
+        cert_data = base64.b64decode(cert_b64)
+        key_data = base64.b64decode(key_b64)
+        wwdr_data = base64.b64decode(wwdr_b64) if wwdr_b64 else None
+        return cert_data, key_data, wwdr_data
+
+    # Development: load from files
+    app_root = os.path.dirname(os.path.abspath(__file__))
+    cert_path = os.path.join(app_root, CERT_PATH)
+    key_path = os.path.join(app_root, KEY_PATH)
+    wwdr_path = os.path.join(app_root, WWDR_PATH)
+
+    with open(cert_path, 'rb') as f:
+        cert_data = f.read()
+    with open(key_path, 'rb') as f:
+        key_data = f.read()
+
+    wwdr_data = None
+    if os.path.exists(wwdr_path):
+        with open(wwdr_path, 'rb') as f:
+            wwdr_data = f.read()
+
+    return cert_data, key_data, wwdr_data
+
+
+def sign_manifest(manifest_data, cert_path=None, key_path=None, wwdr_path=None):
     """Sign the manifest using PKCS#7 detached signature"""
     try:
-        # Load certificate
-        with open(cert_path, 'rb') as f:
-            cert = load_pem_x509_certificate(f.read(), default_backend())
+        # Load certificate data (from env vars or files)
+        cert_data, key_data, wwdr_data = load_certificate_data()
 
-        # Load private key
-        with open(key_path, 'rb') as f:
-            key = serialization.load_pem_private_key(f.read(), password=None, backend=default_backend())
+        # Parse certificates
+        cert = load_pem_x509_certificate(cert_data, default_backend())
+        key = serialization.load_pem_private_key(key_data, password=None, backend=default_backend())
 
-        # Load WWDR certificate (if exists)
+        # Load WWDR certificate if available
         additional_certs = []
-        if os.path.exists(wwdr_path):
-            with open(wwdr_path, 'rb') as f:
-                wwdr_cert = load_pem_x509_certificate(f.read(), default_backend())
-                additional_certs.append(wwdr_cert)
+        if wwdr_data:
+            wwdr_cert = load_pem_x509_certificate(wwdr_data, default_backend())
+            additional_certs.append(wwdr_cert)
 
         # Create PKCS#7 signature
         if isinstance(manifest_data, str):
@@ -324,13 +364,8 @@ def generate_pkpass(participant, tournament, checkin, base_url="https://pickleba
     manifest_json = create_manifest(files)
     files["manifest.json"] = manifest_json
 
-    # Sign manifest
-    app_root = os.path.dirname(os.path.abspath(__file__))
-    cert_path = os.path.join(app_root, CERT_PATH)
-    key_path = os.path.join(app_root, KEY_PATH)
-    wwdr_path = os.path.join(app_root, WWDR_PATH)
-
-    signature = sign_manifest(manifest_json, cert_path, key_path, wwdr_path)
+    # Sign manifest (loads certificates from env vars or files automatically)
+    signature = sign_manifest(manifest_json)
     files["signature"] = signature
 
     # Create ZIP file (.pkpass)
@@ -346,7 +381,12 @@ def generate_pkpass(participant, tournament, checkin, base_url="https://pickleba
 
 
 def is_apple_wallet_available():
-    """Check if certificate files exist for Apple Wallet pass generation"""
+    """Check if certificates are available for Apple Wallet pass generation"""
+    # Check environment variables first (Vercel/production)
+    if os.environ.get(ENV_CERT) and os.environ.get(ENV_KEY):
+        return True
+
+    # Check local files (development)
     app_root = os.path.dirname(os.path.abspath(__file__))
     cert_path = os.path.join(app_root, CERT_PATH)
     key_path = os.path.join(app_root, KEY_PATH)
