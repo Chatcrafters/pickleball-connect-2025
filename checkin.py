@@ -22,16 +22,19 @@ except ImportError:
     QR_AVAILABLE = False
     print("Warning: qrcode not installed. Run: pip install qrcode[pil]")
 
+WALLET_PASS_ERROR = None
 try:
     from wallet_pass import generate_pkpass, is_apple_wallet_available
     # Don't cache at import time - check dynamically
     WALLET_PASS_MODULE_AVAILABLE = True
 except ImportError as e:
     WALLET_PASS_MODULE_AVAILABLE = False
+    WALLET_PASS_ERROR = f"ImportError: {e}"
     is_apple_wallet_available = lambda: False
     print(f"Warning: wallet_pass module not available: {e}")
 except Exception as e:
     WALLET_PASS_MODULE_AVAILABLE = False
+    WALLET_PASS_ERROR = f"Exception: {e}"
     is_apple_wallet_available = lambda: False
     print(f"Error loading wallet_pass: {e}")
 
@@ -564,6 +567,7 @@ def api_debug_apple_wallet():
     return jsonify({
         'APPLE_WALLET_AVAILABLE': is_apple_wallet_available(),
         'wallet_pass_module_available': WALLET_PASS_MODULE_AVAILABLE,
+        'wallet_pass_error': WALLET_PASS_ERROR,
         'env_vars': {
             'APPLE_PASS_CERT': bool(cert_val),
             'APPLE_PASS_KEY': bool(key_val),
