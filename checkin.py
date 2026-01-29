@@ -452,9 +452,9 @@ def self_checkin(token):
             
             db.session.add(checkin_record)
             db.session.commit()
-            
-            return render_template('checkin_success.html',
-                participant=participant, tournament=tournament, checkin=checkin_record, t=t, lang=lang)
+
+            # Redirect to wallet pass
+            return redirect(url_for('checkin.wallet_pass', token=token))
             
         except Exception as e:
             db.session.rollback()
@@ -464,6 +464,43 @@ def self_checkin(token):
         participant=participant, tournament=tournament, settings=settings, waiver=waiver,
         t=t, lang=lang, tshirt_sizes=TSHIRT_SIZES,
         country_phone_code=COUNTRY_PHONE_CODES.get(participant.country, ''))
+
+
+@checkin.route('/checkin/wallet/<token>')
+def wallet_pass(token):
+    """Mobile wallet-style check-in pass"""
+    participant = TournamentParticipant.query.filter_by(checkin_token=token).first_or_404()
+    tournament = participant.tournament
+    checkin_record = TournamentCheckin.query.filter_by(participant_id=participant.id).first()
+
+    if not checkin_record:
+        # Not checked in yet, redirect to check-in form
+        return redirect(url_for('checkin.self_checkin', token=token))
+
+    # Generate QR code for the wallet pass URL
+    base_url = request.host_url.rstrip('/')
+    wallet_url = f"{base_url}/checkin/wallet/{token}"
+    qr_image = generate_qr_code(wallet_url, size=6)
+
+    # Country flags mapping
+    country_flags = {
+        'Germany': '🇩🇪', 'Spain': '🇪🇸', 'France': '🇫🇷', 'Italy': '🇮🇹',
+        'Portugal': '🇵🇹', 'United Kingdom': '🇬🇧', 'Netherlands': '🇳🇱',
+        'Belgium': '🇧🇪', 'Austria': '🇦🇹', 'Switzerland': '🇨🇭',
+        'Sweden': '🇸🇪', 'Denmark': '🇩🇰', 'Norway': '🇳🇴', 'Finland': '🇫🇮',
+        'Poland': '🇵🇱', 'Czech Republic': '🇨🇿', 'Hungary': '🇭🇺',
+        'United States': '🇺🇸', 'Canada': '🇨🇦', 'Mexico': '🇲🇽',
+        'Argentina': '🇦🇷', 'Brazil': '🇧🇷', 'Thailand': '🇹🇭',
+        'Ireland': '🇮🇪', 'Slovakia': '🇸🇰', 'Serbia': '🇷🇸',
+        'Latvia': '🇱🇻', 'Malta': '🇲🇹', 'Greece': '🇬🇷',
+    }
+
+    return render_template('checkin_wallet_pass.html',
+        participant=participant,
+        tournament=tournament,
+        checkin=checkin_record,
+        qr_image=qr_image,
+        country_flags=country_flags)
 
 
 # ============================================================================
