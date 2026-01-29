@@ -182,6 +182,7 @@ def sign_manifest(manifest_data, cert_path, key_path, wwdr_path):
         from cryptography.hazmat.primitives.serialization import pkcs7 as pkcs7_mod
 
         builder = pkcs7_mod.PKCS7SignatureBuilder().set_data(manifest_data)
+        # Use SHA-256 (Apple accepts this for modern passes)
         builder = builder.add_signer(cert, key, hashes.SHA256())
 
         for additional_cert in additional_certs:
@@ -212,6 +213,35 @@ def get_logo_data():
                 return f.read()
 
     return None
+
+
+def resize_image_for_pass(image_data, max_width, max_height):
+    """Resize image to fit within max dimensions, maintaining aspect ratio"""
+    try:
+        from PIL import Image
+        from io import BytesIO
+
+        img = Image.open(BytesIO(image_data))
+
+        # Convert to RGBA if needed
+        if img.mode != 'RGBA':
+            img = img.convert('RGBA')
+
+        # Calculate new size maintaining aspect ratio
+        ratio = min(max_width / img.width, max_height / img.height)
+        new_size = (int(img.width * ratio), int(img.height * ratio))
+
+        img = img.resize(new_size, Image.LANCZOS)
+
+        # Save to bytes
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        return buffer.getvalue()
+    except ImportError:
+        return image_data  # Return original if PIL not available
+    except Exception:
+        return image_data
 
 
 def create_simple_icon():
@@ -274,13 +304,15 @@ def generate_pkpass(participant, tournament, checkin, base_url="https://pickleba
         "pass.json": pass_json
     }
 
-    # Add logo/icon files
+    # Add logo/icon files with proper sizes for Apple Wallet
     logo_data = get_logo_data()
     if logo_data:
-        files["icon.png"] = logo_data
-        files["icon@2x.png"] = logo_data
-        files["logo.png"] = logo_data
-        files["logo@2x.png"] = logo_data
+        # Icon: 29x29 (1x), 58x58 (2x), 87x87 (3x)
+        files["icon.png"] = resize_image_for_pass(logo_data, 29, 29)
+        files["icon@2x.png"] = resize_image_for_pass(logo_data, 58, 58)
+        # Logo: max 160x50 (1x), 320x100 (2x) - used in pass header
+        files["logo.png"] = resize_image_for_pass(logo_data, 160, 50)
+        files["logo@2x.png"] = resize_image_for_pass(logo_data, 320, 100)
     else:
         # Create simple icon
         icon_data = create_simple_icon()
