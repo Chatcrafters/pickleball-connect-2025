@@ -550,6 +550,22 @@ def apple_wallet_pass(token):
 # API ENDPOINTS
 # ============================================================================
 
+@checkin.route('/api/debug/apple-wallet')
+def api_debug_apple_wallet():
+    """Debug endpoint to check Apple Wallet configuration"""
+    import os
+    return jsonify({
+        'APPLE_WALLET_AVAILABLE': APPLE_WALLET_AVAILABLE,
+        'env_vars': {
+            'APPLE_PASS_CERT': bool(os.environ.get('APPLE_PASS_CERT')),
+            'APPLE_PASS_KEY': bool(os.environ.get('APPLE_PASS_KEY')),
+            'APPLE_WWDR_CERT': bool(os.environ.get('APPLE_WWDR_CERT')),
+        },
+        'cert_length': len(os.environ.get('APPLE_PASS_CERT', '')) if os.environ.get('APPLE_PASS_CERT') else 0,
+        'key_length': len(os.environ.get('APPLE_PASS_KEY', '')) if os.environ.get('APPLE_PASS_KEY') else 0,
+    })
+
+
 @checkin.route('/api/tournament/<int:tournament_id>/checkin/init')
 def api_checkin_init(tournament_id):
     """Initialize offline data"""
