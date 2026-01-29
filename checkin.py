@@ -24,13 +24,15 @@ except ImportError:
 
 try:
     from wallet_pass import generate_pkpass, is_apple_wallet_available
-    APPLE_WALLET_AVAILABLE = is_apple_wallet_available()
-    print(f"DEBUG checkin.py: APPLE_WALLET_AVAILABLE = {APPLE_WALLET_AVAILABLE}")
+    # Don't cache at import time - check dynamically
+    WALLET_PASS_MODULE_AVAILABLE = True
 except ImportError as e:
-    APPLE_WALLET_AVAILABLE = False
+    WALLET_PASS_MODULE_AVAILABLE = False
+    is_apple_wallet_available = lambda: False
     print(f"Warning: wallet_pass module not available: {e}")
 except Exception as e:
-    APPLE_WALLET_AVAILABLE = False
+    WALLET_PASS_MODULE_AVAILABLE = False
+    is_apple_wallet_available = lambda: False
     print(f"Error loading wallet_pass: {e}")
 
 checkin = Blueprint('checkin', __name__)
@@ -512,13 +514,13 @@ def wallet_pass(token):
         checkin=checkin_record,
         qr_image=qr_image,
         country_flags=country_flags,
-        apple_wallet_available=APPLE_WALLET_AVAILABLE)
+        apple_wallet_available=is_apple_wallet_available())
 
 
 @checkin.route('/checkin/wallet/<token>/apple')
 def apple_wallet_pass(token):
     """Generate and download Apple Wallet .pkpass file"""
-    if not APPLE_WALLET_AVAILABLE:
+    if not is_apple_wallet_available():
         flash('Apple Wallet is not configured', 'error')
         return redirect(url_for('checkin.wallet_pass', token=token))
 
@@ -555,7 +557,7 @@ def api_debug_apple_wallet():
     """Debug endpoint to check Apple Wallet configuration"""
     import os
     return jsonify({
-        'APPLE_WALLET_AVAILABLE': APPLE_WALLET_AVAILABLE,
+        'APPLE_WALLET_AVAILABLE': is_apple_wallet_available(),
         'env_vars': {
             'APPLE_PASS_CERT': bool(os.environ.get('APPLE_PASS_CERT')),
             'APPLE_PASS_KEY': bool(os.environ.get('APPLE_PASS_KEY')),
