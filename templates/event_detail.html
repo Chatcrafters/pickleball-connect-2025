@@ -16,9 +16,6 @@
                 <a href="{{ url_for('events.edit_event', event_id=event.id) }}" class="btn btn-outline-primary">
                     <i class="bi bi-pencil"></i> Bearbeiten
                 </a>
-                <a href="{{ url_for('admin.edit_event_advanced', event_id=event.id) }}" class="btn btn-outline-info">
-                    <i class="bi bi-gear"></i> Erweitert
-                </a>
             </div>
             <form action="{{ url_for('events.delete_event', event_id=event.id) }}" method="POST" class="d-inline ms-2" onsubmit="return confirmDelete('Möchtest du dieses Event wirklich löschen?');">
                 <button type="submit" class="btn btn-outline-danger">

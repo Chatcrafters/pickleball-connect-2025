@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.page_title }} - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 600px;">
+    
+    <!-- Language Selector -->
+    <div class="text-end mb-3">
+        <div class="btn-group btn-group-sm">
+            <a href="?lang=en" class="btn btn-{{ 'primary' if lang == 'en' else 'outline-secondary' }}">EN</a>
+            <a href="?lang=de" class="btn btn-{{ 'primary' if lang == 'de' else 'outline-secondary' }}">DE</a>
+            <a href="?lang=es" class="btn btn-{{ 'primary' if lang == 'es' else 'outline-secondary' }}">ES</a>
+            <a href="?lang=fr" class="btn btn-{{ 'primary' if lang == 'fr' else 'outline-secondary' }}">FR</a>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <div class="card mb-4 border-0 bg-primary text-white">
+        <div class="card-body text-center py-4">
+            <h1 class="h3 mb-2">🏓 {{ tournament.name }}</h1>
+            <p class="mb-0 opacity-75">{{ t.checkin_title }}</p>
+        </div>
+    </div>
+    
+    <!-- Player Info -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">{{ t.welcome }}, {{ participant.first_name }}!</h5>
+            <div class="row text-muted small">
+                <div class="col-6"><strong>Country:</strong> {{ participant.country or '—' }}</div>
+                <div class="col-6"><strong>Email:</strong> {{ participant.email or '—' }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Check-in Form -->
+    <form method="POST" id="checkinForm">
+        
+        <!-- Emergency Contact -->
+        <div class="card mb-4">
+            <div class="card-header bg-danger text-white">
+                <i class="bi bi-exclamation-triangle me-2"></i>{{ t.emergency_contact }}
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">{{ t.emergency_help }}</p>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t.emergency_name }} *</label>
+                    <input type="text" name="emergency_contact_name" class="form-control" required placeholder="Maria Garcia">
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">{{ t.emergency_phone }} *</label>
+                    <input type="tel" name="emergency_contact_phone" class="form-control" required placeholder="+34 612 345 678">
+                </div>
+                
+                <div class="mb-0">
+                    <label class="form-label">{{ t.date_of_birth }} *</label>
+                    <input type="date" name="date_of_birth" class="form-control" required max="2010-01-01">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Communication -->
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-chat-dots me-2"></i>Communication</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">{{ t.phone }}</label>
+                    <input type="tel" name="phone_number" class="form-control" 
+                           placeholder="{{ country_phone_code }} 612 345 678" value="{{ country_phone_code }}">
+                    <div class="form-text">{{ t.phone_help }}</div>
+                </div>
+                
+                <div class="form-check">
+                    <input type="checkbox" name="whatsapp_optin" class="form-check-input" id="whatsapp_optin" checked>
+                    <label class="form-check-label" for="whatsapp_optin">
+                        <i class="bi bi-whatsapp text-success me-1"></i>{{ t.whatsapp_optin }}
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Welcome Pack -->
+        <div class="card mb-4">
+            <div class="card-header"><i class="bi bi-gift me-2"></i>Welcome Pack</div>
+            <div class="card-body">
+                <label class="form-label">{{ t.tshirt_size }} *</label>
+                <select name="tshirt_size" class="form-select" required>
+                    <option value="">-- Select --</option>
+                    {% for size in tshirt_sizes %}
+                    <option value="{{ size }}">{{ size }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <!-- Liability Waiver -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning"><i class="bi bi-shield-check me-2"></i>{{ t.liability }}</div>
+            <div class="card-body">
+                <h6>{{ waiver.title }}</h6>
+                <div class="border rounded p-3 bg-light mb-3" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem;">
+                    {{ waiver.text | replace('\n', '<br>') | safe }}
+                </div>
+                
+                <div class="form-check">
+                    <input type="checkbox" name="liability_accepted" class="form-check-input" id="liability_accepted" required>
+                    <label class="form-check-label fw-bold" for="liability_accepted">{{ waiver.checkbox_label }} *</label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Submit -->
+        <div class="d-grid">
+            <button type="submit" class="btn btn-success btn-lg" id="submitBtn">
+                <i class="bi bi-check-circle me-2"></i>{{ t.submit }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+document.getElementById('checkinForm').addEventListener('submit', function(e) {
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+});
+</script>
+{% endblock %}

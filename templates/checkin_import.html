@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Import Participants - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 700px;">
+    
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('checkin.admin_checkin_dashboard', tournament_id=tournament.id) }}">Check-in Dashboard</a></li>
+            <li class="breadcrumb-item active">Import Participants</li>
+        </ol>
+    </nav>
+    
+    <div class="card">
+        <div class="card-header"><i class="bi bi-upload me-2"></i>Import from Pickleball Global CSV</div>
+        <div class="card-body">
+            
+            <div class="alert alert-info">
+                <h6><i class="bi bi-info-circle me-2"></i>Expected Format (Tab-separated)</h6>
+                <pre class="mb-0 small bg-light p-2 rounded">COUNTRY    PLAYERS    ACTION
+Spain      57         VIEW
+1140666    Alberto Horcajuelo    albertohorcajuelov@gmail.com
+2140459    Alicia Garcia         alicia.garcia@gmail.com
+Italy      17         VIEW
+1113498    Alberto Vedani        aaairshot@gmail.com</pre>
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-4">
+                    <label class="form-label">Select CSV/TSV file from Pickleball Global</label>
+                    <input type="file" name="csv_file" class="form-control" accept=".csv,.tsv,.txt" required>
+                    <div class="form-text">Export "All Registered Players" from Pickleball Global</div>
+                </div>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-upload me-2"></i>Import Participants</button>
+                    <a href="{{ url_for('checkin.admin_checkin_dashboard', tournament_id=tournament.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

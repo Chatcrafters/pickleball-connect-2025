@@ -603,3 +603,118 @@ COUNTRY_FLAGS = {
     'EUR': 'ðŸ‡ªðŸ‡º',
     'WORLD': 'ðŸŒ',
 }
+
+
+# ============================================================================
+# CHECK-IN SYSTEM MODELS
+# ============================================================================
+
+
+class TournamentCheckinSettings(db.Model):
+    """Tournament-specific check-in settings including liability waiver"""
+    __tablename__ = 'tournament_checkin_settings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    liability_waiver_text = db.Column(db.Text, nullable=True)
+    liability_waiver_lang = db.Column(db.String(5), default='en')
+    liability_waiver_version = db.Column(db.String(20), default='v1')
+    welcome_pack_items = db.Column(db.JSON, default=lambda: {"tshirt": True})
+    checkin_open = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    tournament = db.relationship('Event', backref='checkin_settings_rel')
+
+
+class TournamentParticipant(db.Model):
+    """Participants imported from external systems (Pickleball Global CSV)"""
+    __tablename__ = 'tournament_participant'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    external_id = db.Column(db.String(50), nullable=True)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
+    division = db.Column(db.String(100), nullable=True)
+    partner_name = db.Column(db.String(200), nullable=True)
+    dupr_rating = db.Column(db.String(10), nullable=True)
+    checkin_token = db.Column(db.String(64), unique=True, nullable=True)
+    imported_at = db.Column(db.DateTime, default=datetime.utcnow)
+    import_source = db.Column(db.String(50), default='pickleball_global')
+
+    tournament = db.relationship('Event', backref='tournament_participants')
+    checkin = db.relationship('TournamentCheckin', back_populates='participant', uselist=False)
+
+    __table_args__ = (
+        db.UniqueConstraint('tournament_id', 'external_id', name='unique_participant_per_tournament'),
+    )
+
+    def generate_checkin_token(self):
+        self.checkin_token = secrets.token_urlsafe(32)
+        return self.checkin_token
+
+    def get_checkin_url(self, base_url='https://pickleballconnect.eu'):
+        if not self.checkin_token:
+            self.generate_checkin_token()
+        return f"{base_url}/checkin/self/{self.checkin_token}"
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
+    @property
+    def is_checked_in(self):
+        return self.checkin is not None
+
+
+class TournamentCheckin(db.Model):
+    """Check-in records with insurance data and welcome pack tracking"""
+    __tablename__ = 'tournament_checkin'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=False)
+    participant_id = db.Column(db.Integer, db.ForeignKey('tournament_participant.id'), nullable=False)
+    emergency_contact_name = db.Column(db.String(200), nullable=False)
+    emergency_contact_phone = db.Column(db.String(50), nullable=False)
+    date_of_birth = db.Column(db.Date, nullable=False)
+    liability_accepted = db.Column(db.Boolean, nullable=False, default=False)
+    liability_accepted_at = db.Column(db.DateTime, nullable=True)
+    liability_waiver_version = db.Column(db.String(20), nullable=True)
+    phone_number = db.Column(db.String(50), nullable=True)
+    whatsapp_optin = db.Column(db.Boolean, default=False)
+    preferred_language = db.Column(db.String(5), default='en')
+    tshirt_size = db.Column(db.String(10), nullable=True)
+    welcome_pack_received = db.Column(db.Boolean, default=False)
+    welcome_pack_received_at = db.Column(db.DateTime, nullable=True)
+    welcome_pack_notes = db.Column(db.Text, nullable=True)
+    checked_in_at = db.Column(db.DateTime, default=datetime.utcnow)
+    checked_in_by = db.Column(db.String(100), nullable=True)
+    checkin_method = db.Column(db.String(20), default='qr_self')
+    device_id = db.Column(db.String(100), nullable=True)
+    synced_to_server = db.Column(db.Boolean, default=True)
+    synced_at = db.Column(db.DateTime, nullable=True)
+    offline_created_at = db.Column(db.DateTime, nullable=True)
+
+    tournament = db.relationship('Event')
+    participant = db.relationship('TournamentParticipant', back_populates='checkin')
+
+    __table_args__ = (
+        db.UniqueConstraint('tournament_id', 'participant_id', name='unique_checkin_per_participant'),
+    )
+
+
+class CheckinSyncQueue(db.Model):
+    """Queue for offline check-ins waiting to be synced"""
+    __tablename__ = 'checkin_sync_queue'
+
+    id = db.Column(db.Integer, primary_key=True)
+    device_id = db.Column(db.String(100), nullable=False)
+    tournament_id = db.Column(db.Integer, nullable=False)
+    payload = db.Column(db.JSON, nullable=False)
+    created_offline_at = db.Column(db.DateTime, nullable=False)
+    received_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed = db.Column(db.Boolean, default=False)
+    processed_at = db.Column(db.DateTime, nullable=True)
+    sync_error = db.Column(db.Text, nullable=True)

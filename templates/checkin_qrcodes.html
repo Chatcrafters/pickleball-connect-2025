@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}QR Codes - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    
+    <div class="d-print-none mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1">QR Codes for Check-in</h1>
+                <p class="text-muted mb-0">{{ tournament.name }} - {{ qr_data|length }} participants</p>
+            </div>
+            <div class="btn-group">
+                <a href="{{ url_for('checkin.admin_checkin_dashboard', tournament_id=tournament.id) }}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
+                <button onclick="window.print()" class="btn btn-primary"><i class="bi bi-printer me-1"></i>Print All</button>
+            </div>
+        </div>
+        <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>Print on adhesive labels or cut into cards. Players scan to check in.
+        </div>
+    </div>
+    
+    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+        {% for item in qr_data %}
+        <div class="col">
+            <div class="card h-100 qr-card">
+                <div class="card-body text-center p-2">
+                    {% if item.qr_image %}
+                    <img src="data:image/png;base64,{{ item.qr_image }}" class="img-fluid mb-2" style="max-width: 120px;">
+                    {% else %}
+                    <div class="bg-light p-3 mb-2"><small class="text-muted">QR unavailable</small></div>
+                    {% endif %}
+                    <h6 class="mb-0 text-truncate" style="font-size: 0.85rem;">{{ item.participant.first_name }} {{ item.participant.last_name }}</h6>
+                    <small class="text-muted">{{ item.participant.country or '' }}</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+@media print {
+    .qr-card { break-inside: avoid; border: 1px solid #ddd !important; }
+    .col { flex: 0 0 25% !important; max-width: 25% !important; padding: 5px !important; }
+    img { max-width: 100px !important; }
+    h6 { font-size: 0.75rem !important; }
+}
+</style>
+{% endblock %}

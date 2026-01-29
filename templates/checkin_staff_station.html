@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Check-in - {{ tournament.name }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f5f5f5; }
+        .search-box { position: sticky; top: 0; background: #fff; padding: 1rem; border-bottom: 2px solid #0d6efd; z-index: 100; }
+        .player-card { cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+        .player-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+        .player-card.done { background: #d1e7dd; border-color: #198754; }
+        .offline-bar { background: #dc3545; color: white; text-align: center; padding: 8px; display: none; }
+        .offline-bar.visible { display: block; }
+    </style>
+</head>
+<body>
+
+<div class="offline-bar" id="offlineBar">⚠️ OFFLINE - Data syncs when connected</div>
+
+<nav class="navbar navbar-dark bg-primary">
+    <div class="container-fluid">
+        <span class="navbar-brand">🏓 {{ tournament.name }}</span>
+        <span class="badge bg-light text-dark fs-6" id="counter">Loading...</span>
+    </div>
+</nav>
+
+<div class="search-box">
+    <div class="row g-2">
+        <div class="col">
+            <input type="text" id="search" class="form-control form-control-lg" placeholder="🔍 Search name..." autofocus>
+        </div>
+        <div class="col-auto">
+            <select id="filter" class="form-select form-select-lg">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="done">Done</option>
+            </select>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-primary btn-lg" onclick="refresh()">↻</button>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid py-3">
+    <div class="row g-3" id="grid"></div>
+</div>
+
+<!-- Check-in Modal -->
+<div class="modal fade" id="modal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="modalTitle">Check-in</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="pid">
+                <div class="alert alert-info mb-3">
+                    <strong id="pname"></strong> <span class="text-muted" id="pcountry"></span>
+                </div>
+                
+                <h6 class="text-danger">🚨 Emergency Contact</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6"><input type="text" class="form-control" id="ec_name" placeholder="Contact Name *" required></div>
+                    <div class="col-md-6"><input type="tel" class="form-control" id="ec_phone" placeholder="Contact Phone *" required></div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Date of Birth *</label>
+                        <input type="date" class="form-control" id="dob" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" id="phone" placeholder="+34...">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">T-Shirt *</label>
+                        <select class="form-select" id="tshirt" required>
+                            <option value="">Select</option>
+                            {% for s in tshirt_sizes %}<option>{{ s }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-check mb-3">
+                    <input type="checkbox" class="form-check-input" id="wa" checked>
+                    <label class="form-check-label" for="wa">📱 WhatsApp updates</label>
+                </div>
+                
+                <div class="alert alert-warning">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="liability" required>
+                        <label class="form-check-label" for="liability"><strong>✓ Liability waiver accepted</strong> (verbal)</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-success btn-lg" onclick="submit()">✓ Complete Check-in</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pack Modal -->
+<div class="modal fade" id="packModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content text-center">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Welcome Pack</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body py-4">
+                <h4 id="packName"></h4>
+                <div class="display-1 my-3 fw-bold" id="packSize"></div>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button class="btn btn-success btn-lg px-5" onclick="givePack()">🎁 Pack Given</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const TID = {{ tournament.id }};
+let players = [];
+let pending = JSON.parse(localStorage.getItem('pending_' + TID) || '[]');
+let online = navigator.onLine;
+let currentPack = null;
+
+async function init() {
+    await load();
+    render();
+    document.getElementById('search').oninput = render;
+    document.getElementById('filter').onchange = render;
+    window.addEventListener('online', () => { online = true; hideOffline(); sync(); });
+    window.addEventListener('offline', () => { online = false; showOffline(); });
+}
+
+async function load() {
+    try {
+        const r = await fetch('/api/tournament/' + TID + '/checkin/init');
+        const d = await r.json();
+        players = d.participants;
+        localStorage.setItem('cache_' + TID, JSON.stringify(d));
+    } catch(e) {
+        const c = localStorage.getItem('cache_' + TID);
+        if (c) players = JSON.parse(c).participants;
+    }
+}
+
+function render() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const f = document.getElementById('filter').value;
+    
+    let list = players.filter(p => {
+        const n = (p.first_name + ' ' + p.last_name).toLowerCase();
+        const match = n.includes(q) || (p.country || '').toLowerCase().includes(q);
+        if (f === 'pending') return match && !p.is_checked_in;
+        if (f === 'done') return match && p.is_checked_in;
+        return match;
+    });
+    
+    document.getElementById('grid').innerHTML = list.map(p => `
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card player-card ${p.is_checked_in ? 'done' : ''}" 
+                 onclick="${p.is_checked_in ? 'showPack(' + p.id + ')' : 'open(' + p.id + ')'}">
+                <div class="card-body">
+                    <h6 class="mb-1">${p.first_name} ${p.last_name}</h6>
+                    <small class="text-muted">${p.country || ''}</small>
+                    ${p.is_checked_in && p.checkin_data ? '<span class="badge bg-secondary float-end">' + (p.checkin_data.tshirt_size || '') + '</span>' : ''}
+                </div>
+            </div>
+        </div>
+    `).join('');
+    
+    document.getElementById('counter').textContent = players.filter(p => p.is_checked_in).length + '/' + players.length + ' ✓';
+}
+
+function open(id) {
+    const p = players.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('pid').value = id;
+    document.getElementById('pname').textContent = p.first_name + ' ' + p.last_name;
+    document.getElementById('pcountry').textContent = p.country || '';
+    document.getElementById('modalTitle').textContent = 'Check-in: ' + p.first_name;
+    ['ec_name', 'ec_phone', 'dob', 'phone', 'tshirt', 'liability'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.type === 'checkbox') el.checked = false;
+        else el.value = '';
+    });
+    document.getElementById('wa').checked = true;
+    new bootstrap.Modal(document.getElementById('modal')).show();
+}
+
+async function submit() {
+    if (!document.getElementById('liability').checked) { alert('Liability required!'); return; }
+    
+    const data = {
+        participant_id: parseInt(document.getElementById('pid').value),
+        emergency_contact_name: document.getElementById('ec_name').value,
+        emergency_contact_phone: document.getElementById('ec_phone').value,
+        date_of_birth: document.getElementById('dob').value,
+        phone_number: document.getElementById('phone').value,
+        tshirt_size: document.getElementById('tshirt').value,
+        whatsapp_optin: document.getElementById('wa').checked,
+        liability_accepted: true,
+        offline_at: new Date().toISOString()
+    };
+    
+    const p = players.find(x => x.id === data.participant_id);
+    if (p) { p.is_checked_in = true; p.checkin_data = { tshirt_size: data.tshirt_size }; }
+    
+    if (online) {
+        try { await fetch('/api/tournament/' + TID + '/checkin', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data) }); }
+        catch(e) { pending.push(data); localStorage.setItem('pending_' + TID, JSON.stringify(pending)); }
+    } else {
+        pending.push(data);
+        localStorage.setItem('pending_' + TID, JSON.stringify(pending));
+    }
+    
+    bootstrap.Modal.getInstance(document.getElementById('modal')).hide();
+    render();
+}
+
+function showPack(id) {
+    const p = players.find(x => x.id === id);
+    if (!p || !p.checkin_data) return;
+    currentPack = p;
+    document.getElementById('packName').textContent = p.first_name + ' ' + p.last_name;
+    document.getElementById('packSize').textContent = p.checkin_data.tshirt_size || '?';
+    new bootstrap.Modal(document.getElementById('packModal')).show();
+}
+
+function givePack() {
+    if (currentPack && currentPack.checkin_data) currentPack.checkin_data.welcome_pack_received = true;
+    bootstrap.Modal.getInstance(document.getElementById('packModal')).hide();
+}
+
+async function sync() {
+    if (pending.length > 0 && online) {
+        try {
+            await fetch('/api/tournament/' + TID + '/checkin/sync', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ checkins: pending }) });
+            pending = [];
+            localStorage.removeItem('pending_' + TID);
+        } catch(e) {}
+    }
+    await load();
+    render();
+}
+
+function refresh() { sync(); }
+function showOffline() { document.getElementById('offlineBar').classList.add('visible'); }
+function hideOffline() { document.getElementById('offlineBar').classList.remove('visible'); }
+
+init();
+</script>
+</body>
+</html>
