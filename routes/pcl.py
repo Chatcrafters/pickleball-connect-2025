@@ -1981,20 +1981,37 @@ def api_team_players(token):
     })
 
 # ============================================================================
-# PLAYER CARDS ROUTE
+# PLAYER CARDS ROUTES
 # ============================================================================
 
-@pcl.route('/cards/<int:tournament_id>')
-def player_cards(tournament_id):
-    """Player cards generator page"""
+@pcl.route('/cards/tournament/<int:tournament_id>')
+def player_cards_tournament(tournament_id):
+    """Player cards generator for entire tournament"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
     
-    # Get all registrations with photos
     registrations = []
-    for team in tournament.teams.all():
+    for team in tournament.teams.order_by(PCLTeam.country_name).all():
         for reg in team.registrations.all():
             registrations.append(reg)
     
+    # Use first team as default for template compatibility
+    first_team = tournament.teams.first()
+    
     return render_template('pcl/player_cards.html',
+                         team=first_team,
                          tournament=tournament,
-                         registrations=registrations)
+                         registrations=registrations,
+                         all_teams=True)
+
+
+@pcl.route('/cards/team/<int:team_id>')
+def player_cards_team(team_id):
+    """Player cards generator for a single team"""
+    team = PCLTeam.query.get_or_404(team_id)
+    registrations = team.registrations.all()
+    
+    return render_template('pcl/player_cards.html',
+                         team=team,
+                         tournament=team.tournament,
+                         registrations=registrations,
+                         all_teams=False)
