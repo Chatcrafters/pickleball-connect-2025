@@ -7,7 +7,30 @@
       "Bash(start wpc_malaga_standalone.html)",
       "Bash(copy \"C:\\\\Users\\\\Sergio Caro\\\\Downloads\\\\wpc_malaga_generator\\(8\\).html\" wpc_malaga_generator.html)",
       "Bash(start wpc_malaga_generator.html)",
-      "Bash(python -m http.server:*)"
+      "Bash(python -m http.server:*)",
+      "Bash(python:*)",
+      "Bash(set:*)",
+      "Bash(cmd.exe /c \"cd /d C:\\\\Users\\\\Sergio Caro\\\\Desktop\\\\pickleball_connect_2025 && set PYTHONIOENCODING=utf-8 && chcp 65001 >nul && python -c \"\"from app import app, db; from models import PCLTournament; from datetime import datetime; app.app_context\\(\\).push\\(\\); tournament = PCLTournament.query.first\\(\\); print\\(''Aktuell:'', tournament.name\\); print\\(''Deadline:'', tournament.registration_deadline\\); tournament.registration_deadline = datetime\\(2026, 1, 31, 23, 59\\); db.session.commit\\(\\); print\\(''Neue Deadline:'', tournament.registration_deadline\\)\"\"\")",
+      "Bash(pip install:*)",
+      "Bash(flask db migrate:*)",
+      "Bash(flask db:*)",
+      "Bash(findstr:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(flask routes:*)",
+      "Bash(curl:*)",
+      "Bash(openssl req:*)",
+      "Bash(dir:*)",
+      "Bash(echo:*)",
+      "Bash(openssl x509:*)",
+      "Bash(openssl pkcs7:*)",
+      "Bash(openssl smime:*)",
+      "Bash(openssl asn1parse:*)",
+      "Bash(xxd:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel login:*)",
+      "Bash(vercel whoami:*)",
+      "Bash(file:*)",
+      "Bash(unzip:*)"
     ]
   }
 }

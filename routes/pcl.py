@@ -577,6 +577,75 @@ def admin_tournament_detail(tournament_id):
                          now=datetime.utcnow())
 
 
+@pcl.route('/media/<int:tournament_id>')
+def media_page(tournament_id):
+    """Public media page with all player photos and info for social media"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    # Get all teams with their registrations
+    teams_data = []
+    total_photos = 0
+    
+    for team in tournament.teams.order_by(PCLTeam.country_name).all():
+        players = team.registrations.all()
+        players_with_photos = [p for p in players if p.photo_filename]
+        total_photos += len(players_with_photos)
+        
+        if players:
+            teams_data.append({
+                'team': team,
+                'players': players
+            })
+    
+    return render_template('pcl/media_page.html',
+                         tournament=tournament,
+                         teams_data=teams_data,
+                         total_photos=total_photos)
+
+
+@pcl.route('/admin/tournament/<int:tournament_id>/recheck', methods=['POST'])
+def recheck_tournament_status(tournament_id):
+    """Recheck all player statuses in a tournament"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    count = 0
+    for team in tournament.teams.all():
+        for reg in team.registrations.all():
+            reg.check_completeness()
+            count += 1
+    
+    db.session.commit()
+    flash(f'Status of {count} players rechecked!', 'success')
+    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
+
+
+@pcl.route('/media/<int:tournament_id>')
+def media_page(tournament_id):
+    """Public media page with all player photos and info for social media"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    teams_data = []
+    total_players = 0
+    players_with_photos = 0
+    
+    for team in tournament.teams.order_by(PCLTeam.country_name).all():
+        players = team.registrations.all()
+        total_players += len(players)
+        players_with_photos += len([p for p in players if p.photo_filename])
+        
+        if players:
+            teams_data.append({
+                'team': team,
+                'players': players
+            })
+    
+    return render_template('pcl/media_page.html',
+                         tournament=tournament,
+                         teams_data=teams_data,
+                         total_players=total_players,
+                         players_with_photos=players_with_photos)
+
+
 @pcl.route('/admin/tournament/<int:tournament_id>/add-team', methods=['GET', 'POST'])
 def add_team(tournament_id):
     """Add a team to a tournament"""
@@ -1952,3 +2021,22 @@ def api_team_players(token):
         'players': players,
         'stats': team.get_stats()
     })
+
+# ============================================================================
+# PLAYER CARDS ROUTE
+# ============================================================================
+
+@pcl.route('/cards/<int:tournament_id>')
+def player_cards(tournament_id):
+    """Player cards generator page"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    # Get all registrations with photos
+    registrations = []
+    for team in tournament.teams.all():
+        for reg in team.registrations.all():
+            registrations.append(reg)
+    
+    return render_template('pcl/player_cards.html',
+                         tournament=tournament,
+                         registrations=registrations)

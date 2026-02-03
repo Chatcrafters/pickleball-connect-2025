@@ -1,0 +1,94 @@
+{
+  "formatVersion": 1,
+  "teamIdentifier": "22LC4K2G55",
+  "passTypeIdentifier": "pass.eu.pickleballconnect.wpc",
+  "organizationName": "World Pickleball Championship",
+  "serialNumber": "WPC-1-53-1",
+  "description": "WPC Malaga Check-in Pass",
+  "backgroundColor": "rgb(46, 158, 75)",
+  "foregroundColor": "rgb(255, 255, 255)",
+  "labelColor": "rgb(232, 245, 233)",
+  "barcodes": [
+    {
+      "format": "PKBarcodeFormatQR",
+      "message": "yC8v_VUMpMBbv3JASyL2PEQ3ACMJCkPcZnF0Je29Yz4",
+      "messageEncoding": "iso-8859-1",
+      "altText": "ID: 53"
+    }
+  ],
+  "eventTicket": {
+    "headerFields": [
+      {
+        "key": "status",
+        "label": "STATUS",
+        "value": "CHECKED IN",
+        "textAlignment": "PKTextAlignmentRight"
+      }
+    ],
+    "primaryFields": [
+      {
+        "key": "name",
+        "label": "PLAYER",
+        "value": "Sergio Ruiz Caro"
+      }
+    ],
+    "secondaryFields": [
+      {
+        "key": "tournament",
+        "label": "EVENT",
+        "value": "WPC Malaga"
+      },
+      {
+        "key": "location",
+        "label": "LOCATION",
+        "value": "Malaga, Spain"
+      }
+    ],
+    "auxiliaryFields": [
+      {
+        "key": "country",
+        "label": "COUNTRY",
+        "value": "Spain"
+      },
+      {
+        "key": "tshirt",
+        "label": "T-SHIRT",
+        "value": "XL"
+      },
+      {
+        "key": "date",
+        "label": "CHECK-IN",
+        "value": "29 Jan 2026 13:02"
+      }
+    ],
+    "backFields": [
+      {
+        "key": "participant_id",
+        "label": "Participant ID",
+        "value": "53"
+      },
+      {
+        "key": "checkin_id",
+        "label": "Check-in ID",
+        "value": "1"
+      },
+      {
+        "key": "email",
+        "label": "Email",
+        "value": "sergiocaro@web.de"
+      },
+      {
+        "key": "emergency_contact",
+        "label": "Emergency Contact",
+        "value": "- (-)"
+      },
+      {
+        "key": "info",
+        "label": "Info",
+        "value": "Present this pass at the welcome pack station. For support: info@pickleballconnect.eu"
+      }
+    ]
+  },
+  "relevantDate": "2026-01-25",
+  "voided": false
+}

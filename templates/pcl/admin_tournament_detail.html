@@ -21,6 +21,12 @@
             </p>
         </div>
         <div class="col-md-4 text-end">
+            <a href="{{ url_for('pcl.media_page', tournament_id=tournament.id) }}" class="btn btn-info" target="_blank">
+                <i class="bi bi-camera"></i> Media Kit
+            </a>
+            <a href="{{ url_for('pcl.player_cards', tournament_id=tournament.id) }}" class="btn btn-purple" target="_blank" style="background: #6f42c1; color: white;">
+                <i class="bi bi-person-badge"></i> Player Cards
+            </a>
             <a href="{{ url_for('pcl.add_team', tournament_id=tournament.id) }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Add Team
             </a>
