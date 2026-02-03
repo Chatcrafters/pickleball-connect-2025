@@ -5,18 +5,18 @@ from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
 from utils.whatsapp import send_whatsapp_message
-from utils.auth import admin_required
 import os
 import csv
 import io
 import json
+from urllib.parse import quote
 
 pcl = Blueprint('pcl', __name__)
 
 # Configuration for file uploads
 UPLOAD_FOLDER = 'static/uploads/pcl'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
-MAX_FILE_SIZE = 1 * 1024 * 1024  # 1MB (client compresses to this)
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
 
 # Content Template SIDs for Captain Invitations (approved by Meta)
 CAPTAIN_INVITATION_TEMPLATES = {
@@ -94,8 +94,7 @@ TRANSLATIONS = {
         'shirt_size': 'Shirt Size',
         'profile': 'Profile',
         'photo': 'Profile Photo',
-        'photo_help': 'Required. JPG, PNG. Auto-compressed. Square format recommended.',
-        'auto_compressed': 'auto-compressed',
+        'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
         'upload_photo': 'Upload Photo',
         'bio': 'Short Bio',
         'bio_placeholder': 'Tell us about yourself, your pickleball journey...',
@@ -182,8 +181,7 @@ TRANSLATIONS = {
         'shirt_size': 'Shirt-GrÃ¶ÃŸe',
         'profile': 'Profil',
         'photo': 'Profilbild',
-        'photo_help': 'Pflichtfeld. JPG, PNG. Wird automatisch komprimiert. Quadratisches Format empfohlen.',
-        'auto_compressed': 'wird automatisch komprimiert',
+        'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
         'upload_photo': 'Foto hochladen',
         'bio': 'Kurze Bio',
         'bio_placeholder': 'ErzÃ¤hl uns von dir und deiner Pickleball-Reise...',
@@ -270,8 +268,7 @@ TRANSLATIONS = {
         'shirt_size': 'Talla de camiseta',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
-        'photo_help': 'Obligatorio. JPG, PNG. Se comprime automáticamente. Formato cuadrado recomendado.',
-        'auto_compressed': 'se comprime automáticamente',
+        'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
         'upload_photo': 'Subir foto',
         'bio': 'BiografÃ­a breve',
         'bio_placeholder': 'CuÃ©ntanos sobre ti y tu viaje en pickleball...',
@@ -358,8 +355,7 @@ TRANSLATIONS = {
         'shirt_size': 'Taille du maillot',
         'profile': 'Profil',
         'photo': 'Photo de profil',
-        'photo_help': 'Obligatoire. JPG, PNG. Compression automatique. Format carré recommandé.',
-        'auto_compressed': 'compression automatique',
+        'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
         'upload_photo': 'TÃ©lÃ©charger photo',
         'bio': 'Courte bio',
         'bio_placeholder': 'Parlez-nous de vous et de votre parcours pickleball...',
@@ -535,7 +531,6 @@ WPC Series Europe"""
 # ============================================================================
 
 @pcl.route('/admin')
-@admin_required
 def admin_dashboard():
     """PCL Admin Dashboard - Overview of all tournaments"""
     tournaments = PCLTournament.query.order_by(PCLTournament.start_date.desc()).all()
@@ -543,7 +538,6 @@ def admin_dashboard():
 
 
 @pcl.route('/admin/tournament/create', methods=['GET', 'POST'])
-@admin_required
 def create_tournament():
     """Create a new PCL tournament"""
     if request.method == 'POST':
@@ -569,7 +563,6 @@ def create_tournament():
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>')
-@admin_required
 def admin_tournament_detail(tournament_id):
     """Admin view of a tournament with all teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -585,7 +578,6 @@ def admin_tournament_detail(tournament_id):
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/add-team', methods=['GET', 'POST'])
-@admin_required
 def add_team(tournament_id):
     """Add a team to a tournament"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
@@ -621,36 +613,14 @@ def add_team(tournament_id):
 
 
 @pcl.route('/admin/team/<int:team_id>')
-@admin_required
 def admin_team_detail(team_id):
     """Admin view of a specific team with captain management"""
     team = PCLTeam.query.get_or_404(team_id)
     
-    # Use direct queries to avoid lazy loading issues
-    men = PCLRegistration.query.filter_by(team_id=team_id, gender='male').all()
-    women = PCLRegistration.query.filter_by(team_id=team_id, gender='female').all()
-    captains = PCLRegistration.query.filter_by(team_id=team_id, is_captain=True).all()
-    
-    # Calculate stats directly
-    men_complete = len([r for r in men if r.status == 'complete'])
-    women_complete = len([r for r in women if r.status == 'complete'])
-    
-    stats = {
-        'total': len(men) + len(women),
-        'men': len(men),
-        'women': len(women),
-        'captains': len(captains),
-        'men_complete': men_complete,
-        'women_complete': women_complete,
-        'men_with_photo': len([r for r in men if r.photo_filename]),
-        'women_with_photo': len([r for r in women if r.photo_filename]),
-        'is_complete': (
-            len(men) >= team.min_men and 
-            len(women) >= team.min_women and
-            men_complete >= team.min_men and
-            women_complete >= team.min_women
-        )
-    }
+    men = team.registrations.filter_by(gender='male').all()
+    women = team.registrations.filter_by(gender='female').all()
+    captains = team.registrations.filter_by(is_captain=True).all()
+    stats = team.get_stats()
     
     return render_template('pcl/admin_team_detail.html', 
                          team=team,
@@ -660,60 +630,7 @@ def admin_team_detail(team_id):
                          stats=stats)
 
 
-@pcl.route('/admin/team/<int:team_id>/cards')
-@admin_required
-def team_player_cards(team_id):
-    """Player card generator for a team - shows ALL registrations"""
-    team = PCLTeam.query.get_or_404(team_id)
-    
-    # Get ALL registrations (not just complete ones)
-    registrations = team.registrations.all()
-    
-    return render_template('pcl/player_cards.html',
-                         team=team,
-                         registrations=registrations)
-
-
-@pcl.route('/media/<int:tournament_id>')
-def media_page(tournament_id):
-    """Public media page with all player photos for social media manager"""
-    tournament = PCLTournament.query.get_or_404(tournament_id)
-    
-    # Get all teams with their registrations
-    teams_data = []
-    total_players = 0
-    players_with_photos = 0
-    
-    for team in tournament.teams:
-        all_players = team.registrations.all()
-        total_players += len(all_players)
-        
-        # Count players with photos
-        for p in all_players:
-            if p.photo_filename:
-                players_with_photos += 1
-        
-        # Include all players (with or without photos) but sort by photo first
-        players_sorted = sorted(all_players, key=lambda x: (0 if x.photo_filename else 1, x.first_name))
-        
-        if players_sorted:
-            teams_data.append({
-                'team': team,
-                'players': players_sorted
-            })
-    
-    # Sort teams by country name
-    teams_data.sort(key=lambda x: x['team'].country_name)
-    
-    return render_template('pcl/media_page.html',
-                         tournament=tournament,
-                         teams_data=teams_data,
-                         total_players=total_players,
-                         players_with_photos=players_with_photos)
-
-
 @pcl.route('/admin/team/<int:team_id>/add-captain', methods=['POST'])
-@admin_required
 def add_captain(team_id):
     """Admin adds a captain to a team"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -723,6 +640,7 @@ def add_captain(team_id):
     phone = request.form.get('phone', '').strip()
     gender = request.form.get('gender', 'male')
     language = request.form.get('language', 'EN')
+    is_playing = request.form.get('is_playing') == 'on'
     send_whatsapp = request.form.get('send_whatsapp') == 'on'
     
     if not first_name or not last_name or not phone:
@@ -741,6 +659,7 @@ def add_captain(team_id):
         phone=phone,
         gender=gender,
         is_captain=True,
+        is_playing=is_playing,
         preferred_language=language,
         status='incomplete'
     )
@@ -751,7 +670,10 @@ def add_captain(team_id):
         db.session.add(captain)
         db.session.commit()
         
-        flash(f'Captain {first_name} {last_name} added!', 'success')
+        if is_playing:
+            flash(f'Captain {first_name} {last_name} added as player!', 'success')
+        else:
+            flash(f'Captain {first_name} {last_name} added (not playing)!', 'success')
         
         # Send WhatsApp using Content Template
         if send_whatsapp and phone:
@@ -784,7 +706,6 @@ def add_captain(team_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/export')
-@admin_required
 def export_team_data(team_id):
     """Export team data as CSV"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -816,35 +737,199 @@ def export_team_data(team_id):
     )
 
 
+
 @pcl.route('/admin/export-shirts/<int:tournament_id>')
-@admin_required
 def export_shirt_list(tournament_id):
-    """Export shirt list for all teams"""
+    """Export shirt list as Excel with order summary"""
+    from openpyxl import Workbook
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    
     tournament = PCLTournament.query.get_or_404(tournament_id)
     
-    output = io.StringIO()
-    writer = csv.writer(output)
-    
-    writer.writerow(['Team', 'Category', 'Shirt Name', 'Size', 'Player Name'])
+    # Collect all registrations
+    all_regs = []
+    incomplete = []
     
     for team in tournament.teams.all():
         for reg in team.registrations.all():
-            writer.writerow([
-                f"{team.country_flag} {team.country_name}",
-                team.age_category,
-                reg.shirt_name or '',
-                reg.shirt_size or '',
-                f"{reg.first_name} {reg.last_name}"
-            ])
+            entry = {
+                'team': f"{team.country_flag} {team.country_name}",
+                'category': team.age_category,
+                'shirt_name': (reg.shirt_name or '').strip(),
+                'size': (reg.shirt_size or '').strip(),
+                'player': f"{reg.first_name} {reg.last_name}"
+            }
+            
+            if entry['shirt_name'] and entry['size']:
+                all_regs.append(entry)
+            else:
+                incomplete.append(entry)
     
+    # Create workbook
+    wb = Workbook()
+    
+    # Styles
+    header_fill = PatternFill('solid', fgColor='1F4E79')
+    header_font = Font(bold=True, color='FFFFFF', size=11)
+    warning_fill = PatternFill('solid', fgColor='FFC7CE')
+    warning_font = Font(bold=True, color='9C0006')
+    yellow_fill = PatternFill('solid', fgColor='FFFFCC')
+    size_header_fill = PatternFill('solid', fgColor='D9E1F2')
+    border = Side(style='thin', color='000000')
+    thin_border = Border(left=border, right=border, top=border, bottom=border)
+    
+    # === SHEET 1: Bestellübersicht ===
+    ws1 = wb.active
+    ws1.title = "Bestellübersicht"
+    
+    # Title
+    ws1['A1'] = f'PCL SHIRT BESTELLUNG - {tournament.name}'
+    ws1['A1'].font = Font(bold=True, size=16)
+    ws1.merge_cells('A1:D1')
+    
+    ws1['A3'] = 'ZUSAMMENFASSUNG NACH GRÖSSEN'
+    ws1['A3'].font = Font(bold=True, size=14)
+    
+    # Size counts
+    size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+    size_counts = {}
+    for reg in all_regs:
+        size = reg['size'].upper()
+        size_counts[size] = size_counts.get(size, 0) + 1
+    
+    ws1['A4'] = 'Größe'
+    ws1['B4'] = 'Anzahl'
+    ws1['A4'].font = header_font
+    ws1['B4'].font = header_font
+    ws1['A4'].fill = header_fill
+    ws1['B4'].fill = header_fill
+    ws1['A4'].border = thin_border
+    ws1['B4'].border = thin_border
+    
+    row = 5
+    for size in size_order:
+        count = size_counts.get(size, 0)
+        if count > 0:
+            ws1[f'A{row}'] = size
+            ws1[f'B{row}'] = count
+            ws1[f'A{row}'].border = thin_border
+            ws1[f'B{row}'].border = thin_border
+            ws1[f'B{row}'].alignment = Alignment(horizontal='center')
+            row += 1
+    
+    # Total
+    ws1[f'A{row}'] = 'GESAMT'
+    ws1[f'B{row}'] = len(all_regs)
+    ws1[f'A{row}'].font = Font(bold=True)
+    ws1[f'B{row}'].font = Font(bold=True)
+    ws1[f'A{row}'].border = thin_border
+    ws1[f'B{row}'].border = thin_border
+    
+    # Incomplete section
+    if incomplete:
+        row += 3
+        ws1[f'A{row}'] = f'⚠️ FEHLENDE DATEN ({len(incomplete)} Spieler)'
+        ws1[f'A{row}'].font = warning_font
+        ws1[f'A{row}'].fill = warning_fill
+        ws1.merge_cells(f'A{row}:D{row}')
+        
+        row += 1
+        for col, header in enumerate(['Spieler', 'Team', 'Kategorie', 'Fehlt'], 1):
+            cell = ws1.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.border = thin_border
+        
+        row += 1
+        for inc in incomplete:
+            missing = []
+            if not inc['shirt_name']:
+                missing.append('Shirt Name')
+            if not inc['size']:
+                missing.append('Größe')
+            
+            ws1.cell(row=row, column=1, value=inc['player']).border = thin_border
+            ws1.cell(row=row, column=2, value=inc['team']).border = thin_border
+            ws1.cell(row=row, column=3, value=inc['category']).border = thin_border
+            ws1.cell(row=row, column=4, value=', '.join(missing)).border = thin_border
+            for col in range(1, 5):
+                ws1.cell(row=row, column=col).fill = yellow_fill
+            row += 1
+    
+    ws1.column_dimensions['A'].width = 30
+    ws1.column_dimensions['B'].width = 15
+    ws1.column_dimensions['C'].width = 12
+    ws1.column_dimensions['D'].width = 20
+    
+    # === SHEET 2: Nach Größe sortiert ===
+    ws2 = wb.create_sheet("Nach Größe")
+    row = 1
+    
+    for size in size_order:
+        size_regs = [r for r in all_regs if r['size'].upper() == size]
+        if not size_regs:
+            continue
+        
+        ws2[f'A{row}'] = f'GRÖSSE {size} ({len(size_regs)} Stück)'
+        ws2[f'A{row}'].font = Font(bold=True, size=12)
+        ws2[f'A{row}'].fill = size_header_fill
+        ws2.merge_cells(f'A{row}:D{row}')
+        row += 1
+        
+        for col, header in enumerate(['Shirt Name', 'Spieler', 'Team', 'Kat.'], 1):
+            cell = ws2.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.border = thin_border
+        row += 1
+        
+        for reg in sorted(size_regs, key=lambda x: (x['team'], x['player'])):
+            ws2.cell(row=row, column=1, value=reg['shirt_name']).border = thin_border
+            ws2.cell(row=row, column=2, value=reg['player']).border = thin_border
+            ws2.cell(row=row, column=3, value=reg['team']).border = thin_border
+            ws2.cell(row=row, column=4, value=reg['category']).border = thin_border
+            row += 1
+        row += 1
+    
+    ws2.column_dimensions['A'].width = 25
+    ws2.column_dimensions['B'].width = 30
+    ws2.column_dimensions['C'].width = 20
+    ws2.column_dimensions['D'].width = 8
+    
+    # === SHEET 3: Nach Team sortiert ===
+    ws3 = wb.create_sheet("Nach Team")
+    
+    headers = ['Team', 'Kategorie', 'Shirt Name', 'Größe', 'Spieler']
+    for col, h in enumerate(headers, 1):
+        cell = ws3.cell(row=1, column=col, value=h)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = thin_border
+    
+    sorted_regs = sorted(all_regs, key=lambda x: (x['team'], x['category'], x['player']))
+    for r, reg in enumerate(sorted_regs, 2):
+        ws3.cell(row=r, column=1, value=reg['team']).border = thin_border
+        ws3.cell(row=r, column=2, value=reg['category']).border = thin_border
+        ws3.cell(row=r, column=3, value=reg['shirt_name']).border = thin_border
+        ws3.cell(row=r, column=4, value=reg['size']).border = thin_border
+        ws3.cell(row=r, column=5, value=reg['player']).border = thin_border
+    
+    ws3.column_dimensions['A'].width = 20
+    ws3.column_dimensions['B'].width = 10
+    ws3.column_dimensions['C'].width = 25
+    ws3.column_dimensions['D'].width = 10
+    ws3.column_dimensions['E'].width = 30
+    
+    # Save to BytesIO
+    output = io.BytesIO()
+    wb.save(output)
     output.seek(0)
     
     return send_file(
-        io.BytesIO(output.getvalue().encode('utf-8')),
-        mimetype='text/csv',
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         as_attachment=True,
-        download_name=f'pcl_{tournament.id}_shirt_list.csv'
+        download_name=f'pcl_{tournament.id}_shirt_bestellung.xlsx'
     )
+
 
 
 # ============================================================================
@@ -861,8 +946,8 @@ def captain_dashboard(token):
     
     t = get_translations(lang)
     
-    # Find captain in this team (to get phone number) - use direct query
-    current_captain = PCLRegistration.query.filter_by(team_id=team.id, is_captain=True).first()
+    # Find captain in this team (to get phone number)
+    current_captain = team.registrations.filter_by(is_captain=True).first()
     
     # Find ALL teams where this person is captain (by phone number)
     other_teams = []
@@ -880,31 +965,9 @@ def captain_dashboard(token):
                 if other_team and other_team not in other_teams:
                     other_teams.append(other_team)
     
-    # Use direct queries for players
-    men = PCLRegistration.query.filter_by(team_id=team.id, gender='male').all()
-    women = PCLRegistration.query.filter_by(team_id=team.id, gender='female').all()
-    captains = PCLRegistration.query.filter_by(team_id=team.id, is_captain=True).all()
-    
-    # Calculate stats directly
-    men_complete = len([r for r in men if r.status == 'complete'])
-    women_complete = len([r for r in women if r.status == 'complete'])
-    
-    stats = {
-        'total': len(men) + len(women),
-        'men': len(men),
-        'women': len(women),
-        'captains': len(captains),
-        'men_complete': men_complete,
-        'women_complete': women_complete,
-        'men_with_photo': len([r for r in men if r.photo_filename]),
-        'women_with_photo': len([r for r in women if r.photo_filename]),
-        'is_complete': (
-            len(men) >= team.min_men and 
-            len(women) >= team.min_women and
-            men_complete >= team.min_men and
-            women_complete >= team.min_women
-        )
-    }
+    stats = team.get_stats()
+    men = team.registrations.filter_by(gender='male').all()
+    women = team.registrations.filter_by(gender='female').all()
     
     days_left = (team.tournament.registration_deadline - datetime.now()).days
     
@@ -1005,26 +1068,7 @@ def quick_add_player(token):
         lang = 'EN'
     
     t = get_translations(lang)
-    
-    # Calculate stats directly
-    men = PCLRegistration.query.filter_by(team_id=team.id, gender='male').all()
-    women = PCLRegistration.query.filter_by(team_id=team.id, gender='female').all()
-    men_complete = len([r for r in men if r.status == 'complete'])
-    women_complete = len([r for r in women if r.status == 'complete'])
-    
-    stats = {
-        'total': len(men) + len(women),
-        'men': len(men),
-        'women': len(women),
-        'men_complete': men_complete,
-        'women_complete': women_complete,
-        'is_complete': (
-            len(men) >= team.min_men and 
-            len(women) >= team.min_women and
-            men_complete >= team.min_men and
-            women_complete >= team.min_women
-        )
-    }
+    stats = team.get_stats()
     
     # Check deadline
     if datetime.now() > team.tournament.registration_deadline:
@@ -1436,6 +1480,7 @@ def edit_registration(registration_id):
         registration.gender = request.form['gender']
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
         registration.is_captain = request.form.get('is_captain') == 'on'
+        registration.is_playing = request.form.get('is_playing') == 'on'
         registration.shirt_name = request.form.get('shirt_name', '').upper()[:15]
         registration.shirt_size = request.form.get('shirt_size')
         registration.bio = request.form.get('bio')
@@ -1481,7 +1526,6 @@ def edit_registration(registration_id):
 # ============================================================================
 
 @pcl.route('/admin/registration/<int:registration_id>/edit', methods=['GET', 'POST'])
-@admin_required
 def admin_edit_registration(registration_id):
     """Admin edit registration"""
     registration = PCLRegistration.query.get_or_404(registration_id)
@@ -1534,61 +1578,11 @@ def admin_edit_registration(registration_id):
                          team=team)
 
 
-@pcl.route('/admin/team/<int:team_id>/recheck-status', methods=['POST'])
-@admin_required
-def recheck_team_status(team_id):
-    """Recheck completeness status for all registrations in a team"""
-    team = PCLTeam.query.get_or_404(team_id)
-    
-    updated = 0
-    for reg in team.registrations.all():
-        old_status = reg.status
-        reg.check_completeness()
-        if old_status != reg.status:
-            updated += 1
-    
-    try:
-        db.session.commit()
-        flash(f'Status rechecked for {team.registrations.count()} players. {updated} updated.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error: {str(e)}', 'danger')
-    
-    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
-
-
-@pcl.route('/admin/tournament/<int:tournament_id>/recheck-all-status', methods=['POST'])
-@admin_required
-def recheck_tournament_status(tournament_id):
-    """Recheck completeness status for all registrations in a tournament"""
-    tournament = PCLTournament.query.get_or_404(tournament_id)
-    
-    total = 0
-    updated = 0
-    for team in tournament.teams:
-        for reg in team.registrations.all():
-            total += 1
-            old_status = reg.status
-            reg.check_completeness()
-            if old_status != reg.status:
-                updated += 1
-    
-    try:
-        db.session.commit()
-        flash(f'Status rechecked for {total} players. {updated} updated.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error: {str(e)}', 'danger')
-    
-    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament_id))
-
-
 # ============================================================================
 # DELETE ROUTES
 # ============================================================================
 
 @pcl.route('/admin/team/<int:team_id>/delete', methods=['POST'])
-@admin_required
 def delete_team(team_id):
     """Delete a team and all its registrations"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1608,7 +1602,6 @@ def delete_team(team_id):
 
 
 @pcl.route('/admin/registration/<int:registration_id>/delete', methods=['POST'])
-@admin_required
 def delete_registration(registration_id):
     """Delete a single player registration"""
     registration = PCLRegistration.query.get_or_404(registration_id)
@@ -1805,7 +1798,6 @@ WPC Series Europe"""
 
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-invite', methods=['GET', 'POST'])
-@admin_required
 def send_captain_invite(team_id):
     """Send captain invitation via WhatsApp"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1840,7 +1832,6 @@ def send_captain_invite(team_id):
 
 
 @pcl.route('/admin/team/<int:team_id>/send-captain-reminder', methods=['POST'])
-@admin_required
 def send_captain_reminder(team_id):
     """Send captain reminder via WhatsApp"""
     team = PCLTeam.query.get_or_404(team_id)
@@ -1870,7 +1861,6 @@ def send_captain_reminder(team_id):
 
 
 @pcl.route('/admin/tournament/<int:tournament_id>/send-all-reminders', methods=['POST'])
-@admin_required
 def send_all_captain_reminders(tournament_id):
     """Send reminders to all captains with incomplete teams"""
     tournament = PCLTournament.query.get_or_404(tournament_id)
