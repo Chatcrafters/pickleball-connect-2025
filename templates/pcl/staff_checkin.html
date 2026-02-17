@@ -331,7 +331,7 @@
             <div class="recent-checkins mb-4">
                 <h5 class="mb-3"><i class="bi bi-clock-history text-success"></i> Recent Check-ins</h5>
                 <div id="recentCheckins">
-                    {% for reg in registrations|selectattr('checked_in')|sort(attribute='checked_in_at', reverse=True)|list[:5] %}
+                    {% for reg in registrations|selectattr('checked_in')|sort(attribute='checked_in_at', reverse=True)|list|batch(5)|first %}
                     <div class="recent-item">
                         <span class="recent-time">{{ reg.checked_in_at.strftime('%H:%M') if reg.checked_in_at else '-' }}</span>
                         <span>{{ reg.first_name }} {{ reg.last_name }}</span>
