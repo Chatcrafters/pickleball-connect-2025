@@ -5,6 +5,7 @@ from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
 from utils.whatsapp import send_whatsapp_message
+import base64
 import os
 import csv
 import io
@@ -1983,7 +1984,6 @@ def api_team_players(token):
 # ============================================================================
 # PLAYER CARDS ROUTES
 # ============================================================================
-
 @pcl.route('/cards/tournament/<int:tournament_id>')
 def player_cards_tournament(tournament_id):
     """Player cards generator for entire tournament"""
@@ -2003,7 +2003,6 @@ def player_cards_tournament(tournament_id):
                          registrations=registrations,
                          all_teams=True)
 
-
 @pcl.route('/cards/team/<int:team_id>')
 def player_cards_team(team_id):
     """Player cards generator for a single team"""
@@ -2015,3 +2014,470 @@ def player_cards_team(team_id):
                          tournament=team.tournament,
                          registrations=registrations,
                          all_teams=False)
+
+
+# ============================================================================
+# CHECK-IN SYSTEM
+# ============================================================================
+
+# Helper: QR Code Generation
+def generate_qr_code_base64(data, size=200):
+    """Generate QR code as base64 string"""
+    try:
+        import qrcode
+        from PIL import Image
+        
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        img = img.resize((size, size), Image.Resampling.LANCZOS)
+        
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        return base64.b64encode(buffer.getvalue()).decode('utf-8')
+    except ImportError:
+        return None
+
+
+def get_qr_code_url(data, size=200):
+    """Get QR code URL (fallback if qrcode library not available)"""
+    import urllib.parse
+    encoded = urllib.parse.quote(data)
+    return f"https://api.qrserver.com/v1/create-qr-code/?size={size}x{size}&data={encoded}"
+
+
+# Check-in Translations
+CHECKIN_TRANSLATIONS = {
+    'EN': {
+        'checkin_title': 'Tournament Check-in',
+        'welcome': 'Welcome',
+        'team': 'Team',
+        'shirt_size': 'Shirt Size',
+        'checkin_button': 'Check In Now',
+        'already_checked_in': 'Already Checked In',
+        'checked_in_at': 'Checked in at',
+        'success_title': 'Check-in Complete!',
+        'success_message': 'Please proceed to the Welcome Desk to collect your welcome pack.',
+        'show_pass': 'Show this pass at the Welcome Desk',
+        'add_to_wallet': 'Add to Apple Wallet',
+        'save_pass': 'Save / Screenshot',
+        'staff_station': 'Staff Check-in Station',
+        'scan_qr': 'Scan QR Code',
+        'search_player': 'Search Player',
+        'not_found': 'Player not found',
+        'checkin_success': 'Successfully checked in',
+        'total_players': 'Total Players',
+        'checked_in': 'Checked In',
+        'pending': 'Pending',
+    },
+    'DE': {
+        'checkin_title': 'Turnier Check-in',
+        'welcome': 'Willkommen',
+        'team': 'Team',
+        'shirt_size': 'Shirt-Größe',
+        'checkin_button': 'Jetzt einchecken',
+        'already_checked_in': 'Bereits eingecheckt',
+        'checked_in_at': 'Eingecheckt um',
+        'success_title': 'Check-in erfolgreich!',
+        'success_message': 'Bitte gehe zum Welcome Desk um dein Welcome Pack abzuholen.',
+        'show_pass': 'Zeige diesen Pass am Welcome Desk',
+        'add_to_wallet': 'Zu Apple Wallet hinzufügen',
+        'save_pass': 'Speichern / Screenshot',
+        'staff_station': 'Staff Check-in Station',
+        'scan_qr': 'QR-Code scannen',
+        'search_player': 'Spieler suchen',
+        'not_found': 'Spieler nicht gefunden',
+        'checkin_success': 'Erfolgreich eingecheckt',
+        'total_players': 'Gesamt Spieler',
+        'checked_in': 'Eingecheckt',
+        'pending': 'Ausstehend',
+    },
+    'ES': {
+        'checkin_title': 'Check-in del Torneo',
+        'welcome': 'Bienvenido',
+        'team': 'Equipo',
+        'shirt_size': 'Talla de Camiseta',
+        'checkin_button': 'Hacer Check-in',
+        'already_checked_in': 'Ya registrado',
+        'checked_in_at': 'Registrado a las',
+        'success_title': '¡Check-in completado!',
+        'success_message': 'Por favor dirígete al Welcome Desk para recoger tu pack de bienvenida.',
+        'show_pass': 'Muestra este pase en el Welcome Desk',
+        'add_to_wallet': 'Añadir a Apple Wallet',
+        'save_pass': 'Guardar / Captura',
+        'staff_station': 'Estación de Check-in Staff',
+        'scan_qr': 'Escanear código QR',
+        'search_player': 'Buscar jugador',
+        'not_found': 'Jugador no encontrado',
+        'checkin_success': 'Check-in exitoso',
+        'total_players': 'Total Jugadores',
+        'checked_in': 'Registrados',
+        'pending': 'Pendientes',
+    },
+    'FR': {
+        'checkin_title': 'Check-in du Tournoi',
+        'welcome': 'Bienvenue',
+        'team': 'Équipe',
+        'shirt_size': 'Taille de Maillot',
+        'checkin_button': 'Check-in maintenant',
+        'already_checked_in': 'Déjà enregistré',
+        'checked_in_at': 'Enregistré à',
+        'success_title': 'Check-in réussi!',
+        'success_message': 'Veuillez vous rendre au Welcome Desk pour récupérer votre pack de bienvenue.',
+        'show_pass': 'Montrez ce pass au Welcome Desk',
+        'add_to_wallet': 'Ajouter à Apple Wallet',
+        'save_pass': 'Sauvegarder / Capture',
+        'staff_station': 'Station de Check-in Staff',
+        'scan_qr': 'Scanner le code QR',
+        'search_player': 'Rechercher un joueur',
+        'not_found': 'Joueur non trouvé',
+        'checkin_success': 'Check-in réussi',
+        'total_players': 'Total Joueurs',
+        'checked_in': 'Enregistrés',
+        'pending': 'En attente',
+    }
+}
+
+def get_checkin_translations(lang='EN'):
+    return CHECKIN_TRANSLATIONS.get(lang, CHECKIN_TRANSLATIONS['EN'])
+
+
+# ============================================================================
+# PLAYER SELF CHECK-IN ROUTES
+# ============================================================================
+
+@pcl.route('/checkin/<token>')
+def player_checkin(token):
+    """Player check-in page - accessed via QR code or link"""
+    registration = PCLRegistration.query.filter_by(profile_token=token).first_or_404()
+    team = registration.team
+    tournament = team.tournament
+    
+    lang = request.args.get('lang', registration.preferred_language or 'EN').upper()
+    if lang not in CHECKIN_TRANSLATIONS:
+        lang = 'EN'
+    t = get_checkin_translations(lang)
+    
+    # Generate QR code
+    checkin_url = request.host_url.rstrip('/') + url_for('pcl.player_checkin', token=token)
+    qr_base64 = generate_qr_code_base64(checkin_url, size=250)
+    qr_url = get_qr_code_url(checkin_url, size=250) if not qr_base64 else None
+    
+    return render_template('pcl/checkin.html',
+                         registration=registration,
+                         team=team,
+                         tournament=tournament,
+                         qr_base64=qr_base64,
+                         qr_url=qr_url,
+                         t=t,
+                         current_lang=lang)
+
+
+@pcl.route('/checkin/<token>/confirm', methods=['POST'])
+def confirm_checkin(token):
+    """Process player check-in"""
+    registration = PCLRegistration.query.filter_by(profile_token=token).first_or_404()
+    
+    lang = request.args.get('lang', registration.preferred_language or 'EN').upper()
+    
+    # Check if already checked in
+    if registration.checked_in:
+        return redirect(url_for('pcl.wallet_pass', token=token, lang=lang))
+    
+    # Perform check-in
+    registration.checked_in = True
+    registration.checked_in_at = datetime.utcnow()
+    
+    try:
+        db.session.commit()
+        return redirect(url_for('pcl.wallet_pass', token=token, lang=lang))
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('pcl.player_checkin', token=token, lang=lang))
+
+
+# ============================================================================
+# WALLET PASS (Web Version)
+# ============================================================================
+
+@pcl.route('/checkin/pass/<token>')
+def wallet_pass(token):
+    """Show wallet-style pass after check-in"""
+    registration = PCLRegistration.query.filter_by(profile_token=token).first_or_404()
+    team = registration.team
+    tournament = team.tournament
+    
+    lang = request.args.get('lang', registration.preferred_language or 'EN').upper()
+    if lang not in CHECKIN_TRANSLATIONS:
+        lang = 'EN'
+    t = get_checkin_translations(lang)
+    
+    # Generate QR code
+    checkin_url = request.host_url.rstrip('/') + url_for('pcl.player_checkin', token=token)
+    qr_base64 = generate_qr_code_base64(checkin_url, size=180)
+    qr_url = get_qr_code_url(checkin_url, size=180) if not qr_base64 else None
+    
+    return render_template('pcl/wallet_pass.html',
+                         registration=registration,
+                         team=team,
+                         tournament=tournament,
+                         qr_base64=qr_base64,
+                         qr_url=qr_url,
+                         t=t,
+                         current_lang=lang)
+
+
+# ============================================================================
+# APPLE WALLET (.pkpass)
+# ============================================================================
+
+@pcl.route('/checkin/pass/<token>/apple')
+def apple_wallet_pass(token):
+    """Generate Apple Wallet .pkpass file"""
+    registration = PCLRegistration.query.filter_by(profile_token=token).first_or_404()
+    team = registration.team
+    tournament = team.tournament
+    
+    try:
+        from utils.wallet_pass import create_pkpass, is_apple_wallet_available
+        
+        if not is_apple_wallet_available():
+            flash('Apple Wallet is not configured', 'warning')
+            return redirect(url_for('pcl.wallet_pass', token=token))
+        
+        pkpass_data = create_pkpass(
+            registration=registration,
+            team=team,
+            tournament=tournament
+        )
+        
+        if pkpass_data:
+            filename = f"WPC_{registration.first_name}_{registration.last_name}.pkpass"
+            return send_file(
+                io.BytesIO(pkpass_data),
+                mimetype='application/vnd.apple.pkpass',
+                as_attachment=True,
+                download_name=filename
+            )
+        else:
+            flash('Error generating Apple Wallet pass', 'danger')
+            return redirect(url_for('pcl.wallet_pass', token=token))
+            
+    except ImportError:
+        flash('Apple Wallet module not available', 'warning')
+        return redirect(url_for('pcl.wallet_pass', token=token))
+    except Exception as e:
+        print(f"Apple Wallet Error: {str(e)}")
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('pcl.wallet_pass', token=token))
+
+
+# ============================================================================
+# ADMIN: STAFF CHECK-IN STATION
+# ============================================================================
+
+@pcl.route('/admin/tournament/<int:tournament_id>/checkin')
+def staff_checkin_station(tournament_id):
+    """Staff check-in station dashboard"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    # Get all registrations for this tournament
+    registrations = PCLRegistration.query.join(PCLTeam).filter(
+        PCLTeam.tournament_id == tournament_id
+    ).order_by(PCLRegistration.last_name).all()
+    
+    # Stats
+    total = len(registrations)
+    checked_in = len([r for r in registrations if r.checked_in])
+    pending = total - checked_in
+    
+    # Group by team
+    teams_data = {}
+    for reg in registrations:
+        team_key = f"{reg.team.country_flag} {reg.team.country_name} {reg.team.age_category}"
+        if team_key not in teams_data:
+            teams_data[team_key] = {
+                'team': reg.team,
+                'players': [],
+                'checked_in': 0,
+                'total': 0
+            }
+        teams_data[team_key]['players'].append(reg)
+        teams_data[team_key]['total'] += 1
+        if reg.checked_in:
+            teams_data[team_key]['checked_in'] += 1
+    
+    t = get_checkin_translations('EN')
+    
+    return render_template('pcl/staff_checkin.html',
+                         tournament=tournament,
+                         registrations=registrations,
+                         teams_data=teams_data,
+                         stats={'total': total, 'checked_in': checked_in, 'pending': pending},
+                         t=t)
+
+
+@pcl.route('/admin/tournament/<int:tournament_id>/checkin/search')
+def staff_search_player(tournament_id):
+    """Search for player (AJAX endpoint)"""
+    query = request.args.get('q', '').strip().lower()
+    
+    if len(query) < 2:
+        return jsonify({'players': []})
+    
+    registrations = PCLRegistration.query.join(PCLTeam).filter(
+        PCLTeam.tournament_id == tournament_id,
+        db.or_(
+            PCLRegistration.first_name.ilike(f'%{query}%'),
+            PCLRegistration.last_name.ilike(f'%{query}%'),
+            PCLRegistration.shirt_name.ilike(f'%{query}%')
+        )
+    ).limit(10).all()
+    
+    players = []
+    for reg in registrations:
+        players.append({
+            'id': reg.id,
+            'name': f"{reg.first_name} {reg.last_name}",
+            'team': f"{reg.team.country_flag} {reg.team.country_name} {reg.team.age_category}",
+            'shirt_size': reg.shirt_size,
+            'shirt_name': reg.shirt_name,
+            'checked_in': reg.checked_in,
+            'checked_in_at': reg.checked_in_at.strftime('%H:%M') if reg.checked_in_at else None,
+            'photo': reg.photo_filename
+        })
+    
+    return jsonify({'players': players})
+
+
+@pcl.route('/admin/checkin/<int:registration_id>', methods=['POST'])
+def staff_do_checkin(registration_id):
+    """Staff performs check-in for a player"""
+    registration = PCLRegistration.query.get_or_404(registration_id)
+    
+    if not registration.checked_in:
+        registration.checked_in = True
+        registration.checked_in_at = datetime.utcnow()
+        
+        try:
+            db.session.commit()
+            return jsonify({
+                'success': True,
+                'message': f'{registration.first_name} {registration.last_name} checked in!',
+                'checked_in_at': registration.checked_in_at.strftime('%H:%M')
+            })
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+    else:
+        return jsonify({
+            'success': True,
+            'message': 'Already checked in',
+            'checked_in_at': registration.checked_in_at.strftime('%H:%M') if registration.checked_in_at else None
+        })
+
+
+@pcl.route('/admin/checkin/<int:registration_id>/undo', methods=['POST'])
+def staff_undo_checkin(registration_id):
+    """Undo a check-in (staff only)"""
+    registration = PCLRegistration.query.get_or_404(registration_id)
+    
+    registration.checked_in = False
+    registration.checked_in_at = None
+    
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Check-in undone'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============================================================================
+# ADMIN: QR CODE GENERATION
+# ============================================================================
+
+@pcl.route('/admin/tournament/<int:tournament_id>/qrcodes')
+def generate_qrcodes(tournament_id):
+    """Generate printable QR codes for all players"""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    
+    registrations = PCLRegistration.query.join(PCLTeam).filter(
+        PCLTeam.tournament_id == tournament_id
+    ).order_by(PCLTeam.country_name, PCLRegistration.last_name).all()
+    
+    # Generate tokens if missing
+    for reg in registrations:
+        if not reg.profile_token:
+            reg.generate_profile_token()
+    
+    try:
+        db.session.commit()
+    except:
+        db.session.rollback()
+    
+    # Generate QR codes
+    players_with_qr = []
+    base_url = request.host_url.rstrip('/')
+    
+    for reg in registrations:
+        checkin_url = f"{base_url}/pcl/checkin/{reg.profile_token}"
+        qr_base64 = generate_qr_code_base64(checkin_url, size=150)
+        qr_url = get_qr_code_url(checkin_url, size=150) if not qr_base64 else None
+        
+        players_with_qr.append({
+            'registration': reg,
+            'qr_base64': qr_base64,
+            'qr_url': qr_url,
+            'checkin_url': checkin_url
+        })
+    
+    return render_template('pcl/qrcodes_print.html',
+                         tournament=tournament,
+                         players=players_with_qr)
+
+
+# ============================================================================
+# API: LIVE STATS
+# ============================================================================
+
+@pcl.route('/api/checkin/stats/<int:tournament_id>')
+def checkin_stats_api(tournament_id):
+    """Get live check-in stats (for dashboard auto-refresh)"""
+    registrations = PCLRegistration.query.join(PCLTeam).filter(
+        PCLTeam.tournament_id == tournament_id
+    ).all()
+    
+    total = len(registrations)
+    checked_in = len([r for r in registrations if r.checked_in])
+    
+    # Recent check-ins
+    recent = PCLRegistration.query.join(PCLTeam).filter(
+        PCLTeam.tournament_id == tournament_id,
+        PCLRegistration.checked_in == True
+    ).order_by(PCLRegistration.checked_in_at.desc()).limit(5).all()
+    
+    return jsonify({
+        'total': total,
+        'checked_in': checked_in,
+        'pending': total - checked_in,
+        'percentage': round(checked_in / total * 100, 1) if total > 0 else 0,
+        'recent': [
+            {
+                'name': f"{r.first_name} {r.last_name}",
+                'team': f"{r.team.country_flag} {r.team.country_name}",
+                'time': r.checked_in_at.strftime('%H:%M') if r.checked_in_at else None
+            }
+            for r in recent
+        ]
+    })

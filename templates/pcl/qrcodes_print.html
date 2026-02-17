@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Codes - {{ tournament.name }}</title>
+    
+    <style>
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .print-header {
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #2E9E4B 0%, #1a7a35 100%);
+            color: white;
+            margin-bottom: 20px;
+        }
+        
+        .print-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .controls {
+            padding: 15px;
+            background: white;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .controls button.primary {
+            background: #2E9E4B;
+            color: white;
+        }
+        
+        .controls button.secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            padding: 15px;
+            max-width: 210mm;
+            margin: 0 auto;
+        }
+        
+        .qr-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            page-break-inside: avoid;
+        }
+        
+        .qr-card img {
+            width: 120px;
+            height: 120px;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        
+        .qr-card .name {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+        
+        .qr-card .team {
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .qr-card .shirt {
+            display: inline-block;
+            background: linear-gradient(135deg, #FFD93D, #FFA500);
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        
+        @media print {
+            body { background: white; }
+            .controls { display: none; }
+            .print-header { 
+                background: #2E9E4B; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .qr-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+            .qr-card .shirt {
+                background: #FFD93D;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+        
+        @media screen {
+            .qr-grid {
+                max-width: 900px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="print-header">
+        <h1>🏆 {{ tournament.name }}</h1>
+        <p>Check-in QR Codes | {{ tournament.location }}</p>
+        <p>{{ players|length }} Players</p>
+    </div>
+    
+    <div class="controls">
+        <button class="primary" onclick="window.print();">
+            🖨️ Print All QR Codes
+        </button>
+        <button class="secondary" onclick="window.history.back();">
+            ← Back
+        </button>
+    </div>
+    
+    <div class="qr-grid">
+        {% for player in players %}
+        <div class="qr-card">
+            {% if player.qr_base64 %}
+            <img src="data:image/png;base64,{{ player.qr_base64 }}" alt="QR Code">
+            {% else %}
+            <img src="{{ player.qr_url }}" alt="QR Code">
+            {% endif %}
+            <div class="name">{{ player.registration.first_name }} {{ player.registration.last_name }}</div>
+            <div class="team">{{ player.registration.team.country_flag }} {{ player.registration.team.country_name }} {{ player.registration.team.age_category }}</div>
+            <div class="shirt">{{ player.registration.shirt_size or '-' }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <script>
+        // Auto-print option
+        // window.onload = function() { window.print(); }
+    </script>
+</body>
+</html>

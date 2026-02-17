@@ -1,0 +1,479 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Check-in - {{ tournament.name }}{% endblock %}
+
+{% block extra_head %}
+<style>
+    body {
+        background: #1a1a2e;
+        color: white;
+    }
+    
+    .navbar, .footer { display: none; }
+    
+    .stats-card {
+        background: linear-gradient(135deg, #2E9E4B 0%, #1a7a35 100%);
+        border-radius: 15px;
+        padding: 25px;
+        text-align: center;
+        color: white;
+    }
+    
+    .stats-number {
+        font-size: 3rem;
+        font-weight: 700;
+        line-height: 1;
+    }
+    
+    .stats-label {
+        opacity: 0.9;
+        font-size: 0.9rem;
+        margin-top: 5px;
+    }
+    
+    .search-section {
+        background: #16213e;
+        border-radius: 15px;
+        padding: 25px;
+        margin-bottom: 20px;
+    }
+    
+    .search-input {
+        background: #1a1a2e;
+        border: 2px solid #333;
+        color: white;
+        font-size: 1.3rem;
+        padding: 15px 20px;
+        border-radius: 10px;
+    }
+    
+    .search-input:focus {
+        background: #1a1a2e;
+        border-color: #2E9E4B;
+        color: white;
+        box-shadow: 0 0 0 3px rgba(46, 158, 75, 0.3);
+    }
+    
+    .search-input::placeholder { color: #666; }
+    
+    .player-result {
+        background: #16213e;
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: 2px solid transparent;
+    }
+    
+    .player-result:hover {
+        border-color: #2E9E4B;
+        transform: translateX(5px);
+    }
+    
+    .player-result.checked-in {
+        border-left: 4px solid #28a745;
+    }
+    
+    .player-photo {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid #333;
+    }
+    
+    .player-photo-placeholder {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #333;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #666;
+    }
+    
+    .player-info { flex: 1; }
+    
+    .player-name {
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .player-team {
+        color: #aaa;
+        font-size: 0.9rem;
+    }
+    
+    .shirt-size {
+        font-size: 1.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #FFD93D, #FFA500);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .checkin-btn {
+        padding: 12px 25px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .checkin-btn.pending {
+        background: linear-gradient(135deg, #2E9E4B 0%, #228B22 100%);
+        color: white;
+    }
+    
+    .checkin-btn.checked {
+        background: #28a745;
+        color: white;
+    }
+    
+    .recent-checkins {
+        background: #16213e;
+        border-radius: 15px;
+        padding: 20px;
+    }
+    
+    .recent-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid #333;
+    }
+    
+    .recent-item:last-child { border-bottom: none; }
+    
+    .recent-time {
+        color: #2E9E4B;
+        font-weight: 600;
+        min-width: 50px;
+    }
+    
+    .teams-section {
+        background: #16213e;
+        border-radius: 15px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .team-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #333;
+    }
+    
+    .team-row:last-child { border-bottom: none; }
+    
+    .team-progress {
+        width: 100px;
+        height: 8px;
+        background: #333;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .team-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #2E9E4B, #28a745);
+        transition: width 0.3s;
+    }
+    
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+    }
+    
+    .notification.success {
+        background: linear-gradient(135deg, #28a745, #20c997);
+    }
+    
+    .notification.error {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+    }
+    
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    .all-players-list {
+        background: #16213e;
+        border-radius: 15px;
+        padding: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="mb-0">
+                        <i class="bi bi-qr-code-scan text-success"></i> 
+                        Staff Check-in Station
+                    </h1>
+                    <p class="text-muted mb-0">{{ tournament.name }} | {{ tournament.location }}</p>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <a href="{{ url_for('pcl.generate_qrcodes', tournament_id=tournament.id) }}" 
+                       class="btn btn-outline-light">
+                        <i class="bi bi-qr-code"></i> Print QR Codes
+                    </a>
+                    <span class="badge bg-success fs-5">
+                        <i class="bi bi-circle-fill text-warning me-1" style="font-size: 0.5rem;"></i>
+                        LIVE
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-3">
+            <div class="stats-card">
+                <div class="stats-number" id="statsTotal">{{ stats.total }}</div>
+                <div class="stats-label">{{ t.total_players }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%);">
+                <div class="stats-number" id="statsCheckedIn">{{ stats.checked_in }}</div>
+                <div class="stats-label">{{ t.checked_in }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="stats-card" style="background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%); color: #333;">
+                <div class="stats-number" id="statsPending">{{ stats.pending }}</div>
+                <div class="stats-label">{{ t.pending }}</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Left Column: Search -->
+        <div class="col-lg-8">
+            <!-- Search Section -->
+            <div class="search-section">
+                <h4 class="mb-3"><i class="bi bi-search"></i> {{ t.search_player }}</h4>
+                <input type="text" 
+                       class="form-control search-input" 
+                       id="playerSearch" 
+                       placeholder="Enter name or shirt name..."
+                       autocomplete="off"
+                       autofocus>
+                
+                <div id="searchResults" class="mt-3"></div>
+            </div>
+            
+            <!-- All Players -->
+            <div class="all-players-list">
+                <h5 class="mb-3"><i class="bi bi-people"></i> All Players</h5>
+                {% for reg in registrations %}
+                <div class="player-result {% if reg.checked_in %}checked-in{% endif %}" 
+                     data-id="{{ reg.id }}" 
+                     onclick="checkInPlayer({{ reg.id }}, this)">
+                    {% if reg.photo_filename %}
+                    <img src="{{ reg.photo_filename }}" class="player-photo">
+                    {% else %}
+                    <div class="player-photo-placeholder"><i class="bi bi-person"></i></div>
+                    {% endif %}
+                    <div class="player-info">
+                        <div class="player-name">{{ reg.first_name }} {{ reg.last_name }}</div>
+                        <div class="player-team">{{ reg.team.country_flag }} {{ reg.team.country_name }} {{ reg.team.age_category }}</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="shirt-size">{{ reg.shirt_size or '-' }}</div>
+                        <small class="text-muted">{{ reg.shirt_name or '' }}</small>
+                    </div>
+                    <button class="checkin-btn {% if reg.checked_in %}checked{% else %}pending{% endif %}" 
+                            {% if reg.checked_in %}disabled{% endif %}>
+                        {% if reg.checked_in %}
+                        <i class="bi bi-check-circle"></i> {{ reg.checked_in_at.strftime('%H:%M') if reg.checked_in_at else '✓' }}
+                        {% else %}
+                        <i class="bi bi-box-arrow-in-right"></i> Check In
+                        {% endif %}
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Right Column: Recent & Teams -->
+        <div class="col-lg-4">
+            <!-- Recent Check-ins -->
+            <div class="recent-checkins mb-4">
+                <h5 class="mb-3"><i class="bi bi-clock-history text-success"></i> Recent Check-ins</h5>
+                <div id="recentCheckins">
+                    {% for reg in registrations|selectattr('checked_in')|sort(attribute='checked_in_at', reverse=True)|list[:5] %}
+                    <div class="recent-item">
+                        <span class="recent-time">{{ reg.checked_in_at.strftime('%H:%M') if reg.checked_in_at else '-' }}</span>
+                        <span>{{ reg.first_name }} {{ reg.last_name }}</span>
+                        <span class="text-muted ms-auto">{{ reg.team.country_flag }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center">No check-ins yet</p>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Teams Progress -->
+            <div class="teams-section">
+                <h5 class="mb-3"><i class="bi bi-people text-success"></i> Teams</h5>
+                {% for team_key, data in teams_data.items() %}
+                <div class="team-row">
+                    <div>
+                        <strong>{{ team_key }}</strong>
+                        <br>
+                        <small class="text-muted">{{ data.checked_in }}/{{ data.total }}</small>
+                    </div>
+                    <div class="team-progress">
+                        <div class="team-progress-bar" style="width: {{ (data.checked_in / data.total * 100) if data.total > 0 else 0 }}%;"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification container -->
+<div id="notification" class="notification" style="display: none;"></div>
+
+<script>
+    const tournamentId = {{ tournament.id }};
+    
+    // Search functionality
+    const searchInput = document.getElementById('playerSearch');
+    const searchResults = document.getElementById('searchResults');
+    let searchTimeout;
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            searchResults.innerHTML = '';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`/pcl/admin/tournament/${tournamentId}/checkin/search?q=${encodeURIComponent(query)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.players.length === 0) {
+                        searchResults.innerHTML = '<p class="text-muted text-center py-3">No players found</p>';
+                        return;
+                    }
+                    
+                    searchResults.innerHTML = data.players.map(player => `
+                        <div class="player-result ${player.checked_in ? 'checked-in' : ''}" 
+                             onclick="checkInPlayer(${player.id}, this)">
+                            ${player.photo 
+                                ? `<img src="${player.photo}" class="player-photo">` 
+                                : '<div class="player-photo-placeholder"><i class="bi bi-person"></i></div>'}
+                            <div class="player-info">
+                                <div class="player-name">${player.name}</div>
+                                <div class="player-team">${player.team}</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="shirt-size">${player.shirt_size || '-'}</div>
+                                <small class="text-muted">${player.shirt_name || ''}</small>
+                            </div>
+                            <button class="checkin-btn ${player.checked_in ? 'checked' : 'pending'}" 
+                                    ${player.checked_in ? 'disabled' : ''}>
+                                ${player.checked_in 
+                                    ? `<i class="bi bi-check-circle"></i> ${player.checked_in_at}` 
+                                    : '<i class="bi bi-box-arrow-in-right"></i> Check In'}
+                            </button>
+                        </div>
+                    `).join('');
+                });
+        }, 300);
+    });
+    
+    // Check-in function
+    function checkInPlayer(registrationId, element) {
+        const btn = element.querySelector('.checkin-btn');
+        if (btn.disabled) return;
+        
+        fetch(`/pcl/admin/checkin/${registrationId}`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showNotification(data.message, 'success');
+                
+                // Update the element
+                element.classList.add('checked-in');
+                btn.classList.remove('pending');
+                btn.classList.add('checked');
+                btn.disabled = true;
+                btn.innerHTML = `<i class="bi bi-check-circle"></i> ${data.checked_in_at}`;
+                
+                // Refresh stats
+                refreshStats();
+            } else {
+                showNotification(data.error || 'Error', 'error');
+            }
+        })
+        .catch(err => {
+            showNotification('Network error', 'error');
+        });
+    }
+    
+    // Show notification
+    function showNotification(message, type) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.className = `notification ${type}`;
+        notification.style.display = 'block';
+        
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 3000);
+    }
+    
+    // Refresh stats
+    function refreshStats() {
+        fetch(`/pcl/api/checkin/stats/${tournamentId}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('statsTotal').textContent = data.total;
+                document.getElementById('statsCheckedIn').textContent = data.checked_in;
+                document.getElementById('statsPending').textContent = data.pending;
+            });
+    }
+    
+    // Auto-refresh stats every 10 seconds
+    setInterval(refreshStats, 10000);
+</script>
+{% endblock %}

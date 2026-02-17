@@ -351,6 +351,10 @@ class PCLRegistration(db.Model):
 
     # ========== NEW: Profile completion token ==========
     profile_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # Indexed for token lookups
+
+    # Nach profile_token hinzufügen:
+    checked_in = db.Column(db.Boolean, default=False)
+    checked_in_at = db.Column(db.DateTime, nullable=True)
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

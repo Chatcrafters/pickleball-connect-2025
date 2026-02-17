@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="{{ current_lang.lower() }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>WPC Pass - {{ registration.first_name }} {{ registration.last_name }}</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            background: linear-gradient(180deg, #1a472a 0%, #0d2818 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+        }
+        
+        .wallet-pass {
+            max-width: 380px;
+            margin: 0 auto;
+            background: linear-gradient(160deg, #2E9E4B 0%, #1a7a35 50%, #145a28 100%);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 
+                0 25px 50px rgba(0,0,0,0.5),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+            position: relative;
+        }
+        
+        .wallet-pass::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%);
+            pointer-events: none;
+        }
+        
+        .pass-header {
+            padding: 20px 20px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2E9E4B;
+        }
+        
+        .event-info { color: white; }
+        
+        .event-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .event-subtitle {
+            font-size: 0.75rem;
+            opacity: 0.85;
+        }
+        
+        .status-indicator {
+            background: #FFD93D;
+            color: #1a472a;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .status-indicator.pending {
+            background: #ffc107;
+        }
+        
+        .pass-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            margin: 0 20px;
+        }
+        
+        .player-section {
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .player-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255,255,255,0.3);
+            flex-shrink: 0;
+        }
+        
+        .player-photo-placeholder {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: rgba(255,255,255,0.7);
+            flex-shrink: 0;
+        }
+        
+        .player-details {
+            flex: 1;
+            color: white;
+        }
+        
+        .player-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.2;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        .player-team {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        .info-strip {
+            display: flex;
+            background: rgba(0,0,0,0.2);
+            margin: 0 20px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        .info-item {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            color: white;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-item:last-child { border-right: none; }
+        
+        .info-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .info-value.large { font-size: 1.4rem; }
+        
+        .checkin-time {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,215,0,0.2);
+            margin: 15px 20px 0;
+            border-radius: 8px;
+            color: #FFD93D;
+            font-size: 0.85rem;
+        }
+        
+        .pass-notch {
+            display: flex;
+            justify-content: center;
+            padding: 0 20px;
+            margin: 15px 0;
+        }
+        
+        .notch-left, .notch-right {
+            width: 20px;
+            height: 20px;
+            background: #0d2818;
+            border-radius: 50%;
+        }
+        
+        .notch-line {
+            flex: 1;
+            border-bottom: 2px dashed rgba(255,255,255,0.2);
+            margin: 0 -10px;
+            align-self: center;
+        }
+        
+        .qr-section {
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .qr-container {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+        
+        .qr-container img {
+            width: 160px;
+            height: 160px;
+            display: block;
+        }
+        
+        .qr-hint {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.75rem;
+            margin-top: 12px;
+        }
+        
+        .pass-footer {
+            background: rgba(0,0,0,0.2);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .footer-info {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.75rem;
+        }
+        
+        .footer-date {
+            color: white;
+            font-weight: 600;
+        }
+        
+        .action-buttons {
+            max-width: 380px;
+            margin: 20px auto 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .action-btn.primary {
+            background: white;
+            color: #1a472a;
+        }
+        
+        .action-btn.secondary {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .action-buttons { display: none; }
+            .wallet-pass { box-shadow: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wallet-pass">
+        <!-- Header -->
+        <div class="pass-header">
+            <div class="logo-section">
+                <div class="logo">WPC</div>
+                <div class="event-info">
+                    <div class="event-name">{{ tournament.name }}</div>
+                    <div class="event-subtitle">{{ tournament.location }}</div>
+                </div>
+            </div>
+            <div class="status-indicator {% if not registration.checked_in %}pending{% endif %}">
+                {% if registration.checked_in %}
+                <i class="bi bi-check-circle-fill"></i> CHECKED IN
+                {% else %}
+                <i class="bi bi-clock"></i> PENDING
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="pass-divider"></div>
+        
+        <!-- Player Section -->
+        <div class="player-section">
+            {% if registration.photo_filename %}
+            <img src="{{ registration.photo_filename }}" alt="{{ registration.first_name }}" class="player-photo">
+            {% else %}
+            <div class="player-photo-placeholder">
+                <i class="bi bi-person"></i>
+            </div>
+            {% endif %}
+            
+            <div class="player-details">
+                <div class="player-name">{{ registration.first_name }} {{ registration.last_name }}</div>
+                <div class="player-team">{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</div>
+            </div>
+        </div>
+        
+        <!-- Info Strip -->
+        <div class="info-strip">
+            <div class="info-item">
+                <div class="info-label">Shirt</div>
+                <div class="info-value">{{ registration.shirt_name or registration.last_name|upper }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Size</div>
+                <div class="info-value large">{{ registration.shirt_size or '-' }}</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Gender</div>
+                <div class="info-value">{% if registration.gender == 'male' %}👨{% else %}👩{% endif %}</div>
+            </div>
+        </div>
+        
+        <!-- Check-in Time -->
+        {% if registration.checked_in and registration.checked_in_at %}
+        <div class="checkin-time">
+            <i class="bi bi-clock-history"></i>
+            {{ t.checked_in_at }}: {{ registration.checked_in_at.strftime('%d.%m.%Y %H:%M') }}
+        </div>
+        {% endif %}
+        
+        <!-- Notch decoration -->
+        <div class="pass-notch">
+            <div class="notch-left"></div>
+            <div class="notch-line"></div>
+            <div class="notch-right"></div>
+        </div>
+        
+        <!-- QR Code -->
+        <div class="qr-section">
+            <div class="qr-container">
+                {% if qr_base64 %}
+                <img src="data:image/png;base64,{{ qr_base64 }}" alt="QR Code">
+                {% else %}
+                <img src="{{ qr_url }}" alt="QR Code">
+                {% endif %}
+            </div>
+            <div class="qr-hint">{{ t.show_pass }}</div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="pass-footer">
+            <div class="footer-info">
+                <div class="footer-date">
+                    {{ tournament.start_date.strftime('%d') }} - {{ tournament.end_date.strftime('%d %b %Y') }}
+                </div>
+                WPC Series Europe
+            </div>
+            <div style="color: rgba(255,255,255,0.5); font-size: 0.7rem;">
+                #{{ registration.id }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{{ url_for('pcl.apple_wallet_pass', token=registration.profile_token) }}" class="action-btn primary">
+            <i class="bi bi-wallet2"></i> {{ t.add_to_wallet }}
+        </a>
+        <button onclick="window.print();" class="action-btn secondary">
+            <i class="bi bi-download"></i> {{ t.save_pass }}
+        </button>
+    </div>
+</body>
+</html>
