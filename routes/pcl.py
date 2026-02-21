@@ -2227,7 +2227,6 @@ def confirm_checkin(token):
         db.session.rollback()
         flash(f'Error: {str(e)}', 'danger')
         return redirect(url_for('pcl.player_checkin', token=token))
-
 # ============================================================================
 # WALLET PASS (Web Version)
 # ============================================================================

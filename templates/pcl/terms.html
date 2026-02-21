@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy & Terms - WPC Series{% endblock %}
+
+{% block content %}
+<style>
+    .legal-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    .legal-card { background: white; border-radius: 16px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 30px; }
+    .legal-header { text-align: center; margin-bottom: 40px; }
+    .legal-header h1 { color: #1a472a; font-size: 2rem; margin-bottom: 10px; }
+    .legal-header p { color: #666; }
+    h2 { color: #2E9E4B; font-size: 1.3rem; margin-top: 30px; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid #e8f5e9; }
+    h3 { color: #333; font-size: 1.1rem; margin-top: 20px; }
+    p, li { color: #555; line-height: 1.7; }
+    ul { padding-left: 25px; }
+    li { margin-bottom: 8px; }
+    .highlight-box { background: #e8f5e9; border-left: 4px solid #2E9E4B; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }
+    .contact-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-top: 30px; }
+    .last-updated { text-align: center; color: #999; font-size: 0.85rem; margin-top: 30px; }
+    .back-btn { display: inline-block; padding: 12px 25px; background: #2E9E4B; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 20px; }
+    .back-btn:hover { background: #1a7a35; color: white; }
+    .nav-tabs { display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e0e0e0; }
+    .nav-tab { padding: 12px 25px; background: none; border: none; font-size: 1rem; font-weight: 600; color: #666; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .nav-tab.active { color: #2E9E4B; border-bottom-color: #2E9E4B; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+</style>
+
+<div class="legal-container">
+    <div class="legal-header">
+        <h1>🏓 WPC Series Europe</h1>
+        <p>Privacy Policy & Terms of Service</p>
+    </div>
+    
+    <div class="legal-card">
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('privacy')">Privacy Policy</button>
+            <button class="nav-tab" onclick="showTab('terms')">Terms & Conditions</button>
+        </div>
+        
+        <div id="privacy" class="tab-content active">
+            <h2>1. Data Controller</h2>
+            <p>The data controller responsible for your personal data is:</p>
+            <div class="contact-box">
+                <strong>Pickleball Connect / WPC Series Europe</strong><br>
+                Email: info@pickleballconnect.eu<br>
+                Website: www.pickleballconnect.eu
+            </div>
+            
+            <h2>2. Data We Collect</h2>
+            <p>When you register for a tournament or check in, we collect:</p>
+            <ul>
+                <li><strong>Personal Information:</strong> Name, email address, phone number</li>
+                <li><strong>Tournament Data:</strong> Team assignment, shirt size, player photo</li>
+                <li><strong>Communication Preferences:</strong> Language, WhatsApp opt-in, newsletter opt-in</li>
+                <li><strong>Technical Data:</strong> Check-in timestamps, device information</li>
+            </ul>
+            
+            <h2>3. How We Use Your Data</h2>
+            <div class="highlight-box">
+                <strong>We use your data to:</strong>
+                <ul style="margin-bottom:0;">
+                    <li>Manage your tournament registration and participation</li>
+                    <li>Send you match schedules, court assignments, and results via WhatsApp (if opted in)</li>
+                    <li>Create player passes and team rosters</li>
+                    <li>Inform you about future tournaments and clinics (if opted in)</li>
+                    <li>Improve our services and event organization</li>
+                </ul>
+            </div>
+            
+            <h2>4. Legal Basis (GDPR Art. 6)</h2>
+            <p>We process your personal data based on:</p>
+            <ul>
+                <li><strong>Contract performance:</strong> Processing necessary for your tournament participation</li>
+                <li><strong>Consent:</strong> WhatsApp updates and marketing communications (optional)</li>
+                <li><strong>Legitimate interest:</strong> Event organization and service improvement</li>
+            </ul>
+            
+            <h2>5. WhatsApp Communication</h2>
+            <p>If you opt in to WhatsApp updates, we will send you:</p>
+            <ul>
+                <li>Match schedules and court assignments</li>
+                <li>Real-time updates during the tournament</li>
+                <li>Results and standings</li>
+                <li>Important announcements</li>
+            </ul>
+            <p>You can opt out at any time by replying "STOP" to any message or contacting us.</p>
+            
+            <h2>6. Data Sharing</h2>
+            <p>We may share your data with:</p>
+            <ul>
+                <li><strong>Tournament partners:</strong> Venue operators, officials (limited to necessary information)</li>
+                <li><strong>Service providers:</strong> Twilio (WhatsApp), Supabase (database), Vercel (hosting)</li>
+                <li><strong>Team captains:</strong> Your captain can see team roster information</li>
+            </ul>
+            <p>We do <strong>not</strong> sell your personal data to third parties.</p>
+            
+            <h2>7. Data Retention</h2>
+            <ul>
+                <li><strong>Active players:</strong> As long as you participate in our events</li>
+                <li><strong>Tournament records:</strong> 3 years for statistical and historical purposes</li>
+                <li><strong>Marketing contacts:</strong> Until you unsubscribe</li>
+            </ul>
+            
+            <h2>8. Your Rights (GDPR)</h2>
+            <p>You have the right to:</p>
+            <ul>
+                <li><strong>Access:</strong> Request a copy of your personal data</li>
+                <li><strong>Rectification:</strong> Correct inaccurate data</li>
+                <li><strong>Erasure:</strong> Request deletion of your data ("right to be forgotten")</li>
+                <li><strong>Portability:</strong> Receive your data in a structured format</li>
+                <li><strong>Withdraw consent:</strong> At any time for optional processing</li>
+                <li><strong>Object:</strong> To processing based on legitimate interest</li>
+            </ul>
+            <p>To exercise your rights, contact us at <strong>info@pickleballconnect.eu</strong></p>
+            
+            <h2>9. Data Security</h2>
+            <p>We implement appropriate measures to protect your data, including encrypted data transmission (HTTPS), secure cloud infrastructure, and access controls.</p>
+        </div>
+        
+        <div id="terms" class="tab-content">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By registering for and participating in WPC Series Europe events, you agree to these Terms & Conditions.</p>
+            
+            <h2>2. Tournament Participation</h2>
+            <h3>2.1 Registration</h3>
+            <ul>
+                <li>Registration is binding once confirmed</li>
+                <li>You must provide accurate information</li>
+                <li>Age requirements apply per tournament category</li>
+            </ul>
+            
+            <h3>2.2 Code of Conduct</h3>
+            <p>All participants must demonstrate good sportsmanship, respect officials and opponents, and follow tournament rules.</p>
+            
+            <h3>2.3 Liability Waiver</h3>
+            <div class="highlight-box">
+                <p style="margin:0;">By participating, you acknowledge that pickleball involves physical activity and inherent risks. You participate at your own risk and release WPC Series Europe from liability for injuries, except in cases of gross negligence.</p>
+            </div>
+            
+            <h2>3. Media & Photography</h2>
+            <p>By participating, you grant WPC Series Europe permission to photograph and record matches, and use images for promotional purposes.</p>
+            
+            <h2>4. Cancellation & Refunds</h2>
+            <ul>
+                <li>More than 14 days before: Full refund minus processing fees</li>
+                <li>7-14 days before: 50% refund</li>
+                <li>Less than 7 days before: No refund</li>
+                <li>Event cancellation by organizer: Full refund</li>
+            </ul>
+            
+            <h2>5. Tournament Rules</h2>
+            <p>All matches are played according to official USA Pickleball / WPF rules. Referee decisions are final.</p>
+            
+            <h2>6. Governing Law</h2>
+            <p>These terms are governed by the laws of Spain. Disputes shall be resolved in the courts of Málaga, Spain.</p>
+            
+            <h2>7. Contact</h2>
+            <div class="contact-box">
+                <strong>WPC Series Europe</strong><br>
+                Email: info@pickleballconnect.eu<br>
+                Website: www.pickleballconnect.eu
+            </div>
+        </div>
+        
+        <p class="last-updated">Last updated: February 2026</p>
+        
+        <div class="text-center">
+            <a href="javascript:history.back()" class="back-btn">← Back to Check-In</a>
+        </div>
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(tabName).classList.add('active');
+    event.target.classList.add('active');
+}
+</script>
+{% endblock %}
