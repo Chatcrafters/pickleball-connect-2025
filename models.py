@@ -355,6 +355,12 @@ class PCLRegistration(db.Model):
     # Nach profile_token hinzufügen:
     checked_in = db.Column(db.Boolean, default=False)
     checked_in_at = db.Column(db.DateTime, nullable=True)
+
+    # ========== GDPR / CHECK-IN CONSENT ==========
+    privacy_accepted = db.Column(db.Boolean, default=False)
+    privacy_accepted_at = db.Column(db.DateTime, nullable=True)
+    whatsapp_optin = db.Column(db.Boolean, default=False)
+    marketing_optin = db.Column(db.Boolean, default=False)
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -722,3 +728,4 @@ class CheckinSyncQueue(db.Model):
     processed = db.Column(db.Boolean, default=False)
     processed_at = db.Column(db.DateTime, nullable=True)
     sync_error = db.Column(db.Text, nullable=True)
+

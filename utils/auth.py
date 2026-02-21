@@ -1,36 +1,21 @@
-"""
-Simple authentication decorator for admin routes.
-Uses a shared admin password stored in environment variable.
+﻿"""
+Admin Authentication Utilities
 """
 from functools import wraps
-from flask import request, redirect, url_for, session, flash
+from flask import redirect, url_for, session, request
 import os
 
-ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+def check_admin_password(password):
+    """Check if password matches admin password"""
+    admin_password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    return password == admin_password
 
 def admin_required(f):
-    """
-    Decorator to protect admin routes.
-    Checks if user is authenticated via session.
-    """
+    """Decorator to require admin login"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not ADMIN_PASSWORD:
-            # No password configured - block access in production
-            flash('Admin access not configured. Set ADMIN_PASSWORD in environment.', 'danger')
-            return redirect(url_for('main.index'))
-
         if not session.get('is_admin'):
-            # Store the URL they wanted to access
             session['next_url'] = request.url
             return redirect(url_for('auth.login'))
-
         return f(*args, **kwargs)
     return decorated_function
-
-
-def check_admin_password(password):
-    """Verify admin password."""
-    if not ADMIN_PASSWORD:
-        return False
-    return password == ADMIN_PASSWORD

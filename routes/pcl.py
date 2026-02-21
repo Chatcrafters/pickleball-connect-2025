@@ -2184,27 +2184,49 @@ def player_checkin(token):
 
 @pcl.route('/checkin/<token>/confirm', methods=['POST'])
 def confirm_checkin(token):
-    """Process player check-in"""
+    """Process player check-in with phone and GDPR consent"""
     registration = PCLRegistration.query.filter_by(profile_token=token).first_or_404()
-    
-    lang = request.args.get('lang', registration.preferred_language or 'EN').upper()
-    
+
+    lang = request.form.get('language', registration.preferred_language or 'EN').upper()
+
     # Check if already checked in
     if registration.checked_in:
         return redirect(url_for('pcl.wallet_pass', token=token, lang=lang))
-    
+
+    # Get form data
+    phone = request.form.get('phone', '').strip()
+    privacy_accepted = request.form.get('privacy_accepted') == 'on'
+    whatsapp_optin = request.form.get('whatsapp_optin') == 'on'
+    marketing_optin = request.form.get('marketing_optin') == 'on'
+
+    # Validate required fields
+    if not phone:
+        flash('Phone number is required', 'danger')
+        return redirect(url_for('pcl.player_checkin', token=token))
+
+    if not privacy_accepted:
+        flash('You must accept the Privacy Policy', 'danger')
+        return redirect(url_for('pcl.player_checkin', token=token))
+
+    # Save consent and phone
+    registration.phone = phone
+    registration.preferred_language = lang
+    registration.privacy_accepted = True
+    registration.privacy_accepted_at = datetime.utcnow()
+    registration.whatsapp_optin = whatsapp_optin
+    registration.marketing_optin = marketing_optin
+
     # Perform check-in
     registration.checked_in = True
     registration.checked_in_at = datetime.utcnow()
-    
+
     try:
         db.session.commit()
         return redirect(url_for('pcl.wallet_pass', token=token, lang=lang))
     except Exception as e:
         db.session.rollback()
         flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('pcl.player_checkin', token=token, lang=lang))
-
+        return redirect(url_for('pcl.player_checkin', token=token))
 
 # ============================================================================
 # WALLET PASS (Web Version)
@@ -2481,3 +2503,7 @@ def checkin_stats_api(tournament_id):
             for r in recent
         ]
     })
+@pcl.route('/terms')
+def terms():
+    """Privacy Policy and Terms page"""
+    return render_template('terms.html')
