@@ -1,4 +1,4 @@
-"""
+﻿"""
 Auth Routes - Login for Directors and Admins only
 Players use token-based access (no login needed)
 """
@@ -7,7 +7,7 @@ from datetime import datetime
 from models import db, User
 from functools import wraps
 
-auth = Blueprint('auth', __name__, url_prefix='/auth')
+auth = Blueprint('auth', __name__)
 
 
 # ============================================================================
@@ -225,3 +225,4 @@ def delete_user(user_id):
     
     flash(f'{user.email} geloescht', 'success')
     return redirect(url_for('auth.admin_users'))
+
