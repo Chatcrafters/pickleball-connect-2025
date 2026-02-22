@@ -788,3 +788,21 @@ class WPCRegistration(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     player = db.relationship('WPCPlayer', back_populates='registrations')
+
+class WPCMatch(db.Model):
+    __tablename__ = 'wpc_match'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    match_date = db.Column(db.Date, nullable=False)
+    match_time = db.Column(db.Time, nullable=False)
+    court = db.Column(db.String(20))
+    division = db.Column(db.String(100))
+    flight = db.Column(db.String(50))
+    match_number = db.Column(db.String(50))
+    player1_name = db.Column(db.String(200))
+    player2_name = db.Column(db.String(200))
+    opponent1_name = db.Column(db.String(200))
+    opponent2_name = db.Column(db.String(200))
+    score = db.Column(db.String(50))
+    is_doubles = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

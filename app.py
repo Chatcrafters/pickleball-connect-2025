@@ -1,4 +1,4 @@
-﻿import os
+import os
 from flask import Flask
 from flask_migrate import Migrate
 from models import db
@@ -13,6 +13,7 @@ from routes.pcl import pcl
 from routes.auth import auth
 from routes.wpc import wpc
 from routes.wpc_import import wpc_import
+from routes.wpc_matches import wpc_matches
 from checkin import checkin
 
 # Load environment variables from .env
@@ -67,6 +68,7 @@ app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(checkin)
 app.register_blueprint(wpc)
 app.register_blueprint(wpc_import)
+app.register_blueprint(wpc_matches)
 
 # Create tables on first run
 with app.app_context():
