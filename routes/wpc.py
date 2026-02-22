@@ -1,4 +1,4 @@
-"""
+﻿"""
 WPC Routes - Check-in, Dashboard, Welcome Pack
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
@@ -67,14 +67,60 @@ def player_checkin(token):
 
 @wpc.route('/pass/<token>')
 def boarding_pass(token):
-    """Show boarding pass after check-in"""
+    """Show boarding pass with match schedule"""
+    from models import WPCMatch
+    from collections import defaultdict
+    
     player = WPCPlayer.query.filter_by(checkin_token=token).first_or_404()
     registrations = player.registrations.all()
     
+    # Find player's matches
+    first_name = player.first_name.lower()
+    last_name = player.last_name.lower()
+    
+    all_matches = WPCMatch.query.order_by(WPCMatch.match_date, WPCMatch.match_time).all()
+    
+    player_matches = []
+    for m in all_matches:
+        names = [
+            (m.player1_name or '').lower(),
+            (m.player2_name or '').lower(),
+            (m.opponent1_name or '').lower(),
+            (m.opponent2_name or '').lower()
+        ]
+        
+        for name in names:
+            if first_name in name and last_name in name:
+                is_team1 = first_name in (m.player1_name or '').lower() or first_name in (m.player2_name or '').lower()
+                
+                if is_team1:
+                    partner = m.player2_name if m.player2_name and first_name not in (m.player2_name or '').lower() else (m.player1_name if first_name not in (m.player1_name or '').lower() else None)
+                    opponents = f"{m.opponent1_name}" + (f" & {m.opponent2_name}" if m.opponent2_name else "")
+                else:
+                    partner = m.opponent2_name if m.opponent2_name and first_name not in (m.opponent2_name or '').lower() else (m.opponent1_name if first_name not in (m.opponent1_name or '').lower() else None)
+                    opponents = f"{m.player1_name}" + (f" & {m.player2_name}" if m.player2_name else "")
+                
+                player_matches.append({
+                    'date': m.match_date,
+                    'time': m.match_time,
+                    'court': m.court,
+                    'division': m.division,
+                    'partner': partner if m.is_doubles else None,
+                    'opponents': opponents,
+                    'is_doubles': m.is_doubles
+                })
+                break
+    
+    matches_by_date = defaultdict(list)
+    for match in player_matches:
+        matches_by_date[match['date']].append(match)
+    
     return render_template('wpc/boarding_pass.html',
                          player=player,
-                         registrations=registrations)
-
+                         registrations=registrations,
+                         matches_by_date=dict(matches_by_date),
+                         total_matches=len(player_matches))
+                         
 
 # ============================================================================
 # ADMIN DASHBOARD
@@ -283,3 +329,4 @@ def api_stats():
 def terms():
     """Privacy Policy and Terms"""
     return render_template('wpc/terms.html')
+
