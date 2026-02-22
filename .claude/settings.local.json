@@ -30,7 +30,10 @@
       "Bash(vercel login:*)",
       "Bash(vercel whoami:*)",
       "Bash(file:*)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(cd:*)",
+      "Bash(py --version 2>/dev/null || py -3 --version 2>/dev/null)",
+      "Bash(cmd.exe:*)"
     ]
   }
 }
