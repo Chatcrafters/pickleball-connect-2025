@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+﻿from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import secrets
 
@@ -352,7 +352,7 @@ class PCLRegistration(db.Model):
     # ========== NEW: Profile completion token ==========
     profile_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # Indexed for token lookups
 
-    # Nach profile_token hinzufügen:
+    # Nach profile_token hinzufÃ¼gen:
     checked_in = db.Column(db.Boolean, default=False)
     checked_in_at = db.Column(db.DateTime, nullable=True)
 
@@ -424,7 +424,7 @@ class PCLRegistration(db.Model):
         """Get translated list of missing fields"""
         translations = {
             'EN': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Shirt Name', 'shirt_size': 'Shirt Size'},
-            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Shirt-Name', 'shirt_size': 'Shirt-GrÃ¶ÃŸe'},
+            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Shirt-Name', 'shirt_size': 'Shirt-GrÃƒÂ¶ÃƒÅ¸e'},
             'ES': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Nombre camiseta', 'shirt_size': 'Talla'},
             'FR': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Nom maillot', 'shirt_size': 'Taille'}
         }
@@ -527,7 +527,7 @@ WEAKNESS_CATEGORIES = [
     ('third_shot_drop', 'Third Shot Drop'),
     ('serve', 'Serve / Aufschlag'),
     ('return', 'Return'),
-    ('backhand', 'Backhand / RÃ¼ckhand'),
+    ('backhand', 'Backhand / RÃƒÂ¼ckhand'),
     ('forehand', 'Forehand / Vorhand'),
     ('volley', 'Volley'),
     ('footwork', 'Footwork'),
@@ -540,78 +540,78 @@ SHIRT_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
 
 COUNTRY_FLAGS = {
     # Western Europe
-    'GER': 'ðŸ‡©ðŸ‡ª',
-    'FRA': 'ðŸ‡«ðŸ‡·',
-    'NED': 'ðŸ‡³ðŸ‡±',
-    'BEL': 'ðŸ‡§ðŸ‡ª',
-    'LUX': 'ðŸ‡±ðŸ‡º',
-    'AUT': 'ðŸ‡¦ðŸ‡¹',
-    'SUI': 'ðŸ‡¨ðŸ‡­',
+    'GER': 'Ã°Å¸â€¡Â©Ã°Å¸â€¡Âª',
+    'FRA': 'Ã°Å¸â€¡Â«Ã°Å¸â€¡Â·',
+    'NED': 'Ã°Å¸â€¡Â³Ã°Å¸â€¡Â±',
+    'BEL': 'Ã°Å¸â€¡Â§Ã°Å¸â€¡Âª',
+    'LUX': 'Ã°Å¸â€¡Â±Ã°Å¸â€¡Âº',
+    'AUT': 'Ã°Å¸â€¡Â¦Ã°Å¸â€¡Â¹',
+    'SUI': 'Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â­',
     
     # Southern Europe
-    'ESP': 'ðŸ‡ªðŸ‡¸',
-    'POR': 'ðŸ‡µðŸ‡¹',
-    'ITA': 'ðŸ‡®ðŸ‡¹',
-    'GRE': 'ðŸ‡¬ðŸ‡·',
-    'MLT': 'ðŸ‡²ðŸ‡¹',
-    'CYP': 'ðŸ‡¨ðŸ‡¾',
-    'AND': 'ðŸ‡¦ðŸ‡©',
-    'MON': 'ðŸ‡²ðŸ‡¨',
-    'SMR': 'ðŸ‡¸ðŸ‡²',
-    'VAT': 'ðŸ‡»ðŸ‡¦',
+    'ESP': 'Ã°Å¸â€¡ÂªÃ°Å¸â€¡Â¸',
+    'POR': 'Ã°Å¸â€¡ÂµÃ°Å¸â€¡Â¹',
+    'ITA': 'Ã°Å¸â€¡Â®Ã°Å¸â€¡Â¹',
+    'GRE': 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â·',
+    'MLT': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Â¹',
+    'CYP': 'Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¾',
+    'AND': 'Ã°Å¸â€¡Â¦Ã°Å¸â€¡Â©',
+    'MON': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Â¨',
+    'SMR': 'Ã°Å¸â€¡Â¸Ã°Å¸â€¡Â²',
+    'VAT': 'Ã°Å¸â€¡Â»Ã°Å¸â€¡Â¦',
     
     # Northern Europe
-    'ENG': 'ðŸ´ó §ó ¢ó ¥ó ®ó §ó ¿',
-    'SCO': 'ðŸ´ó §ó ¢ó ³ó £ó ´ó ¿',
-    'WAL': 'ðŸ´ó §ó ¢ó ·ó ¬ó ³ó ¿',
-    'NIR': 'ðŸ‡¬ðŸ‡§',
-    'GBR': 'ðŸ‡¬ðŸ‡§',
-    'IRL': 'ðŸ‡®ðŸ‡ª',
-    'SWE': 'ðŸ‡¸ðŸ‡ª',
-    'NOR': 'ðŸ‡³ðŸ‡´',
-    'DEN': 'ðŸ‡©ðŸ‡°',
-    'FIN': 'ðŸ‡«ðŸ‡®',
-    'ISL': 'ðŸ‡®ðŸ‡¸',
+    'ENG': 'Ã°Å¸ÂÂ´Ã³Â ÂÂ§Ã³Â ÂÂ¢Ã³Â ÂÂ¥Ã³Â ÂÂ®Ã³Â ÂÂ§Ã³Â ÂÂ¿',
+    'SCO': 'Ã°Å¸ÂÂ´Ã³Â ÂÂ§Ã³Â ÂÂ¢Ã³Â ÂÂ³Ã³Â ÂÂ£Ã³Â ÂÂ´Ã³Â ÂÂ¿',
+    'WAL': 'Ã°Å¸ÂÂ´Ã³Â ÂÂ§Ã³Â ÂÂ¢Ã³Â ÂÂ·Ã³Â ÂÂ¬Ã³Â ÂÂ³Ã³Â ÂÂ¿',
+    'NIR': 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§',
+    'GBR': 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Â§',
+    'IRL': 'Ã°Å¸â€¡Â®Ã°Å¸â€¡Âª',
+    'SWE': 'Ã°Å¸â€¡Â¸Ã°Å¸â€¡Âª',
+    'NOR': 'Ã°Å¸â€¡Â³Ã°Å¸â€¡Â´',
+    'DEN': 'Ã°Å¸â€¡Â©Ã°Å¸â€¡Â°',
+    'FIN': 'Ã°Å¸â€¡Â«Ã°Å¸â€¡Â®',
+    'ISL': 'Ã°Å¸â€¡Â®Ã°Å¸â€¡Â¸',
     
     # Central Europe
-    'POL': 'ðŸ‡µðŸ‡±',
-    'CZE': 'ðŸ‡¨ðŸ‡¿',
-    'SVK': 'ðŸ‡¸ðŸ‡°',
-    'HUN': 'ðŸ‡­ðŸ‡º',
-    'SLO': 'ðŸ‡¸ðŸ‡®',
-    'CRO': 'ðŸ‡­ðŸ‡·',
+    'POL': 'Ã°Å¸â€¡ÂµÃ°Å¸â€¡Â±',
+    'CZE': 'Ã°Å¸â€¡Â¨Ã°Å¸â€¡Â¿',
+    'SVK': 'Ã°Å¸â€¡Â¸Ã°Å¸â€¡Â°',
+    'HUN': 'Ã°Å¸â€¡Â­Ã°Å¸â€¡Âº',
+    'SLO': 'Ã°Å¸â€¡Â¸Ã°Å¸â€¡Â®',
+    'CRO': 'Ã°Å¸â€¡Â­Ã°Å¸â€¡Â·',
     
     # Eastern Europe
-    'RUS': 'ðŸ‡·ðŸ‡º',
-    'UKR': 'ðŸ‡ºðŸ‡¦',
-    'BLR': 'ðŸ‡§ðŸ‡¾',
-    'MDA': 'ðŸ‡²ðŸ‡©',
-    'ROM': 'ðŸ‡·ðŸ‡´',
-    'BUL': 'ðŸ‡§ðŸ‡¬',
+    'RUS': 'Ã°Å¸â€¡Â·Ã°Å¸â€¡Âº',
+    'UKR': 'Ã°Å¸â€¡ÂºÃ°Å¸â€¡Â¦',
+    'BLR': 'Ã°Å¸â€¡Â§Ã°Å¸â€¡Â¾',
+    'MDA': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Â©',
+    'ROM': 'Ã°Å¸â€¡Â·Ã°Å¸â€¡Â´',
+    'BUL': 'Ã°Å¸â€¡Â§Ã°Å¸â€¡Â¬',
     
     # Baltic States
-    'EST': 'ðŸ‡ªðŸ‡ª',
-    'LAT': 'ðŸ‡±ðŸ‡»',
-    'LTU': 'ðŸ‡±ðŸ‡¹',
+    'EST': 'Ã°Å¸â€¡ÂªÃ°Å¸â€¡Âª',
+    'LAT': 'Ã°Å¸â€¡Â±Ã°Å¸â€¡Â»',
+    'LTU': 'Ã°Å¸â€¡Â±Ã°Å¸â€¡Â¹',
     
     # Balkans
-    'SRB': 'ðŸ‡·ðŸ‡¸',
-    'MNE': 'ðŸ‡²ðŸ‡ª',
-    'BIH': 'ðŸ‡§ðŸ‡¦',
-    'MKD': 'ðŸ‡²ðŸ‡°',
-    'ALB': 'ðŸ‡¦ðŸ‡±',
-    'KOS': 'ðŸ‡½ðŸ‡°',
+    'SRB': 'Ã°Å¸â€¡Â·Ã°Å¸â€¡Â¸',
+    'MNE': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Âª',
+    'BIH': 'Ã°Å¸â€¡Â§Ã°Å¸â€¡Â¦',
+    'MKD': 'Ã°Å¸â€¡Â²Ã°Å¸â€¡Â°',
+    'ALB': 'Ã°Å¸â€¡Â¦Ã°Å¸â€¡Â±',
+    'KOS': 'Ã°Å¸â€¡Â½Ã°Å¸â€¡Â°',
     
     # Other
-    'TUR': 'ðŸ‡¹ðŸ‡·',
-    'GEO': 'ðŸ‡¬ðŸ‡ª',
-    'ARM': 'ðŸ‡¦ðŸ‡²',
-    'AZE': 'ðŸ‡¦ðŸ‡¿',
+    'TUR': 'Ã°Å¸â€¡Â¹Ã°Å¸â€¡Â·',
+    'GEO': 'Ã°Å¸â€¡Â¬Ã°Å¸â€¡Âª',
+    'ARM': 'Ã°Å¸â€¡Â¦Ã°Å¸â€¡Â²',
+    'AZE': 'Ã°Å¸â€¡Â¦Ã°Å¸â€¡Â¿',
     
     # Special
-    'ASIA': 'ðŸŒ',
-    'EUR': 'ðŸ‡ªðŸ‡º',
-    'WORLD': 'ðŸŒ',
+    'ASIA': 'Ã°Å¸Å’Â',
+    'EUR': 'Ã°Å¸â€¡ÂªÃ°Å¸â€¡Âº',
+    'WORLD': 'Ã°Å¸Å’Â',
 }
 
 
@@ -877,3 +877,4 @@ class User(db.Model):
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
+
