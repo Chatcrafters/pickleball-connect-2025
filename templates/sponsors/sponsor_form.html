@@ -1,22 +1,22 @@
 {% extends "base.html" %}
-{% block title %}{{ 'Sponsor bearbeiten' if sponsor else 'Neuer Sponsor' }} - Pickleball Connect{% endblock %}
+{% block title %}{{ 'Edit Sponsor' if sponsor else 'New Sponsor' }} - Pickleball Connect{% endblock %}
 
 {% block content %}
 <div class="container" style="max-width: 900px;">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>
             <i class="bi bi-megaphone"></i>
-            {{ 'Sponsor bearbeiten' if sponsor else 'Neuer Sponsor' }}
+            {{ 'Edit Sponsor' if sponsor else 'New Sponsor' }}
         </h1>
         <a href="{{ url_for('sponsors.sponsor_list') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Zurueck
+            <i class="bi bi-arrow-left"></i> Back
         </a>
     </div>
 
     <form method="POST">
-        <!-- Grunddaten -->
+        <!-- Basic Info -->
         <div class="card mb-4">
-            <div class="card-header"><i class="bi bi-info-circle"></i> Grunddaten</div>
+            <div class="card-header"><i class="bi bi-info-circle"></i> Basic Info</div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-8">
@@ -48,9 +48,9 @@
             </div>
         </div>
 
-        <!-- Tracking & Einnahmen -->
+        <!-- Tracking & Revenue -->
         <div class="card mb-4">
-            <div class="card-header"><i class="bi bi-graph-up"></i> Tracking & Einnahmen</div>
+            <div class="card-header"><i class="bi bi-graph-up"></i> Tracking & Revenue</div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-8">
@@ -63,19 +63,19 @@
                         <label for="tracking_code" class="form-label">Tracking Code</label>
                         <input type="text" class="form-control" id="tracking_code" name="tracking_code"
                                value="{{ sponsor.tracking_code if sponsor and sponsor.tracking_code else '' }}"
-                               placeholder="z.B. pcl_2026">
+                               placeholder="e.g. pcl_2026">
                     </div>
                     <div class="col-md-6">
                         <label for="revenue_model" class="form-label">Revenue Model</label>
                         <select class="form-select" id="revenue_model" name="revenue_model">
-                            <option value="">-- Kein Modell --</option>
-                            {% for value, label in [('flat_fee', 'Flat Fee'), ('cpc', 'Cost per Click'), ('cpa', 'Cost per Action'), ('commission', 'Commission'), ('barter', 'Barter/Tausch')] %}
+                            <option value="">-- No Model --</option>
+                            {% for value, label in [('flat_fee', 'Flat Fee'), ('cpc', 'Cost per Click'), ('cpa', 'Cost per Action'), ('commission', 'Commission'), ('barter', 'Barter')] %}
                             <option value="{{ value }}" {{ 'selected' if sponsor and sponsor.revenue_model == value else '' }}>{{ label }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label for="revenue_amount" class="form-label">Betrag (EUR)</label>
+                        <label for="revenue_amount" class="form-label">Amount (EUR)</label>
                         <input type="number" step="0.01" class="form-control" id="revenue_amount" name="revenue_amount"
                                value="{{ sponsor.revenue_amount if sponsor and sponsor.revenue_amount else '' }}">
                     </div>
@@ -83,30 +83,30 @@
             </div>
         </div>
 
-        <!-- WhatsApp-Texte -->
+        <!-- WhatsApp Texts -->
         <div class="card mb-4">
-            <div class="card-header"><i class="bi bi-whatsapp"></i> WhatsApp-Texte (4 Sprachen)</div>
+            <div class="card-header"><i class="bi bi-whatsapp"></i> WhatsApp Texts (4 Languages)</div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="whatsapp_text_en" class="form-label">English</label>
                         <textarea class="form-control" id="whatsapp_text_en" name="whatsapp_text_en" rows="3"
-                                  placeholder="z.B. Powered by SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_en if sponsor and sponsor.whatsapp_text_en else '' }}</textarea>
+                                  placeholder="e.g. Powered by SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_en if sponsor and sponsor.whatsapp_text_en else '' }}</textarea>
                     </div>
                     <div class="col-md-6">
                         <label for="whatsapp_text_de" class="form-label">Deutsch</label>
                         <textarea class="form-control" id="whatsapp_text_de" name="whatsapp_text_de" rows="3"
-                                  placeholder="z.B. Praesentiert von SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_de if sponsor and sponsor.whatsapp_text_de else '' }}</textarea>
+                                  placeholder="e.g. Praesentiert von SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_de if sponsor and sponsor.whatsapp_text_de else '' }}</textarea>
                     </div>
                     <div class="col-md-6">
                         <label for="whatsapp_text_es" class="form-label">Espanol</label>
                         <textarea class="form-control" id="whatsapp_text_es" name="whatsapp_text_es" rows="3"
-                                  placeholder="z.B. Patrocinado por SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_es if sponsor and sponsor.whatsapp_text_es else '' }}</textarea>
+                                  placeholder="e.g. Patrocinado por SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_es if sponsor and sponsor.whatsapp_text_es else '' }}</textarea>
                     </div>
                     <div class="col-md-6">
                         <label for="whatsapp_text_fr" class="form-label">Francais</label>
                         <textarea class="form-control" id="whatsapp_text_fr" name="whatsapp_text_fr" rows="3"
-                                  placeholder="z.B. Soutenu par SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_fr if sponsor and sponsor.whatsapp_text_fr else '' }}</textarea>
+                                  placeholder="e.g. Soutenu par SponsorName - www.sponsor.com">{{ sponsor.whatsapp_text_fr if sponsor and sponsor.whatsapp_text_fr else '' }}</textarea>
                     </div>
                 </div>
             </div>
@@ -121,36 +121,36 @@
                         <div class="form-check mt-2">
                             <input class="form-check-input" type="checkbox" id="show_on_boarding_pass" name="show_on_boarding_pass"
                                    {{ 'checked' if sponsor and sponsor.show_on_boarding_pass else '' }}>
-                            <label class="form-check-label" for="show_on_boarding_pass">Auf Boarding Pass anzeigen</label>
+                            <label class="form-check-label" for="show_on_boarding_pass">Show on Boarding Pass</label>
                         </div>
                     </div>
                     <div class="col-md-8">
                         <label for="boarding_pass_text" class="form-label">Boarding Pass Text</label>
                         <input type="text" class="form-control" id="boarding_pass_text" name="boarding_pass_text"
                                value="{{ sponsor.boarding_pass_text if sponsor and sponsor.boarding_pass_text else '' }}"
-                               placeholder="Kurzer Text fuer den Boarding Pass">
+                               placeholder="Short text for the boarding pass">
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Kontakt & Notizen -->
+        <!-- Contact & Notes -->
         <div class="card mb-4">
-            <div class="card-header"><i class="bi bi-person-lines-fill"></i> Kontakt & Notizen</div>
+            <div class="card-header"><i class="bi bi-person-lines-fill"></i> Contact & Notes</div>
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label for="contact_person" class="form-label">Kontaktperson</label>
+                        <label for="contact_person" class="form-label">Contact Person</label>
                         <input type="text" class="form-control" id="contact_person" name="contact_person"
                                value="{{ sponsor.contact_person if sponsor and sponsor.contact_person else '' }}">
                     </div>
                     <div class="col-md-6">
-                        <label for="contact_email" class="form-label">Kontakt E-Mail</label>
+                        <label for="contact_email" class="form-label">Contact Email</label>
                         <input type="email" class="form-control" id="contact_email" name="contact_email"
                                value="{{ sponsor.contact_email if sponsor and sponsor.contact_email else '' }}">
                     </div>
                     <div class="col-12">
-                        <label for="notes" class="form-label">Notizen</label>
+                        <label for="notes" class="form-label">Notes</label>
                         <textarea class="form-control" id="notes" name="notes" rows="3">{{ sponsor.notes if sponsor and sponsor.notes else '' }}</textarea>
                     </div>
                 </div>
@@ -158,10 +158,10 @@
         </div>
 
         <div class="d-flex justify-content-between">
-            <a href="{{ url_for('sponsors.sponsor_list') }}" class="btn btn-outline-secondary">Abbrechen</a>
+            <a href="{{ url_for('sponsors.sponsor_list') }}" class="btn btn-outline-secondary">Cancel</a>
             <button type="submit" class="btn btn-success">
                 <i class="bi bi-check-lg"></i>
-                {{ 'Speichern' if sponsor else 'Erstellen' }}
+                {{ 'Save' if sponsor else 'Create' }}
             </button>
         </div>
     </form>

@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{{ sponsor.name }} - Sponsoren{% endblock %}
+{% block title %}{{ sponsor.name }} - Sponsors{% endblock %}
 
 {% block content %}
 <div class="container">
@@ -8,20 +8,20 @@
             <i class="bi bi-megaphone"></i> {{ sponsor.name }}
             <span class="badge {{ sponsor.tier_badge_class }} fs-6">{{ sponsor.tier_label }}</span>
             {% if not sponsor.is_active %}
-            <span class="badge bg-danger fs-6">Inaktiv</span>
+            <span class="badge bg-danger fs-6">Inactive</span>
             {% endif %}
         </h1>
         <div>
             <a href="{{ url_for('sponsors.sponsor_list') }}" class="btn btn-outline-secondary me-2">
-                <i class="bi bi-arrow-left"></i> Zurueck
+                <i class="bi bi-arrow-left"></i> Back
             </a>
             <a href="{{ url_for('sponsors.sponsor_edit', id=sponsor.id) }}" class="btn btn-primary me-2">
-                <i class="bi bi-pencil"></i> Bearbeiten
+                <i class="bi bi-pencil"></i> Edit
             </a>
             <form method="POST" action="{{ url_for('sponsors.sponsor_toggle_active', id=sponsor.id) }}" class="d-inline">
                 <button type="submit" class="btn {{ 'btn-warning' if sponsor.is_active else 'btn-success' }}">
                     <i class="bi {{ 'bi-pause-circle' if sponsor.is_active else 'bi-play-circle' }}"></i>
-                    {{ 'Deaktivieren' if sponsor.is_active else 'Aktivieren' }}
+                    {{ 'Deactivate' if sponsor.is_active else 'Activate' }}
                 </button>
             </form>
         </div>
@@ -31,7 +31,7 @@
         <!-- Left: Sponsor Info -->
         <div class="col-lg-6">
             <div class="card mb-4">
-                <div class="card-header"><i class="bi bi-info-circle"></i> Sponsor-Info</div>
+                <div class="card-header"><i class="bi bi-info-circle"></i> Sponsor Info</div>
                 <div class="card-body">
                     {% if sponsor.logo_url %}
                     <div class="mb-3 text-center">
@@ -44,15 +44,15 @@
                         <tr><th>Tracking URL</th><td>{% if sponsor.tracking_url %}{{ sponsor.tracking_url }}{% else %}-{% endif %}</td></tr>
                         <tr><th>Tracking Code</th><td>{{ sponsor.tracking_code or '-' }}</td></tr>
                         <tr><th>Revenue Model</th><td>{{ sponsor.revenue_model or '-' }}</td></tr>
-                        <tr><th>Betrag</th><td>{% if sponsor.revenue_amount %}{{ "%.2f"|format(sponsor.revenue_amount) }} EUR{% else %}-{% endif %}</td></tr>
-                        <tr><th>Boarding Pass</th><td>{{ 'Ja' if sponsor.show_on_boarding_pass else 'Nein' }}</td></tr>
-                        <tr><th>Kontaktperson</th><td>{{ sponsor.contact_person or '-' }}</td></tr>
-                        <tr><th>Kontakt E-Mail</th><td>{% if sponsor.contact_email %}<a href="mailto:{{ sponsor.contact_email }}">{{ sponsor.contact_email }}</a>{% else %}-{% endif %}</td></tr>
+                        <tr><th>Amount</th><td>{% if sponsor.revenue_amount %}{{ "%.2f"|format(sponsor.revenue_amount) }} EUR{% else %}-{% endif %}</td></tr>
+                        <tr><th>Boarding Pass</th><td>{{ 'Yes' if sponsor.show_on_boarding_pass else 'No' }}</td></tr>
+                        <tr><th>Contact Person</th><td>{{ sponsor.contact_person or '-' }}</td></tr>
+                        <tr><th>Contact Email</th><td>{% if sponsor.contact_email %}<a href="mailto:{{ sponsor.contact_email }}">{{ sponsor.contact_email }}</a>{% else %}-{% endif %}</td></tr>
                     </table>
 
                     {% if sponsor.notes %}
                     <div class="mt-2">
-                        <strong>Notizen:</strong>
+                        <strong>Notes:</strong>
                         <p class="text-muted mb-0">{{ sponsor.notes }}</p>
                     </div>
                     {% endif %}
@@ -61,7 +61,7 @@
 
             <!-- WhatsApp Preview -->
             <div class="card mb-4">
-                <div class="card-header"><i class="bi bi-whatsapp"></i> WhatsApp-Texte</div>
+                <div class="card-header"><i class="bi bi-whatsapp"></i> WhatsApp Texts</div>
                 <div class="card-body">
                     {% for lang, label in [('EN', 'English'), ('DE', 'Deutsch'), ('ES', 'Espanol'), ('FR', 'Francais')] %}
                     {% set text = sponsor.get_whatsapp_text(lang) %}
@@ -73,7 +73,7 @@
                     {% endif %}
                     {% endfor %}
                     {% if not sponsor.whatsapp_text_en and not sponsor.whatsapp_text_de %}
-                    <p class="text-muted mb-0">Keine WhatsApp-Texte konfiguriert.</p>
+                    <p class="text-muted mb-0">No WhatsApp texts configured.</p>
                     {% endif %}
                 </div>
             </div>
@@ -82,9 +82,9 @@
             <div class="card border-danger">
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('sponsors.sponsor_delete', id=sponsor.id) }}"
-                          onsubmit="return confirm('Sponsor und alle Placements wirklich loeschen?')">
+                          onsubmit="return confirm('Delete sponsor and all placements?')">
                         <button type="submit" class="btn btn-outline-danger btn-sm">
-                            <i class="bi bi-trash"></i> Sponsor loeschen
+                            <i class="bi bi-trash"></i> Delete Sponsor
                         </button>
                     </form>
                 </div>
@@ -131,14 +131,14 @@
                                     <td>{{ p.display_order }}</td>
                                     <td>
                                         <form method="POST" action="{{ url_for('sponsors.placement_toggle', id=p.id) }}" class="d-inline">
-                                            <button type="submit" class="btn btn-sm {{ 'btn-outline-success' if p.is_active else 'btn-outline-secondary' }}" title="{{ 'Aktiv' if p.is_active else 'Inaktiv' }}">
+                                            <button type="submit" class="btn btn-sm {{ 'btn-outline-success' if p.is_active else 'btn-outline-secondary' }}" title="{{ 'Active' if p.is_active else 'Inactive' }}">
                                                 <i class="bi {{ 'bi-toggle-on' if p.is_active else 'bi-toggle-off' }}"></i>
                                             </button>
                                         </form>
                                     </td>
                                     <td>
                                         <form method="POST" action="{{ url_for('sponsors.placement_delete', id=p.id) }}"
-                                              onsubmit="return confirm('Placement entfernen?')">
+                                              onsubmit="return confirm('Remove placement?')">
                                             <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
                                         </form>
                                     </td>
@@ -148,21 +148,21 @@
                         </table>
                     </div>
                     {% else %}
-                    <p class="text-muted">Keine Placements vorhanden.</p>
+                    <p class="text-muted">No placements yet.</p>
                     {% endif %}
                 </div>
             </div>
 
             <!-- Add Placement Form -->
             <div class="card">
-                <div class="card-header"><i class="bi bi-plus-circle"></i> Neues Placement</div>
+                <div class="card-header"><i class="bi bi-plus-circle"></i> New Placement</div>
                 <div class="card-body">
                     <form method="POST" action="{{ url_for('sponsors.add_placement', id=sponsor.id) }}">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="event_id" class="form-label">Event</label>
                                 <select class="form-select" id="event_id" name="event_id">
-                                    <option value="">-- Kein Event --</option>
+                                    <option value="">-- No Event --</option>
                                     {% for e in events %}
                                     <option value="{{ e.id }}">{{ e.name }}</option>
                                     {% endfor %}
@@ -171,20 +171,20 @@
                             <div class="col-md-6">
                                 <label for="pcl_tournament_id" class="form-label">PCL Tournament</label>
                                 <select class="form-select" id="pcl_tournament_id" name="pcl_tournament_id">
-                                    <option value="">-- Kein Tournament --</option>
+                                    <option value="">-- No Tournament --</option>
                                     {% for t in tournaments %}
                                     <option value="{{ t.id }}">{{ t.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label for="display_order" class="form-label">Reihenfolge</label>
+                                <label for="display_order" class="form-label">Display Order</label>
                                 <input type="number" class="form-control" id="display_order" name="display_order" value="0">
                             </div>
                             <div class="col-md-8">
                                 <label for="tier_override" class="form-label">Tier Override (optional)</label>
                                 <select class="form-select" id="tier_override" name="tier_override">
-                                    <option value="">-- Standard ({{ sponsor.tier_label }}) --</option>
+                                    <option value="">-- Default ({{ sponsor.tier_label }}) --</option>
                                     {% for value, label in [('title', 'Title Sponsor'), ('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze'), ('partner', 'Partner')] %}
                                     <option value="{{ value }}">{{ label }}</option>
                                     {% endfor %}
@@ -206,7 +206,7 @@
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-success">
-                                    <i class="bi bi-plus-lg"></i> Placement hinzufuegen
+                                    <i class="bi bi-plus-lg"></i> Add Placement
                                 </button>
                             </div>
                         </div>

@@ -36,7 +36,7 @@ def sponsor_new():
         )
         db.session.add(sponsor)
         db.session.commit()
-        flash(f'Sponsor "{sponsor.name}" erstellt.', 'success')
+        flash(f'Sponsor "{sponsor.name}" created.', 'success')
         return redirect(url_for('sponsors.sponsor_detail', id=sponsor.id))
 
     return render_template('sponsors/sponsor_form.html', sponsor=None)
@@ -78,7 +78,7 @@ def sponsor_edit(id):
         sponsor.contact_email = request.form.get('contact_email', '').strip() or None
         sponsor.notes = request.form.get('notes', '').strip() or None
         db.session.commit()
-        flash(f'Sponsor "{sponsor.name}" aktualisiert.', 'success')
+        flash(f'Sponsor "{sponsor.name}" updated.', 'success')
         return redirect(url_for('sponsors.sponsor_detail', id=sponsor.id))
 
     return render_template('sponsors/sponsor_form.html', sponsor=sponsor)
@@ -91,7 +91,7 @@ def sponsor_delete(id):
     EventSponsor.query.filter_by(sponsor_id=sponsor.id).delete()
     db.session.delete(sponsor)
     db.session.commit()
-    flash(f'Sponsor "{sponsor.name}" geloescht.', 'success')
+    flash(f'Sponsor "{sponsor.name}" deleted.', 'success')
     return redirect(url_for('sponsors.sponsor_list'))
 
 
@@ -101,7 +101,7 @@ def sponsor_toggle_active(id):
     sponsor = Sponsor.query.get_or_404(id)
     sponsor.is_active = not sponsor.is_active
     db.session.commit()
-    status = 'aktiviert' if sponsor.is_active else 'deaktiviert'
+    status = 'activated' if sponsor.is_active else 'deactivated'
     flash(f'Sponsor "{sponsor.name}" {status}.', 'success')
     return redirect(url_for('sponsors.sponsor_detail', id=sponsor.id))
 
@@ -115,7 +115,7 @@ def add_placement(id):
     pcl_tournament_id = request.form.get('pcl_tournament_id', type=int) or None
 
     if not event_id and not pcl_tournament_id:
-        flash('Bitte ein Event oder Tournament auswaehlen.', 'danger')
+        flash('Please select an Event or Tournament.', 'danger')
         return redirect(url_for('sponsors.sponsor_detail', id=sponsor.id))
 
     placement = EventSponsor(
@@ -130,7 +130,7 @@ def add_placement(id):
     )
     db.session.add(placement)
     db.session.commit()
-    flash('Placement hinzugefuegt.', 'success')
+    flash('Placement added.', 'success')
     return redirect(url_for('sponsors.sponsor_detail', id=sponsor.id))
 
 
@@ -141,7 +141,7 @@ def placement_delete(id):
     sponsor_id = placement.sponsor_id
     db.session.delete(placement)
     db.session.commit()
-    flash('Placement entfernt.', 'success')
+    flash('Placement removed.', 'success')
     return redirect(url_for('sponsors.sponsor_detail', id=sponsor_id))
 
 
@@ -151,7 +151,7 @@ def placement_toggle(id):
     placement = EventSponsor.query.get_or_404(id)
     placement.is_active = not placement.is_active
     db.session.commit()
-    status = 'aktiviert' if placement.is_active else 'deaktiviert'
+    status = 'activated' if placement.is_active else 'deactivated'
     flash(f'Placement {status}.', 'success')
     return redirect(url_for('sponsors.sponsor_detail', id=placement.sponsor_id))
 

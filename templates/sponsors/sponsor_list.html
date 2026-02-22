@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Sponsoren - Pickleball Connect{% endblock %}
+{% block title %}Sponsors - Pickleball Connect{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1><i class="bi bi-megaphone"></i> Sponsoren</h1>
+        <h1><i class="bi bi-megaphone"></i> Sponsors</h1>
         <div>
             <a href="{{ url_for('sponsors.preview_whatsapp') }}" class="btn btn-outline-secondary me-2">
                 <i class="bi bi-whatsapp"></i> WhatsApp Preview
             </a>
             <a href="{{ url_for('sponsors.sponsor_new') }}" class="btn btn-success">
-                <i class="bi bi-plus-lg"></i> Neuer Sponsor
+                <i class="bi bi-plus-lg"></i> New Sponsor
             </a>
         </div>
     </div>
@@ -58,7 +58,7 @@
                     {% endif %}
 
                     {% if not sponsor.is_active %}
-                    <span class="badge bg-danger mt-2">Inaktiv</span>
+                    <span class="badge bg-danger mt-2">Inactive</span>
                     {% endif %}
                 </div>
                 <div class="card-footer bg-transparent">
@@ -67,7 +67,7 @@
                             <i class="bi bi-eye"></i> Details
                         </a>
                         <a href="{{ url_for('sponsors.sponsor_edit', id=sponsor.id) }}" class="btn btn-sm btn-outline-secondary">
-                            <i class="bi bi-pencil"></i> Bearbeiten
+                            <i class="bi bi-pencil"></i> Edit
                         </a>
                     </div>
                 </div>
@@ -78,10 +78,10 @@
     {% else %}
     <div class="text-center py-5">
         <i class="bi bi-megaphone display-1 text-muted"></i>
-        <h3 class="mt-3 text-muted">Noch keine Sponsoren</h3>
-        <p class="text-muted">Erstelle den ersten Sponsor fuer deine Events.</p>
+        <h3 class="mt-3 text-muted">No Sponsors Yet</h3>
+        <p class="text-muted">Create the first sponsor for your events.</p>
         <a href="{{ url_for('sponsors.sponsor_new') }}" class="btn btn-success">
-            <i class="bi bi-plus-lg"></i> Neuer Sponsor
+            <i class="bi bi-plus-lg"></i> New Sponsor
         </a>
     </div>
     {% endif %}
