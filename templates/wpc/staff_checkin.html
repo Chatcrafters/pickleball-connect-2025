@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Staff Check-in - WPC European Open 2026{% endblock %}
 
 {% block content %}
@@ -52,7 +52,6 @@
     .recent-name { font-weight: 600; }
     .recent-time { color: #2E9E4B; font-size: 0.85rem; }
     
-    /* Phone input modal */
     .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
     .modal.active { display: flex; }
     .modal-content { background: white; border-radius: 16px; padding: 30px; max-width: 400px; width: 90%; }
@@ -66,8 +65,8 @@
 
 <div class="station">
     <div class="header">
-        <h1>ðŸ“ Staff Check-in Station</h1>
-        <span class="live-badge">â— LIVE</span>
+        <h1><i class="bi bi-qr-code-scan"></i> Staff Check-in Station</h1>
+        <span class="live-badge"><i class="bi bi-circle-fill"></i> LIVE</span>
     </div>
     
     <div class="stats-bar">
@@ -91,7 +90,7 @@
     
     <div class="main-grid">
         <div class="search-section">
-            <input type="text" class="search-box" id="searchInput" placeholder="ðŸ” Search player name..." autofocus>
+            <input type="text" class="search-box" id="searchInput" placeholder="Search player name..." autofocus>
             
             <div class="players-list" id="playersList">
                 {% for player in players %}
@@ -99,24 +98,24 @@
                     <div class="player-avatar">{{ player.first_name[0] }}{{ player.last_name[0] }}</div>
                     <div class="player-info">
                         <div class="player-name">{{ player.first_name }} {{ player.last_name }}</div>
-                        <div class="player-details">ðŸŒ {{ player.country or 'Unknown' }}</div>
+                        <div class="player-details"><i class="bi bi-globe"></i> {{ player.country or 'Unknown' }}</div>
                         {% if player.phone and player.phone != '-' %}
-                        <div class="player-phone">ðŸ“± {{ player.phone }}</div>
+                        <div class="player-phone"><i class="bi bi-phone"></i> {{ player.phone }}</div>
                         {% else %}
-                        <div class="player-phone missing">âŒ No phone</div>
+                        <div class="player-phone missing"><i class="bi bi-x-circle"></i> No phone</div>
                         {% endif %}
                     </div>
                     <div class="player-actions">
                         {% if player.checked_in %}
-                        <button class="btn btn-done">âœ… Checked In</button>
+                        <button class="btn btn-done"><i class="bi bi-check-circle"></i> Done</button>
                         {% else %}
                         <button class="btn btn-checkin" onclick="doCheckin({{ player.id }}, '{{ player.phone or '' }}')">Check In</button>
                         {% endif %}
                         
                         {% if player.welcome_pack_received %}
-                        <button class="btn btn-done">ðŸ“¦ Done</button>
+                        <button class="btn btn-done"><i class="bi bi-box-seam"></i> Done</button>
                         {% else %}
-                        <button class="btn btn-pack" onclick="givePack({{ player.id }})">ðŸ“¦ Pack</button>
+                        <button class="btn btn-pack" onclick="givePack({{ player.id }})"><i class="bi bi-box-seam"></i> Pack</button>
                         {% endif %}
                     </div>
                 </div>
@@ -125,7 +124,7 @@
         </div>
         
         <div class="sidebar">
-            <div class="sidebar-title">â±ï¸ Recent Check-ins</div>
+            <div class="sidebar-title"><i class="bi bi-clock-history"></i> Recent Check-ins</div>
             <div id="recentList">
                 {% for player in players if player.checked_in %}
                 {% if loop.index <= 10 %}
@@ -143,7 +142,7 @@
 <!-- Phone Modal -->
 <div class="modal" id="phoneModal">
     <div class="modal-content">
-        <div class="modal-title">ðŸ“± Enter Phone Number</div>
+        <div class="modal-title"><i class="bi bi-phone"></i> Enter Phone Number</div>
         <input type="tel" class="modal-input" id="phoneInput" placeholder="+34 612 345 678">
         <div class="modal-actions">
             <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cancel</button>
@@ -155,7 +154,6 @@
 <script>
 let currentPlayerId = null;
 
-// Search
 document.getElementById('searchInput').addEventListener('input', function(e) {
     const query = e.target.value.toLowerCase();
     document.querySelectorAll('.player-card').forEach(card => {
@@ -164,7 +162,6 @@ document.getElementById('searchInput').addEventListener('input', function(e) {
     });
 });
 
-// Check-in
 function doCheckin(playerId, phone) {
     currentPlayerId = playerId;
     if (!phone || phone === '-' || phone === '') {
@@ -203,15 +200,15 @@ function submitCheckinRequest(playerId, phone) {
         if (data.success) {
             const card = document.querySelector(`[data-id="${playerId}"]`);
             card.classList.add('checked-in');
-            card.querySelector('.btn-checkin').className = 'btn btn-done';
-            card.querySelector('.btn-checkin').textContent = 'âœ… Checked In';
-            card.querySelector('.btn-checkin').onclick = null;
+            const btn = card.querySelector('.btn-checkin');
+            btn.className = 'btn btn-done';
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Done';
+            btn.onclick = null;
             refreshStats();
         }
     });
 }
 
-// Welcome Pack
 function givePack(playerId) {
     fetch(`/wpc/admin/welcome-pack/${playerId}`, { method: 'POST' })
     .then(r => r.json())
@@ -220,14 +217,13 @@ function givePack(playerId) {
             const card = document.querySelector(`[data-id="${playerId}"]`);
             const packBtn = card.querySelector('.btn-pack');
             packBtn.className = 'btn btn-done';
-            packBtn.textContent = 'ðŸ“¦ Done';
+            packBtn.innerHTML = '<i class="bi bi-box-seam"></i> Done';
             packBtn.onclick = null;
             refreshStats();
         }
     });
 }
 
-// Refresh stats
 function refreshStats() {
     fetch('/wpc/api/stats')
     .then(r => r.json())
@@ -238,9 +234,6 @@ function refreshStats() {
     });
 }
 
-// Auto-refresh every 30 seconds
 setInterval(refreshStats, 30000);
 </script>
 {% endblock %}
-
-
