@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Pickleball Connect{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard { max-width: 1100px; margin: 0 auto; padding: 20px; }
+    .welcome { margin-bottom: 30px; }
+    .welcome h1 { color: #1a472a; margin: 0; }
+    .welcome p { color: #666; margin-top: 5px; }
+    .welcome .role-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; margin-left: 10px; }
+    .role-admin { background: #fce4ec; color: #c2185b; }
+    .role-director { background: #e3f2fd; color: #1976d2; }
+    
+    .nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px; }
+    .nav-card { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; text-decoration: none; color: #333; transition: all 0.2s; }
+    .nav-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+    .nav-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .nav-title { font-weight: 700; font-size: 1.1rem; color: #1a472a; }
+    .nav-desc { color: #666; font-size: 0.85rem; margin-top: 5px; }
+    
+    .admin-section { margin-top: 30px; }
+    .admin-section h2 { color: #1a472a; font-size: 1.2rem; margin-bottom: 20px; }
+    
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-box { background: white; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .stat-value { font-size: 2rem; font-weight: 700; color: #2E9E4B; }
+    .stat-label { color: #666; font-size: 0.85rem; }
+    
+    .user-list { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .user-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0; }
+    .user-item:last-child { border-bottom: none; }
+    .user-name { font-weight: 600; }
+    .user-email { color: #666; font-size: 0.85rem; }
+</style>
+
+<div class="dashboard">
+    <div class="welcome">
+        <h1>
+            Hallo, {{ user.first_name or user.email }}!
+            <span class="role-badge role-{{ user.role }}">{{ user.role }}</span>
+        </h1>
+        <p>Willkommen bei Pickleball Connect</p>
+    </div>
+    
+    <div class="nav-grid">
+        <a href="{{ url_for('wpc.admin_dashboard') }}" class="nav-card">
+            <div class="nav-icon">&#127942;</div>
+            <div class="nav-title">WPC Malaga</div>
+            <div class="nav-desc">Check-in & Spielplan</div>
+        </a>
+        
+        <a href="{{ url_for('wpc.staff_checkin') }}" class="nav-card">
+            <div class="nav-icon">&#128241;</div>
+            <div class="nav-title">Check-in Station</div>
+            <div class="nav-desc">Spieler einchecken</div>
+        </a>
+        
+        <a href="{{ url_for('wpc.admin_players') }}" class="nav-card">
+            <div class="nav-icon">&#128101;</div>
+            <div class="nav-title">Spieler</div>
+            <div class="nav-desc">Alle Teilnehmer</div>
+        </a>
+        
+        <a href="{{ url_for('wpc_matches.admin_matches') }}" class="nav-card">
+            <div class="nav-icon">&#127941;</div>
+            <div class="nav-title">Spielplan</div>
+            <div class="nav-desc">Matches verwalten</div>
+        </a>
+        
+        <a href="{{ url_for('messages.message_history') }}" class="nav-card">
+            <div class="nav-icon">&#128172;</div>
+            <div class="nav-title">Nachrichten</div>
+            <div class="nav-desc">WhatsApp senden</div>
+        </a>
+        
+        <a href="{{ url_for('auth.profile') }}" class="nav-card">
+            <div class="nav-icon">&#128100;</div>
+            <div class="nav-title">Mein Profil</div>
+            <div class="nav-desc">Einstellungen</div>
+        </a>
+    </div>
+    
+    {% if user.role == 'admin' %}
+    <div class="admin-section">
+        <h2>Admin Bereich</h2>
+        
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.total }}</div>
+                <div class="stat-label">Users</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-value">{{ stats.directors }}</div>
+                <div class="stat-label">Direktoren</div>
+            </div>
+        </div>
+        
+        <div class="nav-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+            <a href="{{ url_for('auth.admin_users') }}" class="nav-card">
+                <div class="nav-icon">&#128101;</div>
+                <div class="nav-title">User verwalten</div>
+            </a>
+            <a href="{{ url_for('auth.create_user') }}" class="nav-card">
+                <div class="nav-icon">&#10133;</div>
+                <div class="nav-title">Neuer User</div>
+            </a>
+        </div>
+        
+        {% if recent_users %}
+        <div class="user-list" style="margin-top:20px;">
+            <strong>Letzte User:</strong>
+            {% for u in recent_users %}
+            <div class="user-item">
+                <div>
+                    <div class="user-name">{{ u.get_full_name() }}</div>
+                    <div class="user-email">{{ u.email }}</div>
+                </div>
+                <span class="role-badge role-{{ u.role }}">{{ u.role }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

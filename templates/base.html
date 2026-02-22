@@ -59,6 +59,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('auth.login') }}">
+                            <i class="bi bi-person"></i> Login
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('admin.subscribe') }}">
                             <i class="bi bi-bell"></i> Anmeldung
                         </a>
@@ -101,3 +106,4 @@
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+

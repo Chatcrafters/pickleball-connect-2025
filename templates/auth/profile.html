@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Profil - Pickleball Connect{% endblock %}
+
+{% block content %}
+<style>
+    .profile-container { max-width: 500px; margin: 30px auto; padding: 20px; }
+    .card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .card-title { font-weight: 700; color: #1a472a; margin-bottom: 25px; font-size: 1.3rem; }
+    
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-weight: 600; color: #333; margin-bottom: 8px; display: block; }
+    .form-control { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
+    .form-control:focus { border-color: #2E9E4B; outline: none; }
+    .form-control:disabled { background: #f5f5f5; }
+    
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .form-hint { font-size: 0.8rem; color: #666; margin-top: 5px; }
+    
+    .section-title { font-weight: 600; color: #666; font-size: 0.85rem; text-transform: uppercase; margin: 25px 0 15px; padding-top: 20px; border-top: 1px solid #e0e0e0; }
+    
+    .btn { padding: 12px 25px; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; text-decoration: none; }
+    .btn-primary { background: #2E9E4B; color: white; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    .btn-row { display: flex; gap: 10px; margin-top: 25px; }
+</style>
+
+<div class="profile-container">
+    <div class="card">
+        <div class="card-title">Mein Profil</div>
+        
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" class="form-control" value="{{ user.email }}" disabled>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Vorname</label>
+                    <input type="text" name="first_name" class="form-control" value="{{ user.first_name or '' }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nachname</label>
+                    <input type="text" name="last_name" class="form-control" value="{{ user.last_name or '' }}">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Telefon</label>
+                <input type="tel" name="phone" class="form-control" value="{{ user.phone or '' }}" placeholder="+34 612 345 678">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">Organisation / Verein</label>
+                <input type="text" name="organization" class="form-control" value="{{ user.organization or '' }}">
+            </div>
+            
+            <div class="section-title">Passwort aendern</div>
+            
+            <div class="form-group">
+                <label class="form-label">Neues Passwort</label>
+                <input type="password" name="new_password" class="form-control" placeholder="Leer lassen wenn keine Aenderung">
+                <div class="form-hint">Mindestens 6 Zeichen</div>
+            </div>
+            
+            <div class="btn-row">
+                <button type="submit" class="btn btn-primary">Speichern</button>
+                <a href="{{ url_for('auth.dashboard') }}" class="btn btn-secondary">Zurueck</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

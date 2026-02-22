@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}User verwalten - Pickleball Connect{% endblock %}
+
+{% block content %}
+<style>
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+    .header h1 { color: #1a472a; margin: 0; }
+    
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn-primary { background: #2E9E4B; color: white; }
+    .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+    .btn-danger { background: #ffebee; color: #c62828; }
+    .btn-success { background: #e8f5e9; color: #2E9E4B; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    
+    .users-table { width: 100%; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+    .users-table th { background: #1a472a; color: white; padding: 15px; text-align: left; }
+    .users-table td { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
+    .users-table tr:hover { background: #f8fff8; }
+    
+    .badge { padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .badge-admin { background: #fce4ec; color: #c2185b; }
+    .badge-director { background: #e3f2fd; color: #1976d2; }
+    .badge-active { background: #e8f5e9; color: #2E9E4B; }
+    .badge-inactive { background: #ffebee; color: #c62828; }
+    
+    .back-link { display: inline-block; margin-bottom: 15px; color: #666; text-decoration: none; }
+    .back-link:hover { color: #2E9E4B; }
+</style>
+
+<div class="container">
+    <a href="{{ url_for('auth.dashboard') }}" class="back-link">&larr; Zurueck</a>
+    
+    <div class="header">
+        <h1>User verwalten ({{ users|length }})</h1>
+        <a href="{{ url_for('auth.create_user') }}" class="btn btn-primary">+ Neuer User</a>
+    </div>
+    
+    <table class="users-table">
+        <thead>
+            <tr>
+                <th>Name / Email</th>
+                <th>Rolle</th>
+                <th>Status</th>
+                <th>Letzter Login</th>
+                <th>Aktionen</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>
+                    <strong>{{ u.get_full_name() }}</strong><br>
+                    <span style="color:#666;font-size:0.85rem;">{{ u.email }}</span>
+                </td>
+                <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+                <td>
+                    {% if u.is_active %}
+                    <span class="badge badge-active">Aktiv</span>
+                    {% else %}
+                    <span class="badge badge-inactive">Inaktiv</span>
+                    {% endif %}
+                </td>
+                <td>{{ u.last_login.strftime('%d.%m.%Y %H:%M') if u.last_login else 'Nie' }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('auth.toggle_user', user_id=u.id) }}" style="display:inline;">
+                        {% if u.is_active %}
+                        <button type="submit" class="btn btn-sm btn-danger">Deaktivieren</button>
+                        {% else %}
+                        <button type="submit" class="btn btn-sm btn-success">Aktivieren</button>
+                        {% endif %}
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="5" style="text-align:center;padding:30px;color:#999;">Keine User</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
