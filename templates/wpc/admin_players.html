@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}All Players - WPC{% endblock %}
+
+{% block content %}
+<style>
+    .players-container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px; }
+    .header h1 { margin: 0; color: #1a472a; }
+    
+    .filters { display: flex; gap: 10px; flex-wrap: wrap; }
+    .filter-btn { padding: 8px 16px; border: 2px solid #e0e0e0; border-radius: 8px; background: white; cursor: pointer; font-weight: 500; text-decoration: none; color: #333; }
+    .filter-btn:hover { border-color: #2E9E4B; }
+    .filter-btn.active { background: #2E9E4B; color: white; border-color: #2E9E4B; }
+    
+    .search-box { padding: 10px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; width: 250px; }
+    .search-box:focus { outline: none; border-color: #2E9E4B; }
+    
+    .players-table { width: 100%; background: white; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden; }
+    .players-table th { background: #1a472a; color: white; padding: 15px; text-align: left; font-weight: 600; }
+    .players-table td { padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
+    .players-table tr:hover { background: #f8fff8; }
+    
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
+    .status-checked { background: #d4edda; color: #155724; }
+    .status-pending { background: #fff3cd; color: #856404; }
+    .status-no-phone { background: #f8d7da; color: #721c24; }
+    
+    .player-name { font-weight: 600; color: #333; }
+    .player-email { color: #666; font-size: 0.85rem; }
+    
+    .btn { padding: 6px 12px; border: none; border-radius: 6px; font-size: 0.85rem; cursor: pointer; text-decoration: none; }
+    .btn-sm { padding: 4px 8px; font-size: 0.8rem; }
+    .btn-primary { background: #2E9E4B; color: white; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    
+    .pagination { display: flex; justify-content: center; gap: 5px; margin-top: 20px; }
+    .page-btn { padding: 8px 12px; border: 1px solid #e0e0e0; border-radius: 6px; background: white; cursor: pointer; }
+    .page-btn.active { background: #2E9E4B; color: white; border-color: #2E9E4B; }
+    
+    .empty-state { text-align: center; padding: 50px; color: #666; }
+</style>
+
+<div class="players-container">
+    <div class="header">
+        <h1>👥 All Players ({{ players|length }})</h1>
+        <div class="filters">
+            <a href="{{ url_for('wpc.admin_players') }}" class="filter-btn {% if filter_status == 'all' %}active{% endif %}">All</a>
+            <a href="{{ url_for('wpc.admin_players', status='checked_in') }}" class="filter-btn {% if filter_status == 'checked_in' %}active{% endif %}">✅ Checked In</a>
+            <a href="{{ url_for('wpc.admin_players', status='pending') }}" class="filter-btn {% if filter_status == 'pending' %}active{% endif %}">⏳ Pending</a>
+            <a href="{{ url_for('wpc.admin_players', status='no_phone') }}" class="filter-btn {% if filter_status == 'no_phone' %}active{% endif %}">📵 No Phone</a>
+        </div>
+    </div>
+    
+    <form method="GET" style="margin-bottom:20px;">
+        <input type="hidden" name="status" value="{{ filter_status }}">
+        <input type="text" name="q" value="{{ search }}" class="search-box" placeholder="🔍 Search name or email...">
+    </form>
+    
+    {% if players %}
+    <table class="players-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Country</th>
+                <th>Phone</th>
+                <th>DUPR</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for player in players %}
+            <tr>
+                <td>
+                    <div class="player-name">{{ player.first_name }} {{ player.last_name }}</div>
+                    <div class="player-email">{{ player.email or '-' }}</div>
+                </td>
+                <td>🌍 {{ player.country or '-' }}</td>
+                <td>
+                    {% if player.phone and player.phone != '-' %}
+                    📱 {{ player.phone }}
+                    {% else %}
+                    <span class="status-badge status-no-phone">Missing</span>
+                    {% endif %}
+                </td>
+                <td>{{ player.dupr_rating or '-' }}</td>
+                <td>
+                    {% if player.checked_in %}
+                    <span class="status-badge status-checked">✅ Checked In</span>
+                    {% else %}
+                    <span class="status-badge status-pending">⏳ Pending</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ url_for('wpc.boarding_pass', token=player.checkin_token) }}" class="btn btn-sm btn-secondary" target="_blank">🎫 Pass</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+        <h3>No players found</h3>
+        <p>Try adjusting your filters or <a href="{{ url_for('wpc_import.import_page') }}">import players</a>.</p>
+    </div>
+    {% endif %}
+    
+    <div style="margin-top:20px;display:flex;gap:10px;">
+        <a href="{{ url_for('wpc.admin_dashboard') }}" class="btn btn-secondary">← Back to Dashboard</a>
+        <a href="{{ url_for('wpc.staff_checkin') }}" class="btn btn-primary">📱 Check-in Station</a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Import Players - WPC{% endblock %}
+
+{% block content %}
+<style>
+    .import-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; }
+    .card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    .card-title { font-size: 1.3rem; font-weight: 700; color: #1a472a; margin-bottom: 20px; }
+    
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 30px; }
+    .stat-box { background: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: #2E9E4B; }
+    .stat-label { color: #666; font-size: 0.9rem; }
+    
+    .upload-zone {
+        border: 3px dashed #2E9E4B;
+        border-radius: 16px;
+        padding: 50px;
+        text-align: center;
+        background: #f8fff8;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+    .upload-zone:hover { background: #e8f5e9; border-color: #1a7a35; }
+    .upload-zone.dragover { background: #c8e6c9; border-color: #1a7a35; }
+    .upload-icon { font-size: 3rem; margin-bottom: 15px; }
+    .upload-text { font-size: 1.1rem; color: #333; margin-bottom: 10px; }
+    .upload-hint { color: #666; font-size: 0.9rem; }
+    
+    .file-input { display: none; }
+    
+    .btn { padding: 12px 25px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem; }
+    .btn-primary { background: #2E9E4B; color: white; }
+    .btn-primary:hover { background: #1a7a35; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    
+    .info-box { background: #e8f5e9; border-left: 4px solid #2E9E4B; padding: 15px 20px; border-radius: 0 8px 8px 0; margin-top: 20px; }
+    .info-title { font-weight: 600; color: #1a472a; margin-bottom: 5px; }
+    .info-text { color: #555; font-size: 0.9rem; }
+    
+    .alert { padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; }
+    .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .alert-warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+</style>
+
+<div class="import-container">
+    <h1 style="color:#1a472a;margin-bottom:30px;">📥 Import WPC Players</h1>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div class="stat-value">{{ total_players }}</div>
+            <div class="stat-label">Players in Database</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ total_registrations }}</div>
+            <div class="stat-label">Event Registrations</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ with_phone }}</div>
+            <div class="stat-label">📱 With Phone</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{{ checked_in }}</div>
+            <div class="stat-label">✅ Checked In</div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">Upload CSV from Pickleball Global</div>
+        
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+            <div class="upload-zone" id="uploadZone" onclick="document.getElementById('csvFile').click()">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">Drop CSV file here or click to browse</div>
+                <div class="upload-hint">Supports Pickleball Global export format</div>
+            </div>
+            
+            <input type="file" name="csv_file" id="csvFile" class="file-input" accept=".csv">
+            
+            <div id="fileInfo" style="display:none;margin-top:20px;text-align:center;">
+                <p style="font-size:1.1rem;color:#333;">📄 <span id="fileName"></span></p>
+                <button type="submit" class="btn btn-primary">🚀 Import Players</button>
+            </div>
+        </form>
+        
+        <div class="info-box">
+            <div class="info-title">📋 Expected CSV Format</div>
+            <div class="info-text">
+                Columns: DIVISION TYPE, DIVISION NAME, PLAYER NAME, PGID, DUPR, COUNTRY, RATING, GENDER, DOB, AGE, PARTNER, PHONE, EMAIL ID, ADDRESS, PAYMENT METHOD
+            </div>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-title">🔗 Quick Links</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a href="{{ url_for('wpc.admin_dashboard') }}" class="btn btn-secondary">📊 Dashboard</a>
+            <a href="{{ url_for('wpc.admin_players') }}" class="btn btn-secondary">👥 All Players</a>
+            <a href="{{ url_for('wpc.staff_checkin') }}" class="btn btn-primary">📱 Check-in Station</a>
+        </div>
+    </div>
+</div>
+
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('csvFile');
+const fileInfo = document.getElementById('fileInfo');
+const fileName = document.getElementById('fileName');
+
+// Drag and drop
+uploadZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadZone.classList.add('dragover');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+});
+
+uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.name.endsWith('.csv')) {
+        fileInput.files = e.dataTransfer.files;
+        showFile(file);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files[0]) {
+        showFile(e.target.files[0]);
+    }
+});
+
+function showFile(file) {
+    fileName.textContent = file.name;
+    fileInfo.style.display = 'block';
+    uploadZone.style.display = 'none';
+}
+</script>
+{% endblock %}

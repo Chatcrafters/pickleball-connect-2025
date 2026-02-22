@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}Staff Check-in - WPC European Open 2026{% endblock %}
+
+{% block content %}
+<style>
+    body { background: #1a1a2e; }
+    .station { max-width: 1400px; margin: 0 auto; padding: 20px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: white; }
+    .header h1 { margin: 0; color: #2E9E4B; }
+    .live-badge { background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: 600; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    
+    .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+    .stat-box { background: linear-gradient(135deg, #2E9E4B, #27ae60); border-radius: 12px; padding: 20px; text-align: center; color: white; }
+    .stat-box.pending { background: linear-gradient(135deg, #f39c12, #e67e22); }
+    .stat-box.packs { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+    .stat-value { font-size: 2.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.85rem; opacity: 0.9; }
+    
+    .main-grid { display: grid; grid-template-columns: 1fr 350px; gap: 20px; }
+    @media (max-width: 1000px) { .main-grid { grid-template-columns: 1fr; } }
+    
+    .search-section { background: #16213e; border-radius: 16px; padding: 20px; }
+    .search-box { width: 100%; padding: 15px 20px; font-size: 1.2rem; border: 2px solid #2E9E4B; border-radius: 12px; background: #1a1a2e; color: white; box-sizing: border-box; }
+    .search-box:focus { outline: none; border-color: #27ae60; }
+    .search-box::placeholder { color: #666; }
+    
+    .players-list { margin-top: 20px; max-height: 600px; overflow-y: auto; }
+    .player-card { background: #1a1a2e; border-radius: 12px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; border: 2px solid transparent; transition: all 0.2s; }
+    .player-card:hover { border-color: #2E9E4B; }
+    .player-card.checked-in { opacity: 0.6; }
+    
+    .player-avatar { width: 50px; height: 50px; border-radius: 50%; background: #2E9E4B; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; }
+    .player-info { flex: 1; }
+    .player-name { color: white; font-weight: 600; font-size: 1.1rem; }
+    .player-details { color: #888; font-size: 0.85rem; }
+    .player-phone { color: #2E9E4B; font-size: 0.85rem; }
+    .player-phone.missing { color: #e74c3c; }
+    
+    .player-actions { display: flex; gap: 8px; }
+    .btn { padding: 10px 15px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; }
+    .btn-checkin { background: #2E9E4B; color: white; }
+    .btn-checkin:hover { background: #27ae60; }
+    .btn-pack { background: #9b59b6; color: white; }
+    .btn-pack:hover { background: #8e44ad; }
+    .btn-done { background: #666; color: white; cursor: default; }
+    
+    .sidebar { background: #16213e; border-radius: 16px; padding: 20px; color: white; }
+    .sidebar-title { font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    .recent-item { padding: 10px 0; border-bottom: 1px solid #2a2a4a; }
+    .recent-item:last-child { border-bottom: none; }
+    .recent-name { font-weight: 600; }
+    .recent-time { color: #2E9E4B; font-size: 0.85rem; }
+    
+    /* Phone input modal */
+    .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 16px; padding: 30px; max-width: 400px; width: 90%; }
+    .modal-title { font-size: 1.3rem; font-weight: 700; margin-bottom: 20px; color: #1a472a; }
+    .modal-input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; margin-bottom: 15px; box-sizing: border-box; }
+    .modal-actions { display: flex; gap: 10px; }
+    .modal-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    .modal-btn-primary { background: #2E9E4B; color: white; }
+    .modal-btn-secondary { background: #f0f0f0; color: #333; }
+</style>
+
+<div class="station">
+    <div class="header">
+        <h1>🏓 Staff Check-in Station</h1>
+        <span class="live-badge">● LIVE</span>
+    </div>
+    
+    <div class="stats-bar">
+        <div class="stat-box">
+            <div class="stat-value" id="statTotal">{{ stats.total }}</div>
+            <div class="stat-label">Total Players</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statCheckedIn">{{ stats.checked_in }}</div>
+            <div class="stat-label">Checked In</div>
+        </div>
+        <div class="stat-box pending">
+            <div class="stat-value" id="statPending">{{ stats.pending }}</div>
+            <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-box packs">
+            <div class="stat-value" id="statPacks">{{ stats.welcome_packs }}</div>
+            <div class="stat-label">Welcome Packs</div>
+        </div>
+    </div>
+    
+    <div class="main-grid">
+        <div class="search-section">
+            <input type="text" class="search-box" id="searchInput" placeholder="🔍 Search player name..." autofocus>
+            
+            <div class="players-list" id="playersList">
+                {% for player in players %}
+                <div class="player-card {% if player.checked_in %}checked-in{% endif %}" data-id="{{ player.id }}" data-name="{{ player.first_name }} {{ player.last_name }}" data-phone="{{ player.phone or '' }}">
+                    <div class="player-avatar">{{ player.first_name[0] }}{{ player.last_name[0] }}</div>
+                    <div class="player-info">
+                        <div class="player-name">{{ player.first_name }} {{ player.last_name }}</div>
+                        <div class="player-details">🌍 {{ player.country or 'Unknown' }}</div>
+                        {% if player.phone and player.phone != '-' %}
+                        <div class="player-phone">📱 {{ player.phone }}</div>
+                        {% else %}
+                        <div class="player-phone missing">❌ No phone</div>
+                        {% endif %}
+                    </div>
+                    <div class="player-actions">
+                        {% if player.checked_in %}
+                        <button class="btn btn-done">✅ Checked In</button>
+                        {% else %}
+                        <button class="btn btn-checkin" onclick="doCheckin({{ player.id }}, '{{ player.phone or '' }}')">Check In</button>
+                        {% endif %}
+                        
+                        {% if player.welcome_pack_received %}
+                        <button class="btn btn-done">📦 Done</button>
+                        {% else %}
+                        <button class="btn btn-pack" onclick="givePack({{ player.id }})">📦 Pack</button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="sidebar-title">⏱️ Recent Check-ins</div>
+            <div id="recentList">
+                {% for player in players if player.checked_in %}
+                {% if loop.index <= 10 %}
+                <div class="recent-item">
+                    <div class="recent-name">{{ player.first_name }} {{ player.last_name }}</div>
+                    <div class="recent-time">{{ player.checked_in_at.strftime('%H:%M') if player.checked_in_at else '-' }}</div>
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Phone Modal -->
+<div class="modal" id="phoneModal">
+    <div class="modal-content">
+        <div class="modal-title">📱 Enter Phone Number</div>
+        <input type="tel" class="modal-input" id="phoneInput" placeholder="+34 612 345 678">
+        <div class="modal-actions">
+            <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn modal-btn-primary" onclick="submitCheckin()">Check In</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentPlayerId = null;
+
+// Search
+document.getElementById('searchInput').addEventListener('input', function(e) {
+    const query = e.target.value.toLowerCase();
+    document.querySelectorAll('.player-card').forEach(card => {
+        const name = card.dataset.name.toLowerCase();
+        card.style.display = name.includes(query) ? 'flex' : 'none';
+    });
+});
+
+// Check-in
+function doCheckin(playerId, phone) {
+    currentPlayerId = playerId;
+    if (!phone || phone === '-' || phone === '') {
+        document.getElementById('phoneModal').classList.add('active');
+        document.getElementById('phoneInput').focus();
+    } else {
+        submitCheckinRequest(playerId, '');
+    }
+}
+
+function closeModal() {
+    document.getElementById('phoneModal').classList.remove('active');
+    currentPlayerId = null;
+}
+
+function submitCheckin() {
+    const phone = document.getElementById('phoneInput').value;
+    if (!phone) {
+        alert('Please enter a phone number');
+        return;
+    }
+    submitCheckinRequest(currentPlayerId, phone);
+    closeModal();
+}
+
+function submitCheckinRequest(playerId, phone) {
+    const formData = new FormData();
+    if (phone) formData.append('phone', phone);
+    
+    fetch(`/wpc/admin/checkin/${playerId}`, {
+        method: 'POST',
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.querySelector(`[data-id="${playerId}"]`);
+            card.classList.add('checked-in');
+            card.querySelector('.btn-checkin').className = 'btn btn-done';
+            card.querySelector('.btn-checkin').textContent = '✅ Checked In';
+            card.querySelector('.btn-checkin').onclick = null;
+            refreshStats();
+        }
+    });
+}
+
+// Welcome Pack
+function givePack(playerId) {
+    fetch(`/wpc/admin/welcome-pack/${playerId}`, { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.querySelector(`[data-id="${playerId}"]`);
+            const packBtn = card.querySelector('.btn-pack');
+            packBtn.className = 'btn btn-done';
+            packBtn.textContent = '📦 Done';
+            packBtn.onclick = null;
+            refreshStats();
+        }
+    });
+}
+
+// Refresh stats
+function refreshStats() {
+    fetch('/wpc/api/stats')
+    .then(r => r.json())
+    .then(data => {
+        document.getElementById('statCheckedIn').textContent = data.checked_in;
+        document.getElementById('statPending').textContent = data.pending;
+        document.getElementById('statPacks').textContent = data.welcome_packs;
+    });
+}
+
+// Auto-refresh every 30 seconds
+setInterval(refreshStats, 30000);
+</script>
+{% endblock %}

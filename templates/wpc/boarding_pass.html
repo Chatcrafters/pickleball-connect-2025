@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block title %}Boarding Pass - WPC European Open 2026{% endblock %}
+
+{% block content %}
+<style>
+    body { background: linear-gradient(135deg, #1a472a 0%, #2E9E4B 100%); min-height: 100vh; }
+    .pass-container { max-width: 420px; margin: 0 auto; padding: 20px; }
+    
+    .boarding-pass {
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    
+    .pass-header {
+        background: linear-gradient(135deg, #1a472a, #2E9E4B);
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    .event-name { font-size: 1.3rem; font-weight: 700; margin: 0; }
+    .event-location { opacity: 0.9; font-size: 0.9rem; margin-top: 5px; }
+    
+    .player-section {
+        padding: 20px;
+        border-bottom: 2px dashed #e0e0e0;
+        position: relative;
+    }
+    .player-section::before, .player-section::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(135deg, #1a472a, #2E9E4B);
+        border-radius: 50%;
+        bottom: -10px;
+    }
+    .player-section::before { left: -10px; }
+    .player-section::after { right: -10px; }
+    
+    .player-info { display: flex; align-items: center; gap: 15px; }
+    .player-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #2E9E4B, #1a7a35);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+    .player-name { font-size: 1.4rem; font-weight: 700; color: #1a472a; margin: 0; }
+    .player-country { color: #666; font-size: 1rem; }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-top: 15px;
+    }
+    .info-item { text-align: center; }
+    .info-label { font-size: 0.7rem; text-transform: uppercase; color: #999; }
+    .info-value { font-size: 1.1rem; font-weight: 600; color: #333; }
+    
+    .divisions-section {
+        padding: 20px;
+        background: #f8f9fa;
+    }
+    .section-title { font-size: 0.8rem; text-transform: uppercase; color: #999; margin-bottom: 10px; }
+    .division-item {
+        background: white;
+        border-radius: 8px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
+        border-left: 3px solid #2E9E4B;
+    }
+    .division-type { font-weight: 600; color: #333; }
+    .division-partner { font-size: 0.85rem; color: #666; }
+    
+    .qr-section {
+        padding: 25px;
+        text-align: center;
+        border-top: 2px dashed #e0e0e0;
+        position: relative;
+    }
+    .qr-section::before, .qr-section::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: linear-gradient(135deg, #1a472a, #2E9E4B);
+        border-radius: 50%;
+        top: -10px;
+    }
+    .qr-section::before { left: -10px; }
+    .qr-section::after { right: -10px; }
+    
+    .qr-code {
+        width: 180px;
+        height: 180px;
+        margin: 0 auto 15px;
+        border-radius: 12px;
+    }
+    .qr-hint { color: #666; font-size: 0.85rem; }
+    
+    .pass-footer {
+        background: #1a472a;
+        color: white;
+        padding: 15px;
+        text-align: center;
+        font-size: 0.85rem;
+    }
+    .pass-number { opacity: 0.7; }
+    
+    .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .btn-action {
+        flex: 1;
+        padding: 12px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        text-align: center;
+    }
+    .btn-primary { background: #2E9E4B; color: white; }
+    .btn-secondary { background: #f0f0f0; color: #333; }
+    
+    /* Schedule placeholder */
+    .schedule-section {
+        padding: 20px;
+        background: #fff3cd;
+        border-top: 2px dashed #e0e0e0;
+    }
+    .schedule-coming { text-align: center; color: #856404; }
+    .schedule-icon { font-size: 2rem; margin-bottom: 10px; }
+
+    @media print {
+        body { background: white; }
+        .pass-container { padding: 0; }
+        .actions { display: none; }
+    }
+</style>
+
+<div class="pass-container">
+    <div class="boarding-pass">
+        <!-- Header -->
+        <div class="pass-header">
+            <div class="event-name">🏓 WPC EUROPEAN OPEN 2026</div>
+            <div class="event-location">📍 Málaga, Spain • 25 Feb - 01 Mar</div>
+        </div>
+        
+        <!-- Player Info -->
+        <div class="player-section">
+            <div class="player-info">
+                <div class="player-avatar">{{ player.first_name[0] }}{{ player.last_name[0] }}</div>
+                <div>
+                    <h2 class="player-name">{{ player.first_name }} {{ player.last_name }}</h2>
+                    <div class="player-country">🌍 {{ player.country or 'Unknown' }}</div>
+                </div>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">DUPR</div>
+                    <div class="info-value">{{ player.dupr_rating or '-' }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Status</div>
+                    <div class="info-value" style="color:#2E9E4B;">✅ Checked In</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Divisions -->
+        <div class="divisions-section">
+            <div class="section-title">📋 Your Events</div>
+            {% for reg in registrations %}
+            <div class="division-item">
+                <div class="division-type">{{ reg.division_type }} {{ reg.age_category or '' }}</div>
+                {% if reg.partner_name and reg.partner_name != 'Looking for partner' %}
+                <div class="division-partner">👥 Partner: {{ reg.partner_name }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Schedule Placeholder -->
+        <div class="schedule-section">
+            <div class="schedule-coming">
+                <div class="schedule-icon">📅</div>
+                <strong>Match Schedule Coming Soon!</strong><br>
+                <small>You'll receive WhatsApp notifications with your match times & courts</small>
+            </div>
+        </div>
+        
+        <!-- QR Code -->
+        <div class="qr-section">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data={{ player.checkin_token }}" class="qr-code" alt="QR Code">
+            <div class="qr-hint">Show this at the Welcome Desk to collect your Welcome Pack</div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="pass-footer">
+            <div>WPC Series Europe</div>
+            <div class="pass-number">#{{ player.id }}</div>
+        </div>
+    </div>
+    
+    <!-- Actions -->
+    <div class="actions">
+        <button class="btn-action btn-secondary" onclick="window.print();">🖨️ Print</button>
+        <button class="btn-action btn-secondary" onclick="savePass();">💾 Screenshot</button>
+    </div>
+</div>
+
+<script>
+function savePass() {
+    alert('Take a screenshot to save your pass!\n\niPhone: Power + Volume Up\nAndroid: Power + Volume Down');
+}
+</script>
+{% endblock %}

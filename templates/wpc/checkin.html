@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Check-In - WPC European Open 2026{% endblock %}
+
+{% block content %}
+<style>
+    body { background: linear-gradient(135deg, #1a472a 0%, #2E9E4B 100%); min-height: 100vh; }
+    .checkin-container { max-width: 500px; margin: 0 auto; padding: 20px; }
+    .event-badge { background: rgba(255,255,255,0.2); border-radius: 8px; padding: 8px 15px; font-size: 0.85rem; display: inline-block; margin-bottom: 15px; color: white; }
+    .pass-card { background: linear-gradient(145deg, #1a472a, #2E9E4B); border-radius: 20px; padding: 25px; color: white; box-shadow: 0 20px 60px rgba(0,0,0,0.4); margin-bottom: 20px; }
+    .player-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    .player-photo { width: 80px; height: 80px; border-radius: 50%; border: 3px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; }
+    .player-name { font-size: 1.5rem; font-weight: 700; margin: 0; }
+    .player-country { opacity: 0.9; font-size: 1rem; }
+    .divisions-list { margin-top: 15px; }
+    .division-badge { background: rgba(255,255,255,0.15); border-radius: 8px; padding: 8px 12px; margin: 5px 0; font-size: 0.85rem; }
+    .checkin-form { background: white; border-radius: 16px; padding: 25px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+    .form-title { color: #1a472a; font-weight: 700; margin-bottom: 20px; }
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-weight: 600; color: #333; margin-bottom: 8px; display: block; }
+    .form-control { width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; box-sizing: border-box; }
+    .form-control:focus { border-color: #2E9E4B; outline: none; }
+    .required { color: #e74c3c; }
+    .checkbox-group { margin: 15px 0; }
+    .checkbox-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 10px; margin-bottom: 10px; cursor: pointer; border: 2px solid transparent; }
+    .checkbox-item:hover { background: #e8f5e9; }
+    .checkbox-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: #2E9E4B; margin-top: 2px; flex-shrink: 0; }
+    .checkbox-text { font-size: 0.9rem; color: #333; line-height: 1.4; }
+    .checkbox-text a { color: #2E9E4B; text-decoration: underline; }
+    .checkbox-required { border-color: #e74c3c !important; background: #fff5f5 !important; }
+    .btn-checkin { width: 100%; padding: 15px; background: linear-gradient(135deg, #2E9E4B, #1a7a35); color: white; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
+    .btn-checkin:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(46,158,75,0.4); }
+    .status-badge { text-align: center; padding: 15px; border-radius: 12px; margin-bottom: 20px; background: linear-gradient(135deg, #27ae60, #2ecc71); color: white; }
+    .alert { padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; }
+    .alert-danger { background: #f8d7da; color: #721c24; }
+</style>
+
+<div class="checkin-container">
+    <div class="text-center mb-3">
+        <span class="event-badge">🏓 WPC EUROPEAN OPEN 2026</span>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    
+    <div class="pass-card">
+        <div class="player-header">
+            <div class="player-photo">{{ player.first_name[0] }}{{ player.last_name[0] }}</div>
+            <div>
+                <h2 class="player-name">{{ player.first_name }} {{ player.last_name }}</h2>
+                <div class="player-country">🌍 {{ player.country or 'Unknown' }}</div>
+            </div>
+        </div>
+        
+        <div class="divisions-list">
+            <strong>📋 Your Events:</strong>
+            {% for reg in registrations %}
+            <div class="division-badge">
+                {{ reg.division_type }} {{ reg.age_category or '' }}
+                {% if reg.partner_name and reg.partner_name != 'Looking for partner' %}
+                <br><small>Partner: {{ reg.partner_name }}</small>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    {% if player.checked_in %}
+    <div class="status-badge">
+        <h3 style="margin:0;">✅ Already Checked In!</h3>
+        <p style="margin:5px 0 0;opacity:0.9;">{{ player.checked_in_at.strftime('%d.%m.%Y %H:%M') if player.checked_in_at else '' }}</p>
+    </div>
+    <div class="text-center">
+        <a href="{{ url_for('wpc.boarding_pass', token=player.checkin_token) }}" class="btn-checkin" style="display:inline-block;text-decoration:none;max-width:300px;">
+            🎫 View Boarding Pass
+        </a>
+    </div>
+    {% else %}
+    <div class="checkin-form">
+        <h3 class="form-title">📝 Complete Check-In</h3>
+        
+        <form method="POST" id="checkinForm">
+            <div class="form-group">
+                <label class="form-label">📱 Phone Number (WhatsApp) <span class="required">*</span></label>
+                <input type="tel" name="phone" class="form-control" placeholder="+34 612 345 678" value="{{ player.phone or '' }}" required>
+                <small style="color:#666;font-size:0.8rem;">We'll send you match schedules & court assignments</small>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">🌍 Preferred Language</label>
+                <select name="language" class="form-control">
+                    <option value="EN" {% if player.preferred_language == 'EN' %}selected{% endif %}>English</option>
+                    <option value="DE" {% if player.preferred_language == 'DE' %}selected{% endif %}>Deutsch</option>
+                    <option value="ES" {% if player.preferred_language == 'ES' %}selected{% endif %}>Español</option>
+                    <option value="FR" {% if player.preferred_language == 'FR' %}selected{% endif %}>Français</option>
+                </select>
+            </div>
+            
+            <div class="checkbox-group">
+                <label class="checkbox-item" id="privacyBox">
+                    <input type="checkbox" name="privacy_accepted" id="privacyCheck" required>
+                    <span class="checkbox-text">
+                        I accept the <a href="{{ url_for('wpc.terms') }}" target="_blank">Privacy Policy & Terms</a> <span class="required">*</span>
+                    </span>
+                </label>
+                
+                <label class="checkbox-item">
+                    <input type="checkbox" name="whatsapp_optin" checked>
+                    <span class="checkbox-text">
+                        📱 Send me tournament updates via WhatsApp<br>
+                        <small style="color:#666;">(Match times, court assignments, results)</small>
+                    </span>
+                </label>
+                
+                <label class="checkbox-item">
+                    <input type="checkbox" name="marketing_optin">
+                    <span class="checkbox-text">
+                        📧 Keep me informed about future tournaments & clinics<br>
+                        <small style="color:#666;">(Newsletter, max 2x per month)</small>
+                    </span>
+                </label>
+            </div>
+            
+            <button type="submit" class="btn-checkin">✅ Complete Check-In</button>
+        </form>
+    </div>
+    {% endif %}
+    
+    <div class="text-center mt-4" style="color:rgba(255,255,255,0.7);font-size:0.85rem;">
+        25 Feb - 01 Mar 2026 • Málaga, Spain<br>
+        WPC Series Europe
+    </div>
+</div>
+
+<script>
+document.getElementById('checkinForm')?.addEventListener('submit', function(e) {
+    const privacyCheck = document.getElementById('privacyCheck');
+    if (!privacyCheck.checked) {
+        e.preventDefault();
+        document.getElementById('privacyBox').classList.add('checkbox-required');
+        return false;
+    }
+});
+document.getElementById('privacyCheck')?.addEventListener('change', function() {
+    document.getElementById('privacyBox').classList.remove('checkbox-required');
+});
+</script>
+{% endblock %}
