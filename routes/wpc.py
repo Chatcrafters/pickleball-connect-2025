@@ -3,7 +3,7 @@ WPC Routes - Check-in, Dashboard, Welcome Pack
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from datetime import datetime
-from models import db, WPCPlayer, WPCRegistration
+from models import db, WPCPlayer, WPCRegistration, Sponsor
 
 wpc = Blueprint('wpc', __name__, url_prefix='/wpc')
 
@@ -114,12 +114,24 @@ def boarding_pass(token):
     matches_by_date = defaultdict(list)
     for match in player_matches:
         matches_by_date[match['date']].append(match)
-    
+
+    # Rotating sponsor based on player ID
+    sponsor = None
+    sponsors_list = Sponsor.query.filter_by(is_active=True, show_on_boarding_pass=True).order_by(Sponsor.id).all()
+    if sponsors_list:
+        s = sponsors_list[player.id % len(sponsors_list)]
+        sponsor = {
+            'logo_url': s.logo_url,
+            'website_url': s.get_tracking_link(),
+            'text': s.boarding_pass_text or s.name,
+        }
+
     return render_template('wpc/boarding_pass.html',
                          player=player,
                          registrations=registrations,
                          matches_by_date=dict(matches_by_date),
-                         total_matches=len(player_matches))
+                         total_matches=len(player_matches),
+                         sponsor=sponsor)
                          
 
 # ============================================================================
