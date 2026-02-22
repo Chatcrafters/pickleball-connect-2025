@@ -729,3 +729,62 @@ class CheckinSyncQueue(db.Model):
     processed_at = db.Column(db.DateTime, nullable=True)
     sync_error = db.Column(db.Text, nullable=True)
 
+
+# ============================================================================
+# WPC MODELS (World Pickleball Championship)
+# ============================================================================
+
+class WPCPlayer(db.Model):
+    __tablename__ = 'wpc_player'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    pgid = db.Column(db.String(20), unique=True, nullable=False)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(255), nullable=True)
+    phone = db.Column(db.String(50), nullable=True)
+    country = db.Column(db.String(100), nullable=True)
+    dupr_id = db.Column(db.String(20), nullable=True)
+    dupr_rating = db.Column(db.String(50), nullable=True)
+    gender = db.Column(db.String(10), nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
+    address = db.Column(db.Text, nullable=True)
+    checkin_token = db.Column(db.String(64), unique=True, nullable=True, index=True)
+    checked_in = db.Column(db.Boolean, default=False)
+    checked_in_at = db.Column(db.DateTime, nullable=True)
+    privacy_accepted = db.Column(db.Boolean, default=False)
+    privacy_accepted_at = db.Column(db.DateTime, nullable=True)
+    whatsapp_optin = db.Column(db.Boolean, default=False)
+    marketing_optin = db.Column(db.Boolean, default=False)
+    preferred_language = db.Column(db.String(5), default='EN')
+    welcome_pack_received = db.Column(db.Boolean, default=False)
+    welcome_pack_received_at = db.Column(db.DateTime, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    registrations = db.relationship('WPCRegistration', back_populates='player', lazy='dynamic')
+    
+    def generate_checkin_token(self):
+        self.checkin_token = secrets.token_urlsafe(32)
+        return self.checkin_token
+    
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    
+    def has_phone(self):
+        return bool(self.phone and self.phone.strip() and self.phone.strip() != '-')
+
+
+class WPCRegistration(db.Model):
+    __tablename__ = 'wpc_registration'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    player_id = db.Column(db.Integer, db.ForeignKey('wpc_player.id'), nullable=False)
+    division_type = db.Column(db.String(50), nullable=True)
+    division_name = db.Column(db.String(255), nullable=True)
+    age_category = db.Column(db.String(20), nullable=True)
+    skill_level = db.Column(db.String(50), nullable=True)
+    partner_name = db.Column(db.String(200), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    player = db.relationship('WPCPlayer', back_populates='registrations')

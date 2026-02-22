@@ -1,4 +1,4 @@
-import os
+﻿import os
 from flask import Flask
 from flask_migrate import Migrate
 from models import db
@@ -11,6 +11,8 @@ from routes.webhook import webhook
 from dotenv import load_dotenv
 from routes.pcl import pcl
 from routes.auth import auth
+from routes.wpc import wpc
+from routes.wpc_import import wpc_import
 from checkin import checkin
 
 # Load environment variables from .env
@@ -41,8 +43,9 @@ else:
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024  # 4MB max upload (Vercel limit is 4.5MB)
+app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024  # 4MB max upload
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
     'pool_pre_ping': True,
     'pool_recycle': 300,
@@ -62,6 +65,8 @@ app.register_blueprint(webhook, url_prefix='/webhook')
 app.register_blueprint(pcl, url_prefix='/pcl')
 app.register_blueprint(auth, url_prefix='/auth')
 app.register_blueprint(checkin)
+app.register_blueprint(wpc)
+app.register_blueprint(wpc_import)
 
 # Create tables on first run
 with app.app_context():
@@ -73,7 +78,6 @@ with app.app_context():
         print("Note: Tables may already exist, continuing...")
 
 if __name__ == '__main__':
-    # Lokale Entwicklung
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV') != 'production'
     
