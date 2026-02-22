@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Staff Check-in - WPC European Open 2026{% endblock %}
 
 {% block content %}
@@ -66,8 +66,8 @@
 
 <div class="station">
     <div class="header">
-        <h1>🏓 Staff Check-in Station</h1>
-        <span class="live-badge">● LIVE</span>
+        <h1>ðŸ“ Staff Check-in Station</h1>
+        <span class="live-badge">â— LIVE</span>
     </div>
     
     <div class="stats-bar">
@@ -91,7 +91,7 @@
     
     <div class="main-grid">
         <div class="search-section">
-            <input type="text" class="search-box" id="searchInput" placeholder="🔍 Search player name..." autofocus>
+            <input type="text" class="search-box" id="searchInput" placeholder="ðŸ” Search player name..." autofocus>
             
             <div class="players-list" id="playersList">
                 {% for player in players %}
@@ -99,24 +99,24 @@
                     <div class="player-avatar">{{ player.first_name[0] }}{{ player.last_name[0] }}</div>
                     <div class="player-info">
                         <div class="player-name">{{ player.first_name }} {{ player.last_name }}</div>
-                        <div class="player-details">🌍 {{ player.country or 'Unknown' }}</div>
+                        <div class="player-details">ðŸŒ {{ player.country or 'Unknown' }}</div>
                         {% if player.phone and player.phone != '-' %}
-                        <div class="player-phone">📱 {{ player.phone }}</div>
+                        <div class="player-phone">ðŸ“± {{ player.phone }}</div>
                         {% else %}
-                        <div class="player-phone missing">❌ No phone</div>
+                        <div class="player-phone missing">âŒ No phone</div>
                         {% endif %}
                     </div>
                     <div class="player-actions">
                         {% if player.checked_in %}
-                        <button class="btn btn-done">✅ Checked In</button>
+                        <button class="btn btn-done">âœ… Checked In</button>
                         {% else %}
                         <button class="btn btn-checkin" onclick="doCheckin({{ player.id }}, '{{ player.phone or '' }}')">Check In</button>
                         {% endif %}
                         
                         {% if player.welcome_pack_received %}
-                        <button class="btn btn-done">📦 Done</button>
+                        <button class="btn btn-done">ðŸ“¦ Done</button>
                         {% else %}
-                        <button class="btn btn-pack" onclick="givePack({{ player.id }})">📦 Pack</button>
+                        <button class="btn btn-pack" onclick="givePack({{ player.id }})">ðŸ“¦ Pack</button>
                         {% endif %}
                     </div>
                 </div>
@@ -125,7 +125,7 @@
         </div>
         
         <div class="sidebar">
-            <div class="sidebar-title">⏱️ Recent Check-ins</div>
+            <div class="sidebar-title">â±ï¸ Recent Check-ins</div>
             <div id="recentList">
                 {% for player in players if player.checked_in %}
                 {% if loop.index <= 10 %}
@@ -143,7 +143,7 @@
 <!-- Phone Modal -->
 <div class="modal" id="phoneModal">
     <div class="modal-content">
-        <div class="modal-title">📱 Enter Phone Number</div>
+        <div class="modal-title">ðŸ“± Enter Phone Number</div>
         <input type="tel" class="modal-input" id="phoneInput" placeholder="+34 612 345 678">
         <div class="modal-actions">
             <button class="modal-btn modal-btn-secondary" onclick="closeModal()">Cancel</button>
@@ -204,7 +204,7 @@ function submitCheckinRequest(playerId, phone) {
             const card = document.querySelector(`[data-id="${playerId}"]`);
             card.classList.add('checked-in');
             card.querySelector('.btn-checkin').className = 'btn btn-done';
-            card.querySelector('.btn-checkin').textContent = '✅ Checked In';
+            card.querySelector('.btn-checkin').textContent = 'âœ… Checked In';
             card.querySelector('.btn-checkin').onclick = null;
             refreshStats();
         }
@@ -220,7 +220,7 @@ function givePack(playerId) {
             const card = document.querySelector(`[data-id="${playerId}"]`);
             const packBtn = card.querySelector('.btn-pack');
             packBtn.className = 'btn btn-done';
-            packBtn.textContent = '📦 Done';
+            packBtn.textContent = 'ðŸ“¦ Done';
             packBtn.onclick = null;
             refreshStats();
         }
@@ -242,3 +242,5 @@ function refreshStats() {
 setInterval(refreshStats, 30000);
 </script>
 {% endblock %}
+
+

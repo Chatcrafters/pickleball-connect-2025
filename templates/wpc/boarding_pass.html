@@ -81,7 +81,6 @@
     .division-type { font-weight: 600; color: #333; }
     .division-partner { font-size: 0.8rem; color: #666; }
     
-    /* MATCH SCHEDULE SECTION */
     .schedule-section {
         padding: 15px 20px;
         background: white;
@@ -103,9 +102,7 @@
         font-size: 0.8rem;
     }
     
-    .day-group {
-        margin-bottom: 15px;
-    }
+    .day-group { margin-bottom: 15px; }
     .day-header {
         background: #1a472a;
         color: white;
@@ -140,25 +137,10 @@
         text-align: center;
     }
     .match-details { flex: 1; }
-    .match-court {
-        font-size: 0.75rem;
-        color: #666;
-        margin-bottom: 2px;
-    }
-    .match-division {
-        font-weight: 600;
-        color: #333;
-        font-size: 0.85rem;
-    }
-    .match-opponent {
-        font-size: 0.8rem;
-        color: #555;
-        margin-top: 3px;
-    }
-    .match-partner {
-        font-size: 0.75rem;
-        color: #2E9E4B;
-    }
+    .match-court { font-size: 0.75rem; color: #666; margin-bottom: 2px; }
+    .match-division { font-weight: 600; color: #333; font-size: 0.85rem; }
+    .match-opponent { font-size: 0.8rem; color: #555; margin-top: 3px; }
+    .match-partner { font-size: 0.75rem; color: #2E9E4B; }
     
     .no-matches {
         background: #fff3cd;
@@ -233,7 +215,7 @@
         <!-- Header -->
         <div class="pass-header">
             <div class="event-name">WPC EUROPEAN OPEN 2026</div>
-            <div class="event-location">📍 Málaga, Spain • 25 Feb - 01 Mar</div>
+            <div class="event-location"><i class="bi bi-geo-alt"></i> Malaga, Spain - 25 Feb - 01 Mar</div>
         </div>
         
         <!-- Player Info -->
@@ -242,7 +224,7 @@
                 <div class="player-avatar">{{ player.first_name[0] }}{{ player.last_name[0] }}</div>
                 <div>
                     <h2 class="player-name">{{ player.first_name }} {{ player.last_name }}</h2>
-                    <div class="player-country">🌍 {{ player.country or 'Unknown' }}</div>
+                    <div class="player-country"><i class="bi bi-globe"></i> {{ player.country or 'Unknown' }}</div>
                 </div>
             </div>
             
@@ -260,12 +242,12 @@
         
         <!-- Divisions -->
         <div class="divisions-section">
-            <div class="section-title">📋 Your Events</div>
+            <div class="section-title"><i class="bi bi-list-check"></i> Your Events</div>
             {% for reg in registrations %}
             <div class="division-item">
                 <div class="division-type">{{ reg.division_type }} {{ reg.age_category or '' }}</div>
                 {% if reg.partner_name and reg.partner_name != 'Looking for partner' %}
-                <div class="division-partner">👥 {{ reg.partner_name }}</div>
+                <div class="division-partner"><i class="bi bi-people"></i> {{ reg.partner_name }}</div>
                 {% endif %}
             </div>
             {% endfor %}
@@ -274,7 +256,7 @@
         <!-- Match Schedule -->
         <div class="schedule-section">
             <div class="schedule-title">
-                📅 Your Matches
+                <i class="bi bi-calendar-event"></i> Your Matches
                 <span class="match-count">{{ total_matches }} games</span>
             </div>
             
@@ -292,9 +274,9 @@
                                 <div class="match-court">Court {{ match.court }}</div>
                                 <div class="match-division">{{ match.division }}</div>
                                 {% if match.partner %}
-                                <div class="match-partner">👥 with {{ match.partner }}</div>
+                                <div class="match-partner"><i class="bi bi-people"></i> with {{ match.partner }}</div>
                                 {% endif %}
-                                <div class="match-opponent">🆚 {{ match.opponents }}</div>
+                                <div class="match-opponent">vs {{ match.opponents }}</div>
                             </div>
                         </div>
                         {% endfor %}
@@ -303,7 +285,7 @@
                 {% endfor %}
             {% else %}
             <div class="no-matches">
-                <div style="font-size:2rem;margin-bottom:10px;">📅</div>
+                <div style="font-size:2rem;margin-bottom:10px;"><i class="bi bi-calendar-x"></i></div>
                 <strong>Schedule Coming Soon!</strong><br>
                 <small>You'll receive WhatsApp notifications with your match times</small>
             </div>
@@ -325,8 +307,8 @@
     
     <!-- Actions -->
     <div class="actions">
-        <button class="btn-action btn-secondary" onclick="window.print();">🖨️ Print</button>
-        <button class="btn-action btn-secondary" onclick="savePass();">📱 Screenshot</button>
+        <button class="btn-action btn-secondary" onclick="window.print();"><i class="bi bi-printer"></i> Print</button>
+        <button class="btn-action btn-secondary" onclick="savePass();"><i class="bi bi-phone"></i> Screenshot</button>
     </div>
 </div>
 
