@@ -1,6 +1,6 @@
 from urllib.parse import quote
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
-from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS
+from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS, get_whatsapp_sponsor_block
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
@@ -1143,7 +1143,9 @@ def quick_add_player(token):
             if send_whatsapp and phone:
                 profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
                 message = get_profile_completion_message(registration, profile_url, preferred_language)
-                
+                sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=preferred_language)
+                message += sponsor_block
+
                 result = send_whatsapp_message(phone, message, test_mode=False)
                 
                 if result.get('status') in ['sent', 'queued']:
@@ -1291,7 +1293,9 @@ def send_single_profile_link(token, registration_id):
     # Build URL and send
     profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
     message = get_profile_completion_message(registration, profile_url, registration.preferred_language or 'EN')
-    
+    sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=registration.preferred_language or 'EN')
+    message += sponsor_block
+
     result = send_whatsapp_message(registration.phone, message, test_mode=False)
     
     if result.get('status') in ['sent', 'queued']:
@@ -1329,7 +1333,9 @@ def send_all_profile_links(token):
         
         profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
         message = get_profile_completion_message(registration, profile_url, registration.preferred_language or 'EN')
-        
+        sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=registration.preferred_language or 'EN')
+        message += sponsor_block
+
         result = send_whatsapp_message(registration.phone, message, test_mode=False)
         
         if result.get('status') in ['sent', 'queued']:
@@ -1843,7 +1849,9 @@ def send_captain_invite(team_id):
         
         captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
         message = get_captain_invitation_message(team, captain_name, captain_url, language)
-        
+        sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=language)
+        message += sponsor_block
+
         result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
         
         if result.get('status') in ['sent', 'queued', 'test_mode']:
@@ -1876,7 +1884,9 @@ def send_captain_reminder(team_id):
     captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
     stats = team.get_stats()
     message = get_captain_reminder_message(team, captain_name, captain_url, stats, language)
-    
+    sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=language)
+    message += sponsor_block
+
     result = send_whatsapp_message(captain_phone, message, test_mode=test_mode)
     
     if result.get('status') in ['sent', 'queued', 'test_mode']:
@@ -1913,13 +1923,15 @@ def send_all_captain_reminders(tournament_id):
         
         captain_url = request.host_url.rstrip('/') + url_for('pcl.captain_dashboard', token=team.captain_token)
         message = get_captain_reminder_message(
-            team, 
-            captain_reg.first_name, 
-            captain_url, 
-            stats, 
+            team,
+            captain_reg.first_name,
+            captain_url,
+            stats,
             captain_reg.preferred_language or 'EN'
         )
-        
+        sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=captain_reg.preferred_language or 'EN')
+        message += sponsor_block
+
         result = send_whatsapp_message(captain_reg.phone, message, test_mode=test_mode)
         
         if result.get('status') in ['sent', 'queued', 'test_mode']:

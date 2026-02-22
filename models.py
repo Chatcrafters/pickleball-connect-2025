@@ -519,6 +519,192 @@ class VideoLibrary(db.Model):
 
 
 # ============================================================================
+# SPONSOR MODELS
+# ============================================================================
+
+class Sponsor(db.Model):
+    """Sponsor for events and tournaments"""
+    __tablename__ = 'sponsor'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    logo_url = db.Column(db.String(500), nullable=True)
+    website_url = db.Column(db.String(500), nullable=True)
+    tier = db.Column(db.String(20), nullable=False, default='partner')  # title/gold/silver/bronze/partner
+
+    # Tracking
+    tracking_url = db.Column(db.String(500), nullable=True)
+    tracking_code = db.Column(db.String(100), nullable=True)
+
+    # WhatsApp texts per language
+    whatsapp_text_en = db.Column(db.Text, nullable=True)
+    whatsapp_text_de = db.Column(db.Text, nullable=True)
+    whatsapp_text_es = db.Column(db.Text, nullable=True)
+    whatsapp_text_fr = db.Column(db.Text, nullable=True)
+
+    # Boarding pass
+    show_on_boarding_pass = db.Column(db.Boolean, default=False)
+    boarding_pass_text = db.Column(db.String(200), nullable=True)
+
+    # Status
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Revenue
+    revenue_model = db.Column(db.String(20), nullable=True)  # flat_fee/cpc/cpa/commission/barter
+    revenue_amount = db.Column(db.Float, nullable=True)
+
+    # Contact
+    contact_person = db.Column(db.String(200), nullable=True)
+    contact_email = db.Column(db.String(200), nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+
+    # Timestamps
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    placements = db.relationship('EventSponsor', back_populates='sponsor', lazy='dynamic')
+
+    def __repr__(self):
+        return f'<Sponsor {self.name}>'
+
+    @property
+    def tier_badge_class(self):
+        classes = {
+            'title': 'bg-warning text-dark',
+            'gold': 'bg-warning text-dark',
+            'silver': 'bg-secondary',
+            'bronze': 'bg-bronze',
+            'partner': 'bg-info text-dark',
+        }
+        return classes.get(self.tier, 'bg-secondary')
+
+    @property
+    def tier_label(self):
+        labels = {
+            'title': 'Title Sponsor',
+            'gold': 'Gold',
+            'silver': 'Silver',
+            'bronze': 'Bronze',
+            'partner': 'Partner',
+        }
+        return labels.get(self.tier, self.tier)
+
+    def get_whatsapp_text(self, lang='EN'):
+        lang = lang.upper()
+        texts = {
+            'EN': self.whatsapp_text_en,
+            'DE': self.whatsapp_text_de,
+            'ES': self.whatsapp_text_es,
+            'FR': self.whatsapp_text_fr,
+        }
+        return texts.get(lang) or self.whatsapp_text_en or ''
+
+    def get_tracking_link(self):
+        if self.tracking_url:
+            url = self.tracking_url
+            if self.tracking_code:
+                sep = '&' if '?' in url else '?'
+                url = f"{url}{sep}utm_source=pickleball_connect&utm_campaign={self.tracking_code}"
+            return url
+        return self.website_url or ''
+
+
+class EventSponsor(db.Model):
+    """Junction table linking sponsors to events/tournaments"""
+    __tablename__ = 'event_sponsor'
+
+    id = db.Column(db.Integer, primary_key=True)
+    sponsor_id = db.Column(db.Integer, db.ForeignKey('sponsor.id'), nullable=False)
+    event_id = db.Column(db.Integer, db.ForeignKey('event.id'), nullable=True)
+    pcl_tournament_id = db.Column(db.Integer, db.ForeignKey('pcl_tournament.id'), nullable=True)
+
+    # Display settings
+    show_in_whatsapp = db.Column(db.Boolean, default=True)
+    show_on_boarding_pass = db.Column(db.Boolean, default=True)
+    show_on_event_page = db.Column(db.Boolean, default=True)
+    display_order = db.Column(db.Integer, default=0)
+    tier_override = db.Column(db.String(20), nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    sponsor = db.relationship('Sponsor', back_populates='placements')
+    event = db.relationship('Event', backref='sponsor_placements')
+    pcl_tournament = db.relationship('PCLTournament', backref='sponsor_placements')
+
+    def __repr__(self):
+        return f'<EventSponsor {self.sponsor_id} -> Event {self.event_id or self.pcl_tournament_id}>'
+
+    @property
+    def effective_tier(self):
+        return self.tier_override or self.sponsor.tier
+
+
+def get_whatsapp_sponsor_block(event_id=None, pcl_tournament_id=None, language='EN'):
+    """Return formatted sponsor text block for WhatsApp messages."""
+    query = EventSponsor.query.filter_by(is_active=True, show_in_whatsapp=True)
+    if event_id:
+        query = query.filter_by(event_id=event_id)
+    elif pcl_tournament_id:
+        query = query.filter_by(pcl_tournament_id=pcl_tournament_id)
+    else:
+        return ''
+
+    placements = query.join(Sponsor).filter(Sponsor.is_active == True).order_by(
+        EventSponsor.display_order
+    ).all()
+
+    if not placements:
+        return ''
+
+    lines = []
+    for p in placements:
+        text = p.sponsor.get_whatsapp_text(language)
+        if text:
+            lines.append(text)
+
+    if not lines:
+        return ''
+
+    headers = {
+        'EN': 'Supported by',
+        'DE': 'Unterstuetzt von',
+        'ES': 'Patrocinado por',
+        'FR': 'Soutenu par',
+    }
+    header = headers.get(language.upper(), headers['EN'])
+    block = f"\n\n---\n{header}:\n" + "\n".join(lines)
+    return block
+
+
+def get_boarding_pass_sponsors(event_id=None, pcl_tournament_id=None):
+    """Return list of sponsor dicts for boarding pass display."""
+    query = EventSponsor.query.filter_by(is_active=True, show_on_boarding_pass=True)
+    if event_id:
+        query = query.filter_by(event_id=event_id)
+    elif pcl_tournament_id:
+        query = query.filter_by(pcl_tournament_id=pcl_tournament_id)
+    else:
+        return []
+
+    placements = query.join(Sponsor).filter(
+        Sponsor.is_active == True,
+        Sponsor.show_on_boarding_pass == True
+    ).order_by(EventSponsor.display_order).all()
+
+    result = []
+    for p in placements:
+        result.append({
+            'name': p.sponsor.name,
+            'logo_url': p.sponsor.logo_url,
+            'website_url': p.sponsor.get_tracking_link(),
+            'tier': p.effective_tier,
+            'text': p.sponsor.boarding_pass_text or p.sponsor.name,
+        })
+    return result
+
+
+# ============================================================================
 # CONSTANTS
 # ============================================================================
 

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
-from models import db, Event, Player, Message
+from models import db, Event, Player, Message, get_whatsapp_sponsor_block
 from datetime import datetime
 from utils.whatsapp import send_whatsapp_message, get_message_template
 
@@ -165,7 +165,11 @@ def send_event_invitations(event_id):
             location=event.location,
             description=event.description or ""
         )
-        
+
+        # Append sponsor block
+        sponsor_block = get_whatsapp_sponsor_block(event_id=event.id, language=player.preferred_language)
+        message += sponsor_block
+
         result = send_whatsapp_message(player.phone, message, test_mode=test_mode)
         
         if result['status'] in ['sent', 'test_mode']:

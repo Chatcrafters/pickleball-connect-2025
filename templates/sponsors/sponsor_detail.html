@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}{{ sponsor.name }} - Sponsoren{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>
+            <i class="bi bi-megaphone"></i> {{ sponsor.name }}
+            <span class="badge {{ sponsor.tier_badge_class }} fs-6">{{ sponsor.tier_label }}</span>
+            {% if not sponsor.is_active %}
+            <span class="badge bg-danger fs-6">Inaktiv</span>
+            {% endif %}
+        </h1>
+        <div>
+            <a href="{{ url_for('sponsors.sponsor_list') }}" class="btn btn-outline-secondary me-2">
+                <i class="bi bi-arrow-left"></i> Zurueck
+            </a>
+            <a href="{{ url_for('sponsors.sponsor_edit', id=sponsor.id) }}" class="btn btn-primary me-2">
+                <i class="bi bi-pencil"></i> Bearbeiten
+            </a>
+            <form method="POST" action="{{ url_for('sponsors.sponsor_toggle_active', id=sponsor.id) }}" class="d-inline">
+                <button type="submit" class="btn {{ 'btn-warning' if sponsor.is_active else 'btn-success' }}">
+                    <i class="bi {{ 'bi-pause-circle' if sponsor.is_active else 'bi-play-circle' }}"></i>
+                    {{ 'Deaktivieren' if sponsor.is_active else 'Aktivieren' }}
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Sponsor Info -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header"><i class="bi bi-info-circle"></i> Sponsor-Info</div>
+                <div class="card-body">
+                    {% if sponsor.logo_url %}
+                    <div class="mb-3 text-center">
+                        <img src="{{ sponsor.logo_url }}" alt="{{ sponsor.name }}" class="img-fluid" style="max-height: 80px;">
+                    </div>
+                    {% endif %}
+
+                    <table class="table table-sm">
+                        <tr><th style="width:40%">Website</th><td>{% if sponsor.website_url %}<a href="{{ sponsor.website_url }}" target="_blank">{{ sponsor.website_url }}</a>{% else %}-{% endif %}</td></tr>
+                        <tr><th>Tracking URL</th><td>{% if sponsor.tracking_url %}{{ sponsor.tracking_url }}{% else %}-{% endif %}</td></tr>
+                        <tr><th>Tracking Code</th><td>{{ sponsor.tracking_code or '-' }}</td></tr>
+                        <tr><th>Revenue Model</th><td>{{ sponsor.revenue_model or '-' }}</td></tr>
+                        <tr><th>Betrag</th><td>{% if sponsor.revenue_amount %}{{ "%.2f"|format(sponsor.revenue_amount) }} EUR{% else %}-{% endif %}</td></tr>
+                        <tr><th>Boarding Pass</th><td>{{ 'Ja' if sponsor.show_on_boarding_pass else 'Nein' }}</td></tr>
+                        <tr><th>Kontaktperson</th><td>{{ sponsor.contact_person or '-' }}</td></tr>
+                        <tr><th>Kontakt E-Mail</th><td>{% if sponsor.contact_email %}<a href="mailto:{{ sponsor.contact_email }}">{{ sponsor.contact_email }}</a>{% else %}-{% endif %}</td></tr>
+                    </table>
+
+                    {% if sponsor.notes %}
+                    <div class="mt-2">
+                        <strong>Notizen:</strong>
+                        <p class="text-muted mb-0">{{ sponsor.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- WhatsApp Preview -->
+            <div class="card mb-4">
+                <div class="card-header"><i class="bi bi-whatsapp"></i> WhatsApp-Texte</div>
+                <div class="card-body">
+                    {% for lang, label in [('EN', 'English'), ('DE', 'Deutsch'), ('ES', 'Espanol'), ('FR', 'Francais')] %}
+                    {% set text = sponsor.get_whatsapp_text(lang) %}
+                    {% if text %}
+                    <div class="mb-3">
+                        <strong>{{ label }}:</strong>
+                        <div class="bg-light rounded p-2 mt-1" style="font-size: 0.9rem;">{{ text }}</div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    {% if not sponsor.whatsapp_text_en and not sponsor.whatsapp_text_de %}
+                    <p class="text-muted mb-0">Keine WhatsApp-Texte konfiguriert.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Delete -->
+            <div class="card border-danger">
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('sponsors.sponsor_delete', id=sponsor.id) }}"
+                          onsubmit="return confirm('Sponsor und alle Placements wirklich loeschen?')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-trash"></i> Sponsor loeschen
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Placements -->
+        <div class="col-lg-6">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-pin-map"></i> Placements ({{ placements|length }})</span>
+                </div>
+                <div class="card-body">
+                    {% if placements %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Event / Tournament</th>
+                                    <th>WhatsApp</th>
+                                    <th>Boarding</th>
+                                    <th>Event Page</th>
+                                    <th>Order</th>
+                                    <th>Status</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in placements %}
+                                <tr class="{{ '' if p.is_active else 'text-muted' }}">
+                                    <td>
+                                        {% if p.event %}
+                                        <i class="bi bi-calendar-event"></i> {{ p.event.name }}
+                                        {% elif p.pcl_tournament %}
+                                        <i class="bi bi-trophy"></i> {{ p.pcl_tournament.name }}
+                                        {% endif %}
+                                        {% if p.tier_override %}
+                                        <br><small class="text-muted">Tier: {{ p.tier_override }}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td><i class="bi {{ 'bi-check-circle-fill text-success' if p.show_in_whatsapp else 'bi-x-circle text-muted' }}"></i></td>
+                                    <td><i class="bi {{ 'bi-check-circle-fill text-success' if p.show_on_boarding_pass else 'bi-x-circle text-muted' }}"></i></td>
+                                    <td><i class="bi {{ 'bi-check-circle-fill text-success' if p.show_on_event_page else 'bi-x-circle text-muted' }}"></i></td>
+                                    <td>{{ p.display_order }}</td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('sponsors.placement_toggle', id=p.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-sm {{ 'btn-outline-success' if p.is_active else 'btn-outline-secondary' }}" title="{{ 'Aktiv' if p.is_active else 'Inaktiv' }}">
+                                                <i class="bi {{ 'bi-toggle-on' if p.is_active else 'bi-toggle-off' }}"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        <form method="POST" action="{{ url_for('sponsors.placement_delete', id=p.id) }}"
+                                              onsubmit="return confirm('Placement entfernen?')">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted">Keine Placements vorhanden.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Add Placement Form -->
+            <div class="card">
+                <div class="card-header"><i class="bi bi-plus-circle"></i> Neues Placement</div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('sponsors.add_placement', id=sponsor.id) }}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="event_id" class="form-label">Event</label>
+                                <select class="form-select" id="event_id" name="event_id">
+                                    <option value="">-- Kein Event --</option>
+                                    {% for e in events %}
+                                    <option value="{{ e.id }}">{{ e.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="pcl_tournament_id" class="form-label">PCL Tournament</label>
+                                <select class="form-select" id="pcl_tournament_id" name="pcl_tournament_id">
+                                    <option value="">-- Kein Tournament --</option>
+                                    {% for t in tournaments %}
+                                    <option value="{{ t.id }}">{{ t.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="display_order" class="form-label">Reihenfolge</label>
+                                <input type="number" class="form-control" id="display_order" name="display_order" value="0">
+                            </div>
+                            <div class="col-md-8">
+                                <label for="tier_override" class="form-label">Tier Override (optional)</label>
+                                <select class="form-select" id="tier_override" name="tier_override">
+                                    <option value="">-- Standard ({{ sponsor.tier_label }}) --</option>
+                                    {% for value, label in [('title', 'Title Sponsor'), ('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze'), ('partner', 'Partner')] %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="show_in_whatsapp" name="show_in_whatsapp" checked>
+                                    <label class="form-check-label" for="show_in_whatsapp">WhatsApp</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="show_on_boarding_pass_p" name="show_on_boarding_pass" checked>
+                                    <label class="form-check-label" for="show_on_boarding_pass_p">Boarding Pass</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="show_on_event_page" name="show_on_event_page" checked>
+                                    <label class="form-check-label" for="show_on_event_page">Event Page</label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-plus-lg"></i> Placement hinzufuegen
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

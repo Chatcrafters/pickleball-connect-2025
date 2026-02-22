@@ -1,5 +1,5 @@
 from flask import Blueprint, request
-from models import db, Player, Event, PlayerResponse, event_players
+from models import db, Player, Event, PlayerResponse, event_players, get_whatsapp_sponsor_block
 from datetime import datetime
 from utils.whatsapp import send_whatsapp_message
 
@@ -101,6 +101,10 @@ WPC Series Europe"""
         responses[response_type]['EN']
     )
     
+    # Append sponsor block
+    sponsor_block = get_whatsapp_sponsor_block(event_id=event.id, language=player.preferred_language)
+    message += sponsor_block
+
     # Send confirmation (NOT in test mode!)
     result = send_whatsapp_message(player.phone, message, test_mode=False)
     print(f"ðŸ“¤ Confirmation sent to {player.first_name}: {response_type}")
