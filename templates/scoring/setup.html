@@ -1,0 +1,103 @@
+﻿{% extends "base.html" %}
+{% block title %}Scoring Setup - {{ tournament.name }}{% endblock %}
+{% block content %}
+<div class="container">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=tournament.id) }}">{{ tournament.name }}</a></li>
+        <li class="breadcrumb-item active">Scoring Setup</li>
+    </ol></nav>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="bi bi-clipboard-data"></i> Scoring Setup</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('scoring.live_dashboard', tournament_id=tournament.id) }}" class="btn btn-danger"><i class="bi bi-activity"></i> Live Dashboard</a>
+            <a href="{{ url_for('scoring.court_links', tournament_id=tournament.id) }}" class="btn btn-outline-primary"><i class="bi bi-qr-code"></i> Court Manager Links</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-5">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-geo-alt"></i> Courts ({{ courts|length }})</h5></div>
+                <div class="card-body">
+                    {% if courts %}
+                    <div class="table-responsive"><table class="table table-sm"><thead><tr><th>#</th><th>Court Manager</th><th>Status</th><th>Matches</th></tr></thead><tbody>
+                        {% for court in courts %}
+                        <tr><td><strong>{{ court.court_number }}</strong></td><td>{{ court.manager_name or '-' }}</td>
+                        <td>{% if court.status == 'in_play' %}<span class="badge bg-danger">LIVE</span>{% elif court.status == 'available' %}<span class="badge bg-success">Frei</span>{% else %}<span class="badge bg-secondary">{{ court.status }}</span>{% endif %}</td>
+                        <td>{{ court.matches.count() }}</td></tr>
+                        {% endfor %}
+                    </tbody></table></div>
+                    {% else %}<p class="text-muted">Noch keine Courts angelegt.</p>{% endif %}
+                    <hr><h6>Courts erstellen</h6>
+                    <form method="POST" action="{{ url_for('scoring.create_courts', tournament_id=tournament.id) }}">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-auto"><label class="form-label">Anzahl Courts</label><input type="number" name="num_courts" class="form-control" value="9" min="1" max="30"></div>
+                            <div class="col-auto"><div class="form-check"><input type="checkbox" name="replace_existing" class="form-check-input" id="replaceCheck"><label class="form-check-label" for="replaceCheck">Bestehende ersetzen</label></div></div>
+                            <div class="col-auto"><button type="submit" class="btn btn-primary"><i class="bi bi-plus-circle"></i> Courts erstellen</button></div>
+                        </div>
+                        <div class="mt-3"><a class="text-decoration-none" data-bs-toggle="collapse" href="#managerNames"><small><i class="bi bi-person"></i> Court Manager Namen zuweisen</small></a>
+                        <div class="collapse mt-2" id="managerNames"><div class="row g-2">
+                            {% for i in range(1, 10) %}<div class="col-md-4"><div class="input-group input-group-sm"><span class="input-group-text">C{{ i }}</span><input type="text" name="manager_name_{{ i }}" class="form-control" placeholder="Name"></div></div>{% endfor %}
+                        </div></div></div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-7">
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-plus-circle"></i> Match hinzufuegen</h5></div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('scoring.add_match', tournament_id=tournament.id) }}">
+                        <div class="row g-2">
+                            <div class="col-md-2"><label class="form-label">Nr.</label><input type="number" name="match_number" class="form-control" placeholder="#" value="{{ (matches[-1].match_number|int + 1) if matches else 1 }}"></div>
+                            <div class="col-md-5"><label class="form-label">Team 1</label><input type="text" name="team1_name" class="form-control" placeholder="z.B. Mueller/Schmidt" required></div>
+                            <div class="col-md-5"><label class="form-label">Team 2</label><input type="text" name="team2_name" class="form-control" placeholder="z.B. Garcia/Lopez" required></div>
+                        </div>
+                        <div class="row g-2 mt-1">
+                            <div class="col-md-3"><label class="form-label">Kategorie</label><input type="text" name="category" class="form-control" placeholder="z.B. Mixed +19"></div>
+                            <div class="col-md-3"><label class="form-label">Runde</label><input type="text" name="round_name" class="form-control" placeholder="z.B. Vorrunde"></div>
+                            <div class="col-md-3"><label class="form-label">Court</label><select name="court_id" class="form-select"><option value="">-- Spaeter --</option>{% for court in courts %}<option value="{{ court.id }}">Court {{ court.court_number }}</option>{% endfor %}</select></div>
+                            <div class="col-md-3"><label class="form-label">Uhrzeit</label><input type="datetime-local" name="scheduled_time" class="form-control"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success mt-3"><i class="bi bi-plus-circle"></i> Match hinzufuegen</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-upload"></i> Matches Bulk-Import</h5></div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('scoring.import_matches', tournament_id=tournament.id) }}">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-6"><label class="form-label">Kategorie (fuer alle)</label><input type="text" name="category" class="form-control" placeholder="z.B. Men's Doubles +50"></div>
+                            <div class="col-md-6"><label class="form-label">Runde (fuer alle)</label><input type="text" name="round_name" class="form-control" placeholder="z.B. Vorrunde Gruppe A"></div>
+                        </div>
+                        <div class="mb-2"><label class="form-label">Matches (ein Match pro Zeile: Team A vs Team B)</label>
+                        <textarea name="matches_text" class="form-control" rows="6" placeholder="Mueller/Schmidt vs Garcia/Lopez&#10;Becker/Novak vs Nadal/Federer"></textarea></div>
+                        <button type="submit" class="btn btn-primary"><i class="bi bi-upload"></i> Importieren</button>
+                    </form>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0"><i class="bi bi-list-ol"></i> Alle Matches ({{ matches|length }})</h5></div>
+                <div class="card-body p-0">
+                    {% if matches %}
+                    <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead><tr><th>#</th><th>Team 1</th><th>Team 2</th><th>Kategorie</th><th>Court</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>
+                        {% for match in matches %}
+                        <tr>
+                            <td>{{ match.match_number }}</td>
+                            <td>{% if match.team1_score is not none and match.team1_score > match.team2_score %}<strong>{{ match.get_team1_display() }}</strong>{% else %}{{ match.get_team1_display() }}{% endif %}</td>
+                            <td>{% if match.team2_score is not none and match.team2_score > match.team1_score %}<strong>{{ match.get_team2_display() }}</strong>{% else %}{{ match.get_team2_display() }}{% endif %}</td>
+                            <td><small>{{ match.category or '-' }}</small></td>
+                            <td>{% if match.court %}Court {{ match.court.court_number }}{% else %}<form method="POST" action="{{ url_for('scoring.assign_court', match_id=match.id) }}" style="display:inline"><select name="court_id" class="form-select form-select-sm" style="width:80px;display:inline" onchange="this.form.submit()"><option value="">--</option>{% for court in courts %}<option value="{{ court.id }}">C{{ court.court_number }}</option>{% endfor %}</select></form>{% endif %}</td>
+                            <td>{% if match.team1_score is not none %}<strong>{{ match.team1_score }} : {{ match.team2_score }}</strong>{% if match.scoresheet_verified %}<i class="bi bi-patch-check-fill text-success"></i>{% endif %}{% else %}-{% endif %}</td>
+                            <td>{% if match.status == 'completed' %}<span class="badge bg-success">Fertig</span>{% elif match.status == 'in_play' %}<span class="badge bg-danger">LIVE</span>{% else %}<span class="badge bg-secondary">Geplant</span>{% endif %}</td>
+                            <td><form method="POST" action="{{ url_for('scoring.delete_match', match_id=match.id) }}" style="display:inline" onsubmit="return confirm('Match loeschen?')"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody></table></div>
+                    {% else %}<div class="text-center text-muted py-4">Noch keine Matches angelegt.</div>{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

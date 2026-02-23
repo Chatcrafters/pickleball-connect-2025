@@ -1,0 +1,139 @@
+﻿{% extends "base.html" %}
+{% block title %}LIVE Dashboard - {{ tournament.name }}{% endblock %}
+{% block extra_head %}
+<style>
+    body { background: #0d1117; }
+    .navbar { background: #161b22 !important; }
+    .live-header { background: linear-gradient(135deg, #161b22 0%, #0d1117 100%); border-bottom: 1px solid #30363d; padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+    .live-header h1 { color: #fff; font-size: 1.4rem; margin: 0; font-weight: 700; }
+    .live-indicator { display: flex; align-items: center; gap: 0.5rem; color: #53d991; font-size: 0.85rem; font-weight: 600; }
+    .live-dot { width: 10px; height: 10px; background: #e94560; border-radius: 50%; animation: pulse 1.5s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(233,69,96,0.5); } 50% { opacity: 0.8; box-shadow: 0 0 0 6px rgba(233,69,96,0); } }
+    .stats-bar { display: flex; gap: 1rem; padding: 0.75rem 1.5rem; background: #161b22; border-bottom: 1px solid #30363d; overflow-x: auto; }
+    .stat-item { text-align: center; min-width: 80px; }
+    .stat-value { font-size: 1.5rem; font-weight: 700; color: #fff; }
+    .stat-label { font-size: 0.7rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value.live { color: #e94560; } .stat-value.done { color: #53d991; } .stat-value.warn { color: #f0883e; }
+    .courts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; padding: 1rem 1.5rem; }
+    .court-card { background: #161b22; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; transition: border-color 0.3s; }
+    .court-card.has-match { border-color: #e94560; box-shadow: 0 0 15px rgba(233,69,96,0.15); }
+    .court-card.idle { opacity: 0.7; }
+    .court-card-header { padding: 0.6rem 0.9rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #30363d; }
+    .court-number { color: #fff; font-weight: 700; font-size: 0.95rem; }
+    .court-status { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; }
+    .court-status.live { background: rgba(233,69,96,0.2); color: #e94560; }
+    .court-status.available { background: rgba(83,217,145,0.15); color: #53d991; }
+    .court-status.waiting { background: rgba(139,148,158,0.15); color: #8b949e; }
+    .court-card-body { padding: 0.75rem 0.9rem; min-height: 100px; }
+    .court-match-info { text-align: center; }
+    .court-team { color: #fff; font-weight: 600; font-size: 0.9rem; }
+    .court-vs { color: #e94560; font-size: 0.75rem; font-weight: 700; margin: 0.15rem 0; }
+    .court-meta { color: #8b949e; font-size: 0.72rem; margin-top: 0.4rem; }
+    .court-result { text-align: center; }
+    .court-result .score { font-size: 1.4rem; font-weight: 700; color: #53d991; }
+    .court-result .teams { color: #8b949e; font-size: 0.8rem; }
+    .court-result .time { color: #484f58; font-size: 0.7rem; }
+    .unverified-badge { font-size: 0.65rem; color: #f0883e; font-weight: 600; }
+    .verified-badge { font-size: 0.65rem; color: #53d991; }
+    .feed-section { padding: 1rem 1.5rem; }
+    .feed-title { color: #8b949e; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.75rem; font-weight: 600; }
+    .score-feed { display: flex; flex-direction: column; gap: 0.5rem; }
+    .feed-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0.9rem; background: #161b22; border: 1px solid #30363d; border-radius: 8px; font-size: 0.85rem; }
+    .feed-item .match-num { color: #484f58; font-size: 0.75rem; min-width: 35px; }
+    .feed-item .teams-score { flex: 1; color: #c9d1d9; }
+    .feed-item .teams-score .winner { color: #53d991; font-weight: 600; }
+    .feed-item .feed-score { font-weight: 700; color: #fff; min-width: 50px; text-align: center; }
+    .feed-item .feed-court { color: #484f58; font-size: 0.75rem; min-width: 50px; text-align: right; }
+    .feed-item .feed-time { color: #484f58; font-size: 0.72rem; min-width: 40px; text-align: right; }
+    .feed-item.unverified { border-left: 3px solid #f0883e; }
+    .btn-verify { font-size: 0.65rem; padding: 0.15rem 0.4rem; background: transparent; border: 1px solid #f0883e; color: #f0883e; border-radius: 4px; cursor: pointer; }
+    .btn-verify:hover { background: rgba(240,136,62,0.15); }
+    .btn-verify.verified { border-color: #53d991; color: #53d991; cursor: default; }
+    .no-match-text { color: #484f58; font-size: 0.8rem; text-align: center; padding: 1.5rem 0; }
+    .next-hint { border-top: 1px solid #21262d; padding: 0.4rem 0.9rem; font-size: 0.72rem; color: #484f58; }
+    .next-hint strong { color: #8b949e; }
+    @keyframes newScore { 0% { background: rgba(83,217,145,0.2); } 100% { background: #161b22; } }
+    .feed-item.new { animation: newScore 2s ease-out; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="live-header">
+    <div><h1><i class="bi bi-activity"></i> {{ tournament.name }}</h1></div>
+    <div class="d-flex align-items-center gap-3">
+        <div class="live-indicator"><div class="live-dot"></div><span>LIVE</span></div>
+        <span id="lastUpdate" style="color: #484f58; font-size: 0.75rem;"></span>
+        <a href="{{ url_for('scoring.setup_tournament', tournament_id=tournament.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-gear"></i> Setup</a>
+        <a href="{{ url_for('scoring.court_links', tournament_id=tournament.id) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-qr-code"></i> Links</a>
+    </div>
+</div>
+<div class="stats-bar" id="statsBar">
+    <div class="stat-item"><div class="stat-value" id="statTotal">--</div><div class="stat-label">Total</div></div>
+    <div class="stat-item"><div class="stat-value live" id="statLive">--</div><div class="stat-label">Live</div></div>
+    <div class="stat-item"><div class="stat-value done" id="statDone">--</div><div class="stat-label">Fertig</div></div>
+    <div class="stat-item"><div class="stat-value" id="statScheduled" style="color: #8b949e;">--</div><div class="stat-label">Geplant</div></div>
+    <div class="stat-item"><div class="stat-value warn" id="statUnverified">--</div><div class="stat-label">Offen</div></div>
+</div>
+<div class="courts-grid" id="courtsGrid"><div class="no-match-text">Lade Courts...</div></div>
+<div class="feed-section">
+    <div class="feed-title">Letzte Ergebnisse</div>
+    <div class="score-feed" id="scoreFeed"><div class="no-match-text">Noch keine Ergebnisse</div></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+const TOURNAMENT_ID = {{ tournament.id }};
+const API_URL = `/scoring/api/live/${TOURNAMENT_ID}`;
+let knownScoreIds = new Set();
+function updateDashboard() {
+    fetch(API_URL).then(r => r.json()).then(data => {
+        updateStats(data.stats); updateCourts(data.courts); updateFeed(data.recent_scores);
+        document.getElementById('lastUpdate').textContent = data.timestamp;
+    }).catch(err => console.error('Update failed:', err));
+}
+function updateStats(s) {
+    document.getElementById('statTotal').textContent = s.total;
+    document.getElementById('statLive').textContent = s.in_play;
+    document.getElementById('statDone').textContent = s.completed;
+    document.getElementById('statScheduled').textContent = s.scheduled;
+    document.getElementById('statUnverified').textContent = s.unverified;
+}
+function updateCourts(courts) {
+    const g = document.getElementById('courtsGrid');
+    g.innerHTML = courts.map(c => {
+        const has = c.current_match !== null;
+        const cls = has ? 'has-match' : (c.latest_result ? '' : 'idle');
+        let st = '', body = '', nx = '';
+        if (has) {
+            const m = c.current_match;
+            st = '<span class="court-status live">LIVE</span>';
+            body = `<div class="court-match-info"><div class="court-team">${m.team1}</div><div class="court-vs">VS</div><div class="court-team">${m.team2}</div><div class="court-meta">Match #${m.number}${m.category ? ' | '+m.category : ''}${m.started_at ? ' | seit '+m.started_at : ''}</div></div>`;
+        } else if (c.latest_result) {
+            const r = c.latest_result; const w1 = r.score1 > r.score2;
+            st = '<span class="court-status available">Frei</span>';
+            body = `<div class="court-result"><div class="teams"><span class="${w1?'court-team':''}">${r.team1}</span> <span style="color:#484f58">vs</span> <span class="${!w1?'court-team':''}">${r.team2}</span></div><div class="score">${r.score1} : ${r.score2}</div><div class="time">${r.completed_at||''}${r.verified?' <span class="verified-badge"><i class="bi bi-patch-check-fill"></i></span>':` <button class="btn-verify" onclick="verifyMatch(${r.id},this)">Pruefen</button>`}</div></div>`;
+        } else {
+            st = '<span class="court-status waiting">Wartend</span>';
+            body = '<div class="no-match-text">Kein Spiel</div>';
+        }
+        if (c.next_match && !has) { const n=c.next_match; nx=`<div class="next-hint"><strong>Naechstes:</strong> #${n.number} ${n.team1} vs ${n.team2}</div>`; }
+        return `<div class="court-card ${cls}"><div class="court-card-header"><span class="court-number"><i class="bi bi-geo-alt"></i> Court ${c.number}${c.manager!=='Nicht zugewiesen'?' <span style="color:#484f58;font-weight:400;font-size:0.75rem">('+c.manager+')</span>':''}</span>${st}</div><div class="court-card-body">${body}</div>${nx}</div>`;
+    }).join('');
+}
+function updateFeed(scores) {
+    const f = document.getElementById('scoreFeed');
+    if (!scores.length) { f.innerHTML = '<div class="no-match-text">Noch keine Ergebnisse</div>'; return; }
+    f.innerHTML = scores.map(s => {
+        const w1 = s.score1 > s.score2; const isNew = !knownScoreIds.has(s.id) && knownScoreIds.size > 0;
+        return `<div class="feed-item ${s.verified?'':'unverified'} ${isNew?'new':''}"><span class="match-num">#${s.number||'-'}</span><span class="teams-score"><span class="${w1?'winner':''}">${s.team1}</span> <span style="color:#484f58">vs</span> <span class="${!w1?'winner':''}">${s.team2}</span></span><span class="feed-score">${s.score1} : ${s.score2}</span><span class="feed-court">Court ${s.court||'?'}</span><span class="feed-time">${s.completed_at||''}</span>${s.verified?'<span class="verified-badge"><i class="bi bi-patch-check-fill"></i></span>':`<button class="btn-verify" onclick="verifyMatch(${s.id},this)">Pruefen</button>`}</div>`;
+    }).join('');
+    scores.forEach(s => knownScoreIds.add(s.id));
+}
+function verifyMatch(id, btn) {
+    fetch(`/scoring/match/${id}/verify`, {method:'POST'}).then(r=>r.json()).then(d => {
+        if(d.success){btn.className='btn-verify verified';btn.innerHTML='<i class="bi bi-patch-check-fill"></i>';btn.onclick=null;const u=document.getElementById('statUnverified');u.textContent=Math.max(0,parseInt(u.textContent)-1);}
+    });
+}
+updateDashboard();
+setInterval(updateDashboard, 5000);
+</script>
+{% endblock %}

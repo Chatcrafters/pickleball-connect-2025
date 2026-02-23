@@ -16,6 +16,7 @@ from routes.wpc_import import wpc_import
 from routes.wpc_matches import wpc_matches
 from checkin import checkin
 from sponsors import sponsors
+from routes.scoring import scoring
 
 # Load environment variables from .env
 load_dotenv()
@@ -71,6 +72,7 @@ app.register_blueprint(wpc)
 app.register_blueprint(wpc_import)
 app.register_blueprint(wpc_matches)
 app.register_blueprint(sponsors)
+app.register_blueprint(scoring)
 
 # Create tables on first run
 with app.app_context():
