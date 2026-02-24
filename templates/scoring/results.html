@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Ergebnisse - {{ tournament.name }}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="bi bi-table"></i> Ergebnisse - {{ tournament.name }}</h3>
+        <a href="{{ url_for('scoring.setup_tournament', tournament_id=tournament.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Setup</a>
+    </div>
+
+    {% set ns = namespace(current_cat='') %}
+    <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+            <thead class="table-dark">
+                <tr>
+                    <th style="width:40px">#</th>
+                    <th>Team 1</th>
+                    <th style="width:70px" class="text-center">Score</th>
+                    <th>Team 2</th>
+                    <th style="width:40px">C</th>
+                    <th style="width:50px">Zeit</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for match in matches %}
+                {% if match.category != ns.current_cat %}
+                {% set ns.current_cat = match.category %}
+                <tr class="table-warning">
+                    <td colspan="6"><strong>{{ match.category or 'Ohne Kategorie' }}</strong></td>
+                </tr>
+                {% endif %}
+                <tr class="{% if match.status == 'completed' %}table-success{% endif %}">
+                    <td><small>{{ match.match_number }}</small></td>
+                    <td>{% if match.team1_score is not none and match.team1_score > match.team2_score %}<strong>{{ match.get_team1_display() }}</strong>{% else %}{{ match.get_team1_display() }}{% endif %}</td>
+                    <td class="text-center">{% if match.team1_score is not none %}<strong>{{ match.team1_score }} - {{ match.team2_score }}</strong>{% else %}-{% endif %}</td>
+                    <td>{% if match.team2_score is not none and match.team2_score > match.team1_score %}<strong>{{ match.get_team2_display() }}</strong>{% else %}{{ match.get_team2_display() }}{% endif %}</td>
+                    <td>{{ match.court_number or '-' }}</td>
+                    <td><small>{{ match.scheduled_time.strftime('%H:%M') if match.scheduled_time else '-' }}</small></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% set total = matches|length %}
+    {% set completed = matches|selectattr('status', 'equalto', 'completed')|list|length %}
+    <div class="text-center text-muted mt-2">
+        <small>{{ completed }} von {{ total }} Spielen abgeschlossen</small>
+    </div>
+</div>
+{% endblock %}

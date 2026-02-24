@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}Court Manager - {{ manager_name or 'Court' }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 600px;">
+    <div class="text-center mb-3 mt-2">
+        <h4>{{ tournament.name }}</h4>
+        <h5 class="text-muted">{{ manager_name or 'Court Manager' }}</h5>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div class="alert alert-{{ category }} alert-dismissible fade show py-2" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    {% for item in courts_with_matches %}
+    <div class="card mb-3">
+        <div class="card-header bg-dark text-white py-2">
+            <h5 class="mb-0">Court {{ item.court.court_number }}</h5>
+        </div>
+
+        <!-- PENDING MATCHES -->
+        {% if item.pending %}
+        {% for match in item.pending %}
+        <div class="card-body border-bottom">
+            <div class="d-flex justify-content-between mb-1">
+                <span class="badge bg-secondary">{{ match.category or '' }}</span>
+                <small class="text-muted">{{ match.scheduled_time.strftime('%H:%M') if match.scheduled_time else '' }} | #{{ match.match_number }}</small>
+            </div>
+            <form method="POST" action="{{ url_for('scoring.submit_score', token=token, match_id=match.id) }}">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <div class="text-center small fw-bold mb-1">{{ match.get_team1_display().replace('&', ' / ') }}</div>
+                        <input type="number" name="score_team1" class="form-control form-control-lg text-center" min="0" max="15" placeholder="0" required>
+                    </div>
+                    <div class="col-auto align-self-end pb-1"><strong>:</strong></div>
+                    <div class="col">
+                        <div class="text-center small fw-bold mb-1">{{ match.get_team2_display().replace('&', ' / ') }}</div>
+                        <input type="number" name="score_team2" class="form-control form-control-lg text-center" min="0" max="15" placeholder="0" required>
+                    </div>
+                    <div class="col-auto align-self-end">
+                        <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-check-lg"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="card-body text-center text-muted py-3">
+            <small>Keine offenen Spiele</small>
+        </div>
+        {% endif %}
+
+        <!-- COMPLETED (last 3) -->
+        {% if item.completed %}
+        <div class="card-footer bg-light p-2">
+            <small class="text-muted">Letzte Ergebnisse:</small>
+            {% for match in item.completed %}
+            <div class="d-flex justify-content-between small">
+                <span>{{ match.get_team1_display().replace('&', ' / ') }}</span>
+                <strong>{{ match.team1_score }}-{{ match.team2_score }}</strong>
+                <span>{{ match.get_team2_display().replace('&', ' / ') }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if not courts_with_matches %}
+    <div class="text-center text-muted py-5">
+        <h5>Keine Courts zugewiesen</h5>
+    </div>
+    {% endif %}
+
+    <div class="text-center mt-3 mb-5">
+        <small class="text-muted">Seite aktualisieren: nach unten ziehen</small>
+    </div>
+</div>
+
+<script>
+// Auto-focus first empty score input
+document.addEventListener('DOMContentLoaded', function() {
+    const firstInput = document.querySelector('input[name="score_team1"][value=""], input[name="score_team1"]:not([value])');
+    if (firstInput) firstInput.focus();
+});
+</script>
+{% endblock %}

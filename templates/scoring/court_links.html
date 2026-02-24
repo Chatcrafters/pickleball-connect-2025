@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Court Manager Links - {{ tournament.name }}{% endblock %}
+{% block content %}
+<div class="container" style="max-width: 800px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="bi bi-link-45deg"></i> Court Manager Links</h3>
+        <a href="{{ url_for('scoring.setup_tournament', tournament_id=tournament.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Setup</a>
+    </div>
+    <p class="text-muted">Jeder Manager bekommt EINEN Link fuer alle seine Courts.</p>
+
+    {% for name, info in managers.items() %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-1">{{ name }}</h5>
+                    <span class="text-muted">Courts: {{ info.courts|map(attribute='court_number')|join(', ') }}</span>
+                    {% if info.phone %}<span class="ms-2 text-muted">| {{ info.phone }}</span>{% endif %}
+                </div>
+                <a href="{{ url_for('scoring.send_whatsapp_link', tournament_id=tournament.id, manager_name=name) }}" class="btn btn-success" target="_blank"><i class="bi bi-whatsapp"></i> Senden</a>
+            </div>
+            <div class="mt-2">
+                <input type="text" class="form-control form-control-sm bg-light" value="{{ info.courts[0].get_manager_url() }}" readonly onclick="this.select(); document.execCommand('copy');">
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if not managers %}
+    <div class="text-center text-muted py-5">Noch keine Courts mit Managern angelegt.</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Live - {{ tournament.name }}{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3><i class="bi bi-activity"></i> {{ tournament.name }} - Live</h3>
+        <div class="d-flex gap-2 align-items-center">
+            <span id="stats-badge" class="badge bg-secondary">Laden...</span>
+            <a href="{{ url_for('scoring.setup_tournament', tournament_id=tournament.id) }}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Setup</a>
+        </div>
+    </div>
+
+    <!-- Court Grid -->
+    <div class="row mb-4" id="courts-grid">
+        {% for court in courts %}
+        <div class="col-md-4 col-6 mb-3">
+            <div class="card h-100" id="court-{{ court.id }}">
+                <div class="card-header bg-dark text-white py-1 d-flex justify-content-between">
+                    <strong>Court {{ court.court_number }}</strong>
+                    <small>{{ court.manager_name or '-' }}</small>
+                </div>
+                <div class="card-body py-2 text-center text-muted">
+                    <small>Laden...</small>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Scores -->
+    <div class="card">
+        <div class="card-header"><h5 class="mb-0">Letzte Ergebnisse</h5></div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0" id="recent-table">
+                <tbody><tr><td class="text-center text-muted py-3">Laden...</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function refreshData() {
+    fetch('{{ url_for("scoring.api_live_data", tournament_id=tournament.id) }}')
+    .then(r => r.json())
+    .then(data => {
+        // Stats
+        document.getElementById('stats-badge').innerHTML = data.stats.completed + '/' + data.stats.total + ' fertig';
+        document.getElementById('stats-badge').className = 'badge ' + (data.stats.remaining == 0 ? 'bg-success' : 'bg-primary');
+
+        // Courts
+        data.courts.forEach(c => {
+            const el = document.getElementById('court-' + c.id);
+            if (!el) return;
+            const body = el.querySelector('.card-body');
+            if (c.latest_result) {
+                body.innerHTML = '<div class="small">' + c.latest_result.team1.replace('&', ' / ') + '</div><div class="fw-bold fs-5">' + c.latest_result.score + '</div><div class="small">' + c.latest_result.team2.replace('&', ' / ') + '</div>';
+            } else if (c.next_match) {
+                body.innerHTML = '<div class="small text-muted">Naechstes:</div><div class="small">' + c.next_match.team1.replace('&', ' / ') + '</div><div class="small">vs</div><div class="small">' + c.next_match.team2.replace('&', ' / ') + '</div>';
+            } else {
+                body.innerHTML = '<small class="text-muted">-</small>';
+            }
+        });
+
+        // Recent scores
+        const tbody = document.querySelector('#recent-table tbody');
+        if (data.recent_scores.length > 0) {
+            tbody.innerHTML = data.recent_scores.map(s =>
+                '<tr><td><small>#' + s.number + '</small></td><td>' + s.team1.replace('&', ' / ') + '</td><td class="text-center fw-bold">' + s.score + '</td><td>' + s.team2.replace('&', ' / ') + '</td><td>C' + s.court + '</td></tr>'
+            ).join('');
+        } else {
+            tbody.innerHTML = '<tr><td class="text-center text-muted py-3">Noch keine Ergebnisse</td></tr>';
+        }
+    });
+}
+refreshData();
+setInterval(refreshData, 10000);
+</script>
+{% endblock %}
