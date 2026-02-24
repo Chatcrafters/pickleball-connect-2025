@@ -384,3 +384,14 @@ def court_links(tournament_id):
     tournament = get_tournament_or_404(tournament_id)
     courts = Court.query.filter_by(tournament_id=tournament_id).order_by(Court.court_number).all()
     return render_template('scoring/court_links.html', tournament=tournament, courts=courts)
+
+
+@scoring.route('/court/<int:court_id>/update-name', methods=['POST'])
+def update_court_name(court_id):
+    court = Court.query.get_or_404(court_id)
+    court.manager_name = request.form.get('manager_name', '').strip()
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+    return redirect(url_for('scoring.setup_tournament', tournament_id=court.tournament_id))
