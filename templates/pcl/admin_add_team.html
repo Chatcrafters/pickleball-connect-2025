@@ -27,7 +27,7 @@
                                     {% for code, flag in country_flags.items() %}
                                     <option value="{{ code }}" data-flag="{{ flag }}">{{ flag }} {{ code }}</option>
                                     {% endfor %}
-                                    <option value="OTHER">🏳️ Other</option>
+                                    <option value="OTHER">-- Other</option>
                                 </select>
                             </div>
                             <div class="col-md-8 mb-3">
@@ -97,7 +97,63 @@ const countryNames = {
     'NED': 'Netherlands',
     'AUT': 'Austria',
     'SUI': 'Switzerland',
-    'ASIA': 'Asia'
+    'BEL': 'Belgium',
+    'LUX': 'Luxembourg',
+    'GRE': 'Greece',
+    'MLT': 'Malta',
+    'CYP': 'Cyprus',
+    'AND': 'Andorra',
+    'MON': 'Monaco',
+    'SMR': 'San Marino',
+    'VAT': 'Vatican City',
+    'SCO': 'Scotland',
+    'WAL': 'Wales',
+    'NIR': 'Northern Ireland',
+    'GBR': 'Great Britain',
+    'IRL': 'Ireland',
+    'NOR': 'Norway',
+    'DEN': 'Denmark',
+    'FIN': 'Finland',
+    'ISL': 'Iceland',
+    'POL': 'Poland',
+    'CZE': 'Czech Republic',
+    'SVK': 'Slovakia',
+    'HUN': 'Hungary',
+    'ROU': 'Romania',
+    'BUL': 'Bulgaria',
+    'SLO': 'Slovenia',
+    'CRO': 'Croatia',
+    'SRB': 'Serbia',
+    'BIH': 'Bosnia',
+    'MNE': 'Montenegro',
+    'MKD': 'North Macedonia',
+    'ALB': 'Albania',
+    'KOS': 'Kosovo',
+    'EST': 'Estonia',
+    'LAT': 'Latvia',
+    'LTU': 'Lithuania',
+    'UKR': 'Ukraine',
+    'BLR': 'Belarus',
+    'MDA': 'Moldova',
+    'RUS': 'Russia',
+    'TUR': 'Turkey',
+    'GEO': 'Georgia',
+    'ARM': 'Armenia',
+    'AZE': 'Azerbaijan',
+    'USA': 'USA',
+    'CAN': 'Canada',
+    'MEX': 'Mexico',
+    'BRA': 'Brazil',
+    'ARG': 'Argentina',
+    'AUS': 'Australia',
+    'NZL': 'New Zealand',
+    'JPN': 'Japan',
+    'KOR': 'South Korea',
+    'CHN': 'China',
+    'IND': 'India',
+    'ISR': 'Israel',
+    'UAE': 'UAE',
+    'RSA': 'South Africa'
 };
 
 function updateCountryName() {
