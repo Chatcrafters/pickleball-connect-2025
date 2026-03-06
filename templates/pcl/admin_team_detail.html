@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}{{ team.country_flag }} {{ team.country_name }} {{ team.age_category }} - PCL Admin{% endblock %}
 
@@ -249,7 +249,7 @@
         <div class="col-md-3">
             <div class="card bg-primary text-white text-center">
                 <div class="card-body">
-                    <h2>{{ stats.total_players }}</h2>
+                    <h2>{{ stats.total }}</h2>
                     <p class="mb-0">Total Players</p>
                 </div>
             </div>
@@ -271,9 +271,9 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="card {% if stats.complete == stats.total_players and stats.total_players > 0 %}bg-success{% else %}bg-warning{% endif %} text-white text-center">
+            <div class="card {% if stats.is_complete %}bg-success{% else %}bg-warning{% endif %} text-white text-center">
                 <div class="card-body">
-                    <h2>{{ stats.complete }}/{{ stats.total_players }}</h2>
+                    <h2>{{ (stats.men_complete + stats.women_complete) }}/{{ stats.total }}</h2>
                     <p class="mb-0">Complete</p>
                 </div>
             </div>
@@ -513,3 +513,4 @@ function sendProfileLink(captainId, name, phone) {
 }
 </script>
 {% endblock %}
+
