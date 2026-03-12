@@ -131,16 +131,40 @@ def get_combined_player(token):
     }
 
 def load_submissions():
-    if not os.path.exists(SUBMISSIONS_FILE):
+    try:
+        sb = get_supabase()
+        result = sb.table('prize_money_submissions').select('*').execute()
+        return {row['player_id']: row['data'] for row in result.data}
+    except Exception as e:
+        print(f'Warning: could not load submissions from Supabase: {e}')
+        # Fallback to local file
+        if os.path.exists(SUBMISSIONS_FILE):
+            with open(SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
         return {}
-    with open(SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
-        return json.load(f)
 
 def save_submission(player_id, data):
-    submissions = load_submissions()
-    submissions[player_id] = {**data, 'submitted_at': datetime.now().isoformat()}
-    with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
-        json.dump(submissions, f, indent=2, ensure_ascii=False)
+    record = {**data, 'submitted_at': datetime.now().isoformat()}
+    try:
+        sb = get_supabase()
+        sb.table('prize_money_submissions').upsert({
+            'player_id': player_id,
+            'data': record,
+            'submitted_at': record['submitted_at'],
+        }).execute()
+    except Exception as e:
+        print(f'Warning: could not save to Supabase: {e}')
+        # Fallback to local file
+        try:
+            submissions = {}
+            if os.path.exists(SUBMISSIONS_FILE):
+                with open(SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
+                    submissions = json.load(f)
+            submissions[player_id] = record
+            with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(submissions, f, indent=2, ensure_ascii=False)
+        except Exception as e2:
+            print(f'Warning: local fallback also failed: {e2}')
 
 # ─── PM Login ─────────────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/login', methods=['GET', 'POST'])
@@ -206,15 +230,18 @@ def upload_document(token):
     path = upload_doc(player['id'], file_bytes, f.filename, f.content_type, page_num)
     if not path:
         return jsonify({'error': 'Upload failed. Please try again.'}), 500
-    # Save doc path in submissions temp store
-    submissions = load_submissions()
-    if player['id'] not in submissions:
-        submissions[player['id']] = {}
-    key = 'doc_path' if page_num == '1' else 'doc_path_p2'
-    submissions[player['id']][key] = path
-    submissions[player['id']]['doc_uploaded_at'] = datetime.now().isoformat()
-    with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as sf:
-        json.dump(submissions, sf, indent=2, ensure_ascii=False)
+    # Save doc path in submissions temp store (best effort - may fail on Vercel)
+    try:
+        submissions = load_submissions()
+        if player['id'] not in submissions:
+            submissions[player['id']] = {}
+        key = 'doc_path' if page_num == '1' else 'doc_path_p2'
+        submissions[player['id']][key] = path
+        submissions[player['id']]['doc_uploaded_at'] = datetime.now().isoformat()
+        with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as sf:
+            json.dump(submissions, sf, indent=2, ensure_ascii=False)
+    except Exception as e:
+        print(f'Warning: could not save doc_path to submissions: {e}')
     return jsonify({'success': True, 'path': path})
 
 # ─── Submit Form ──────────────────────────────────────────────────────────────
