@@ -1,0 +1,724 @@
+[
+  {
+    "id": "wpc_001",
+    "name": "Marcello Paiva Jardim",
+    "email": "marcellojardim@hotmail.com",
+    "type": "WPC",
+    "total": 1325.0,
+    "prizes": "35+ Men Singles 🥇 (€450) + 50+ Men Singles 🥇 (€340) + 50+ Men Doubles 🥇 (€170) + 50+ Mixed Doubles 🥇 (€365)"
+  },
+  {
+    "id": "wpc_002",
+    "name": "Jesus Garcia Garre",
+    "email": "jesusgarciagarre98@gmail.com",
+    "type": "WPC",
+    "total": 780.0,
+    "prizes": "19+ Men Doubles 🥇 (€450) + 19+ Mixed Doubles 🥈 (€330)"
+  },
+  {
+    "id": "wpc_003",
+    "name": "Karolina Owczarek",
+    "email": "kangurtrenuje@gmail.com",
+    "type": "WPC",
+    "total": 780.0,
+    "prizes": "19+ Women Doubles 🥇 (€280) + 19+ Mixed Doubles 🥇 (€500)"
+  },
+  {
+    "id": "wpc_004",
+    "name": "Bako Balint Gergo",
+    "email": "bakobalintgergo@gmail.com",
+    "type": "WPC",
+    "total": 750.0,
+    "prizes": "19+ Men Singles 🥇 (€600) + 19+ Men Doubles 🥉 (€150)"
+  },
+  {
+    "id": "wpc_005",
+    "name": "Brooke Revuelta",
+    "email": "brookerevueltapb@gmail.com",
+    "type": "WPC",
+    "total": 600.0,
+    "prizes": "19+ Women Singles 🥇 (€600)"
+  },
+  {
+    "id": "wpc_006",
+    "name": "Pialena Ander",
+    "email": "pialena@ballongverkstan.se",
+    "type": "WPC",
+    "total": 600.0,
+    "prizes": "50+ Women Singles 🥇 (€140) + 50+ Women Doubles 🥇 (€95) + 50+ Mixed Doubles 🥇 (€365)"
+  },
+  {
+    "id": "wpc_007",
+    "name": "Joshua Bright",
+    "email": "joshuabright202@gmail.com",
+    "type": "WPC",
+    "total": 500.0,
+    "prizes": "19+ Mixed Doubles 🥇 (€500)"
+  },
+  {
+    "id": "wpc_008",
+    "name": "Hector Sanchez Vidal",
+    "email": "pabletedor@gmail.com",
+    "type": "WPC",
+    "total": 450.0,
+    "prizes": "19+ Men Doubles 🥇 (€450)"
+  },
+  {
+    "id": "wpc_009",
+    "name": "Mikołaj Biedermann",
+    "email": "mikolaj.biedermann@gmail.com",
+    "type": "WPC",
+    "total": 400.0,
+    "prizes": "19+ Men Singles 🥈 (€400)"
+  },
+  {
+    "id": "wpc_010",
+    "name": "Karina Zustakova",
+    "email": "karina.zustakova@gmail.com",
+    "type": "WPC",
+    "total": 400.0,
+    "prizes": "19+ Women Singles 🥈 (€400)"
+  },
+  {
+    "id": "wpc_011",
+    "name": "Sabrina Mendez",
+    "email": "sabri5688@hotmail.com",
+    "type": "WPC",
+    "total": 330.0,
+    "prizes": "19+ Mixed Doubles 🥈 (€330)"
+  },
+  {
+    "id": "wpc_012",
+    "name": "Felix Grunert",
+    "email": "felix.grunert95@googlemail.com",
+    "type": "WPC",
+    "total": 300.0,
+    "prizes": "19+ Men Doubles 🥈 (€300)"
+  },
+  {
+    "id": "wpc_013",
+    "name": "Arwid Dahlin",
+    "email": "Arwid.dahlin@hotmail.com",
+    "type": "WPC",
+    "total": 300.0,
+    "prizes": "19+ Men Doubles 🥈 (€300)"
+  },
+  {
+    "id": "wpc_014",
+    "name": "Ferdoco42 Dominguez",
+    "email": "Nandodc_trc@hotmail.com",
+    "type": "WPC",
+    "total": 300.0,
+    "prizes": "35+ Men Singles 🥈 (€300)"
+  },
+  {
+    "id": "wpc_015",
+    "name": "Antonella Sonda",
+    "email": "",
+    "type": "WPC",
+    "total": 290.0,
+    "prizes": "50+ Women Singles 🥉 (€45) + 50+ Mixed Doubles 🥈 (€245)"
+  },
+  {
+    "id": "wpc_016",
+    "name": "Paula Levitskiy De Miguel",
+    "email": "paula.levitskiy@hotmail.com",
+    "type": "WPC",
+    "total": 280.0,
+    "prizes": "19+ Women Doubles 🥇 (€280)"
+  },
+  {
+    "id": "wpc_017",
+    "name": "Clara Contis",
+    "email": "claracontis@hotmail.es",
+    "type": "WPC",
+    "total": 265.0,
+    "prizes": "19+ Women Doubles 🥉 (€95) + 19+ Mixed Doubles 🥉 (€170)"
+  },
+  {
+    "id": "wpc_018",
+    "name": "Silvio Martin Suarez",
+    "email": "martinsuarez974@hotmail.com",
+    "type": "WPC",
+    "total": 252.5,
+    "prizes": "35+ Men Doubles 🥉 (€45) + 35+ Mixed Doubles 🥉 (€37.5) + 50+ Men Doubles 🥇 (€170)"
+  },
+  {
+    "id": "wpc_019",
+    "name": "Juan Carlos Hintze Martinez",
+    "email": "",
+    "type": "WPC",
+    "total": 245.0,
+    "prizes": "50+ Mixed Doubles 🥈 (€245)"
+  },
+  {
+    "id": "wpc_020",
+    "name": "Gabriel Satrustegui Escudero",
+    "email": "",
+    "type": "WPC",
+    "total": 225.0,
+    "prizes": "50+ Men Singles 🥈 (€225)"
+  },
+  {
+    "id": "wpc_021",
+    "name": "Gustaf Geterud",
+    "email": "gustaf.geterud@gmail.com",
+    "type": "WPC",
+    "total": 205.0,
+    "prizes": "35+ Men Doubles 🥇 (€130) + 35+ Mixed Doubles 🥈 (€75)"
+  },
+  {
+    "id": "wpc_022",
+    "name": "Mauro García",
+    "email": "mgarsan3009@iescastillodeluna.es",
+    "type": "WPC",
+    "total": 200.0,
+    "prizes": "19+ Men Singles 🥉 (€200)"
+  },
+  {
+    "id": "wpc_023",
+    "name": "Claudia Caymel",
+    "email": "claudiacaymel@gmail.com",
+    "type": "WPC",
+    "total": 200.0,
+    "prizes": "19+ Women Singles 🥉 (€200)"
+  },
+  {
+    "id": "wpc_024",
+    "name": "Domini Elias Pereira",
+    "email": "",
+    "type": "WPC",
+    "total": 195.0,
+    "prizes": "35+ Men Singles 🥉 (€150) + 35+ Men Doubles 🥉 (€45)"
+  },
+  {
+    "id": "wpc_025",
+    "name": "Rebecca Pijls",
+    "email": "rebeccambpijls@gmail.com",
+    "type": "WPC",
+    "total": 187.5,
+    "prizes": "19+ Women Doubles 🥈 (€187.5)"
+  },
+  {
+    "id": "wpc_026",
+    "name": "Sharienne Ricardo",
+    "email": "sharienne.ricardo@gmail.com",
+    "type": "WPC",
+    "total": 187.5,
+    "prizes": "19+ Women Doubles 🥈 (€187.5)"
+  },
+  {
+    "id": "wpc_027",
+    "name": "Federica Mundula",
+    "email": "",
+    "type": "WPC",
+    "total": 185.0,
+    "prizes": "50+ Women Doubles 🥈 (€62.5) + 50+ Mixed Doubles 🥉 (€122.5)"
+  },
+  {
+    "id": "wpc_028",
+    "name": "Jorge Rodriguez Agudo",
+    "email": "jorge.globalagent@gmail.com",
+    "type": "WPC",
+    "total": 170.0,
+    "prizes": "19+ Mixed Doubles 🥉 (€170)"
+  },
+  {
+    "id": "wpc_029",
+    "name": "Jo Foster",
+    "email": "",
+    "type": "WPC",
+    "total": 167.5,
+    "prizes": "35+ Women Doubles 🥇 (€130) + 35+ Mixed Doubles 🥉 (€37.5)"
+  },
+  {
+    "id": "wpc_030",
+    "name": "Paola Tampieri",
+    "email": "",
+    "type": "WPC",
+    "total": 157.5,
+    "prizes": "50+ Women Singles 🥈 (€95) + 50+ Women Doubles 🥈 (€62.5)"
+  },
+  {
+    "id": "wpc_031",
+    "name": "Armando Ferreira",
+    "email": "Armando@mysportjobs.org",
+    "type": "WPC",
+    "total": 150.0,
+    "prizes": "19+ Men Doubles 🥉 (€150)"
+  },
+  {
+    "id": "wpc_032",
+    "name": "Kenneth Dahlin",
+    "email": "Arwid.dahlin@hotmail.com",
+    "type": "WPC",
+    "total": 130.0,
+    "prizes": "35+ Men Doubles 🥇 (€130)"
+  },
+  {
+    "id": "wpc_033",
+    "name": "Blanca De Dorremochea",
+    "email": "",
+    "type": "WPC",
+    "total": 130.0,
+    "prizes": "35+ Women Doubles 🥇 (€130)"
+  },
+  {
+    "id": "wpc_034",
+    "name": "Rinaldo Rossi",
+    "email": "rudolf75@yahoo.it",
+    "type": "WPC",
+    "total": 122.5,
+    "prizes": "50+ Mixed Doubles 🥉 (€122.5)"
+  },
+  {
+    "id": "wpc_035",
+    "name": "Christian Singer",
+    "email": "christian_singer@gmx.de",
+    "type": "WPC",
+    "total": 112.5,
+    "prizes": "35+ Mixed Doubles 🥇 (€112.5)"
+  },
+  {
+    "id": "wpc_036",
+    "name": "Melanie Schumann",
+    "email": "melanie.schumann1986@web.de",
+    "type": "WPC",
+    "total": 112.5,
+    "prizes": "35+ Mixed Doubles 🥇 (€112.5)"
+  },
+  {
+    "id": "wpc_037",
+    "name": "Andrea Della Vedova",
+    "email": "andrea@veuve.it",
+    "type": "WPC",
+    "total": 112.5,
+    "prizes": "50+ Men Doubles 🥈 (€112.5)"
+  },
+  {
+    "id": "wpc_038",
+    "name": "Federico Balli",
+    "email": "freddiballi@gmail.com",
+    "type": "WPC",
+    "total": 112.5,
+    "prizes": "50+ Men Doubles 🥈 (€112.5)"
+  },
+  {
+    "id": "wpc_039",
+    "name": "Ian Banks",
+    "email": "Ian@mclarenbanks.co.uk",
+    "type": "WPC",
+    "total": 110.0,
+    "prizes": "50+ Men Singles 🥉 (€110)"
+  },
+  {
+    "id": "wpc_040",
+    "name": "Anais Geslin",
+    "email": "Anais.g0809@gmail.com",
+    "type": "WPC",
+    "total": 95.0,
+    "prizes": "19+ Women Doubles 🥉 (€95)"
+  },
+  {
+    "id": "wpc_041",
+    "name": "Pernilla Ohlin",
+    "email": "pernilla.ohlin@proton.me",
+    "type": "WPC",
+    "total": 95.0,
+    "prizes": "50+ Women Doubles 🥇 (€95)"
+  },
+  {
+    "id": "wpc_042",
+    "name": "Carlos Pérez",
+    "email": "calpersoto@hotmail.com",
+    "type": "WPC",
+    "total": 87.5,
+    "prizes": "35+ Men Doubles 🥈 (€87.5)"
+  },
+  {
+    "id": "wpc_043",
+    "name": "Andrés Gonzalez",
+    "email": "angolba88@gmail.com",
+    "type": "WPC",
+    "total": 87.5,
+    "prizes": "35+ Men Doubles 🥈 (€87.5)"
+  },
+  {
+    "id": "wpc_044",
+    "name": "Patricia Castrillo",
+    "email": "pickleballnortesur@gmail.com",
+    "type": "WPC",
+    "total": 87.5,
+    "prizes": "35+ Women Doubles 🥈 (€87.5)"
+  },
+  {
+    "id": "wpc_045",
+    "name": "Silvia Gutierrez",
+    "email": "Silguqui@msn.com",
+    "type": "WPC",
+    "total": 87.5,
+    "prizes": "35+ Women Doubles 🥈 (€87.5)"
+  },
+  {
+    "id": "wpc_046",
+    "name": "Tea Korkeakunnas",
+    "email": "tkorkeakunnas@gmail.com",
+    "type": "WPC",
+    "total": 75.0,
+    "prizes": "35+ Mixed Doubles 🥈 (€75)"
+  },
+  {
+    "id": "wpc_047",
+    "name": "Quintin Garrido",
+    "email": "Sr. qgs66@hotmail.com",
+    "type": "WPC",
+    "total": 55.0,
+    "prizes": "50+ Men Doubles 🥉 (€55)"
+  },
+  {
+    "id": "wpc_048",
+    "name": "Gabriel Satrustegui",
+    "email": "",
+    "type": "WPC",
+    "total": 55.0,
+    "prizes": "50+ Men Doubles 🥉 (€55)"
+  },
+  {
+    "id": "wpc_049",
+    "name": "Steffi Pace",
+    "email": "maltapickleball@gmail.com",
+    "type": "WPC",
+    "total": 45.0,
+    "prizes": "35+ Women Doubles 🥉 (€45)"
+  },
+  {
+    "id": "wpc_050",
+    "name": "Roberta Pace Girard",
+    "email": "Robgirl24@gmail.com",
+    "type": "WPC",
+    "total": 45.0,
+    "prizes": "35+ Women Doubles 🥉 (€45)"
+  },
+  {
+    "id": "wpc_051",
+    "name": "Bárbara Molina Durán",
+    "email": "bbies72@gmail.com",
+    "type": "WPC",
+    "total": 30.0,
+    "prizes": "50+ Women Doubles 🥉 (€30)"
+  },
+  {
+    "id": "wpc_052",
+    "name": "Eva Martinez Gonzalez",
+    "email": "almar.cb@telefonica.net",
+    "type": "WPC",
+    "total": 30.0,
+    "prizes": "50+ Women Doubles 🥉 (€30)"
+  },
+  {
+    "id": "pcl_001",
+    "name": "Ignasi De Rueda",
+    "email": "iderueda98@gmail.com",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_002",
+    "name": "Carlos Pérez",
+    "email": "calpersoto@hotmail.com",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_003",
+    "name": "María Costantino",
+    "email": "mariacostantino10@gmail.com",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_004",
+    "name": "Mauro García",
+    "email": "mgarsan3009@iescastillodeluna.es",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_005",
+    "name": "Claudia Caymel",
+    "email": "claudiacaymel@gmail.com",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_006",
+    "name": "Sabrina Méndez",
+    "email": "sabri5688@hotmail.com",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_007",
+    "name": "Jorge Rodriguez Agudo",
+    "email": "jorge.globalagent@gmail.com",
+    "type": "PCL",
+    "total": 428.57,
+    "prizes": "PCL 19+ 🥇 Spain (€428.57/player)"
+  },
+  {
+    "id": "pcl_008",
+    "name": "Pieter de Vries",
+    "email": "devries.pb@gmail.com",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_009",
+    "name": "Caitlin Klaassen",
+    "email": "CaityKlaassen11@gmail.com",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_010",
+    "name": "Rebecca Pijls",
+    "email": "rebeccambpijls@gmail.com",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_011",
+    "name": "Sharienne Ricardo",
+    "email": "sharienne.ricardo@gmail.com",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_012",
+    "name": "Geert Van Dijken",
+    "email": "",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_013",
+    "name": "Giancarlo Balzarelli",
+    "email": "giancarlobalzarelli@hotmail.com",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_014",
+    "name": "Paul van Loon",
+    "email": "paulvanloon88@hotmail.com",
+    "type": "PCL",
+    "total": 214.29,
+    "prizes": "PCL 19+ 🥈 Netherlands (€214.29/player)"
+  },
+  {
+    "id": "pcl_015",
+    "name": "Eleana Rodino",
+    "email": "rodinoeleana@libero.it",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_016",
+    "name": "Andrea Bosi",
+    "email": "andreabosi31@gmail.com",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_017",
+    "name": "Davide Vendrame",
+    "email": "davide.vendrame@icloud.com",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_018",
+    "name": "Francesca Rumi",
+    "email": "francescarumi9@gmail.com",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_019",
+    "name": "Silvia Mocciola",
+    "email": "mocciolasilvia96@gmail.com",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_020",
+    "name": "Marcello Bettinelli",
+    "email": "marcello@prokennex.it",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_021",
+    "name": "Alberto Seccia",
+    "email": "imperfettopassivo@gmail.com",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_022",
+    "name": "Matteo Cugliari",
+    "email": "mteo422@gmail.com",
+    "type": "PCL",
+    "total": 62.5,
+    "prizes": "PCL 19+ 🥉 Italy (€62.50/player)"
+  },
+  {
+    "id": "pcl_023",
+    "name": "Kenneth Dahlin",
+    "email": "kenneth.dahlin67@hotmail.com",
+    "type": "PCL",
+    "total": 500.0,
+    "prizes": "PCL 50+ 🥇 Sweden (€500.00/player)"
+  },
+  {
+    "id": "pcl_024",
+    "name": "Jörgen Encke",
+    "email": "juggaencke@hotmail.com",
+    "type": "PCL",
+    "total": 500.0,
+    "prizes": "PCL 50+ 🥇 Sweden (€500.00/player)"
+  },
+  {
+    "id": "pcl_025",
+    "name": "Fredrik Sidfalk",
+    "email": "fredrik@sidfalk.com",
+    "type": "PCL",
+    "total": 500.0,
+    "prizes": "PCL 50+ 🥇 Sweden (€500.00/player)"
+  },
+  {
+    "id": "pcl_026",
+    "name": "Pernilla Ohlin",
+    "email": "pernilla.ohlin@proton.me",
+    "type": "PCL",
+    "total": 500.0,
+    "prizes": "PCL 50+ 🥇 Sweden (€500.00/player)"
+  },
+  {
+    "id": "pcl_027",
+    "name": "Monica Andersson",
+    "email": "monica.andersson74@gmail.com",
+    "type": "PCL",
+    "total": 500.0,
+    "prizes": "PCL 50+ 🥇 Sweden (€500.00/player)"
+  },
+  {
+    "id": "pcl_028",
+    "name": "Pialena Ander",
+    "email": "pialena@ballongverkstan.se",
+    "type": "PCL",
+    "total": 500.0,
+    "prizes": "PCL 50+ 🥇 Sweden (€500.00/player)"
+  },
+  {
+    "id": "pcl_029",
+    "name": "Marcello Paiva Jardim",
+    "email": "marcellojardim@hotmail.com",
+    "type": "PCL",
+    "total": 375.0,
+    "prizes": "PCL 50+ 🥈 Spain (€375.00/player)"
+  },
+  {
+    "id": "pcl_030",
+    "name": "Silvio Martin Suarez",
+    "email": "martinsuarez974@hotmail.com",
+    "type": "PCL",
+    "total": 375.0,
+    "prizes": "PCL 50+ 🥈 Spain (€375.00/player)"
+  },
+  {
+    "id": "pcl_031",
+    "name": "Elena Gomez Garcia",
+    "email": "",
+    "type": "PCL",
+    "total": 375.0,
+    "prizes": "PCL 50+ 🥈 Spain (€375.00/player)"
+  },
+  {
+    "id": "pcl_032",
+    "name": "Bárbara Molina Durán",
+    "email": "bbies72@gmail.com",
+    "type": "PCL",
+    "total": 375.0,
+    "prizes": "PCL 50+ 🥈 Spain (€375.00/player)"
+  },
+  {
+    "id": "pcl_033",
+    "name": "Federico Pasquali",
+    "email": "Farmpasquali@tiscali.it",
+    "type": "PCL",
+    "total": 125.0,
+    "prizes": "PCL 50+ 🥉 Italy (€125.00/player)"
+  },
+  {
+    "id": "pcl_034",
+    "name": "Federica Mundula",
+    "email": "fedemund@libero.it",
+    "type": "PCL",
+    "total": 125.0,
+    "prizes": "PCL 50+ 🥉 Italy (€125.00/player)"
+  },
+  {
+    "id": "pcl_035",
+    "name": "Rinaldo Rossi",
+    "email": "rudolf75@yahoo.it",
+    "type": "PCL",
+    "total": 125.0,
+    "prizes": "PCL 50+ 🥉 Italy (€125.00/player)"
+  },
+  {
+    "id": "pcl_036",
+    "name": "Paola Tampieri",
+    "email": "",
+    "type": "PCL",
+    "total": 125.0,
+    "prizes": "PCL 50+ 🥉 Italy (€125.00/player)"
+  },
+  {
+    "id": "test_wpc_001",
+    "name": "Test Player WPC",
+    "email": "test@test.com",
+    "type": "WPC",
+    "category": "MD Open",
+    "prizes": "1st Place MD Open",
+    "total": 500
+  },
+  {
+    "id": "test_pcl_001",
+    "name": "Test Player PCL",
+    "email": "test@test.com",
+    "type": "PCL",
+    "category": "Mixed",
+    "prizes": "1st Place Mixed",
+    "total": 300
+  }
+]

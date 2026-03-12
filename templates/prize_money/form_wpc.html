@@ -1,0 +1,408 @@
+{% extends "base.html" %}
+{% block title %}WPC Prize Money — {{ player.name }}{% endblock %}
+{% block extra_head %}
+<style>
+  body{background:#f4f6f9;}
+  .pm-header{background:#0D1B2A;color:white;padding:22px 0 18px;text-align:center;}
+  .pm-header .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;margin-bottom:4px;}
+  .pm-header h1{font-size:20px;font-weight:800;margin:0;}
+  .pm-header .sub{font-size:13px;opacity:.65;margin-top:4px;}
+  .prize-badge{border-radius:8px;padding:11px 15px;margin:12px 0;font-size:13px;display:flex;align-items:center;gap:10px;background:#1a2a3a;border:1px solid #C9A84C;color:#C9A84C;font-weight:600;}
+  .steps-nav{display:flex;border-radius:8px;overflow:hidden;border:1px solid #dee2e6;margin:16px 0;}
+  .step-btn{flex:1;padding:9px 4px;text-align:center;background:white;border:none;font-size:11px;color:#999;font-weight:500;border-right:1px solid #dee2e6;}
+  .step-btn:last-child{border-right:none;}
+  .step-btn.active{background:#0D1B2A;color:white;font-weight:700;}
+  .step-btn.done{background:#1B998B;color:white;}
+  .step-btn .sn{display:block;font-size:15px;font-weight:800;line-height:1;margin-bottom:1px;}
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+  .form-card{background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:22px;margin-bottom:14px;}
+  .form-card h5{font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:#0D1B2A;margin-bottom:14px;font-weight:700;border-bottom:2px solid #C9A84C;padding-bottom:7px;}
+  .radio-group{display:flex;gap:10px;}
+  .radio-opt{flex:1;border:2px solid #dee2e6;border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;}
+  .radio-opt.selected{border-color:#0D1B2A;background:#f0f4ff;}
+  .radio-opt input{display:none;}
+  .radio-opt .icon{font-size:22px;display:block;margin-bottom:3px;}
+  .radio-opt .lbl{font-size:12px;font-weight:600;}
+  .radio-opt .sub{font-size:10px;color:#888;}
+  .consent-box{border-radius:10px;padding:16px;margin-bottom:14px;background:#fffbf0;border:1px solid #C9A84C;}
+  .consent-box .title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#856404;margin-bottom:12px;}
+  .consent-text{font-size:13px;color:#333;margin-bottom:8px;line-height:1.55;}
+  .consent-text.es{font-size:12px;color:#666;font-style:italic;border-top:1px solid #f0dea0;padding-top:8px;margin-top:8px;}
+  .consent-check{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid #f0dea0;}
+  .consent-check input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:2px;cursor:pointer;accent-color:#0D1B2A;}
+  .consent-check label{font-size:12px;font-weight:600;cursor:pointer;line-height:1.5;color:#333;}
+  .sum-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+  .sum-row:last-child{border-bottom:none;}
+  .sum-row .k{color:#666;}
+  .sum-row .v{font-weight:600;color:#0D1B2A;word-break:break-all;max-width:60%;text-align:right;}
+  .sum-row .v.mono{font-family:monospace;font-size:12px;}
+  .btn-next{width:100%;padding:13px;background:#0D1B2A;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+  .btn-next:disabled{background:#ccc;cursor:not-allowed;}
+  .btn-back{padding:13px 18px;background:white;color:#666;border:2px solid #dee2e6;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;}
+  .btn-submit{flex:1;padding:13px;background:#1B998B;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+  .nav-btns{display:flex;gap:10px;margin-top:18px;}
+  #autonomo-sec{display:none;}
+  #autonomo-sec.vis{display:block;}
+  .success-screen{text-align:center;padding:50px 16px;}
+  .check-circle{width:72px;height:72px;background:#1B998B;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:34px;color:white;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pm-header">
+  <div class="tag">WPC PCL Malaga 2026</div>
+  <h1>WPC Prize Money</h1>
+  <div class="sub">{{ player.name }}</div>
+</div>
+
+<div class="container" style="max-width:540px;padding:16px 14px;">
+
+{% if already_submitted %}
+<div class="success-screen">
+  <div class="check-circle"><i class="bi bi-check-lg"></i></div>
+  <h3 style="color:#1B998B;margin-bottom:8px;">Already submitted!</h3>
+  <p style="color:#666;margin-bottom:6px;">Submitted on {{ submission.submitted_at[:10] }}.</p>
+  <p style="color:#999;font-size:13px;">Our team will process your WPC payment shortly.<br><br>Questions? sergio@wpc-series.com</p>
+</div>
+
+{% else %}
+
+<div class="prize-badge">
+  <i class="bi bi-trophy-fill" style="font-size:20px;"></i>
+  WPC Individual Prize &mdash; Pickleball Europe (Spain)
+</div>
+
+<div class="steps-nav">
+  <div class="step-btn active" id="sn1"><span class="sn">1</span>Identity</div>
+  <div class="step-btn" id="sn2"><span class="sn">2</span>Bank</div>
+  <div class="step-btn" id="sn3"><span class="sn">3</span>Consent</div>
+  <div class="step-btn" id="sn4"><span class="sn">4</span>Review</div>
+</div>
+
+<!-- STEP 1: Identity -->
+<div class="step-panel active" id="step-1">
+  <div class="form-card">
+    <h5>Personal Information</h5>
+    <div class="mb-3">
+      <label class="form-label fw-semibold" style="font-size:13px;">Full legal name <span class="text-danger">*</span></label>
+      <input type="text" id="full_name" class="form-control" placeholder="As on your ID document" value="{{ player.name }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold" style="font-size:13px;">Country of tax residence <span class="text-danger">*</span></label>
+      <select id="country" class="form-select">
+        <option value="">Select country...</option>
+        {% for c in countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="row g-2">
+      <div class="col-5">
+        <label class="form-label fw-semibold" style="font-size:13px;">Document type <span class="text-danger">*</span></label>
+        <select id="doc_type" class="form-select">
+          <option value="">Select...</option>
+          <option value="NIE (Spain)">NIE (Spain)</option>
+          <option value="DNI (Spain)">DNI (Spain)</option>
+          <option value="Passport">Passport</option>
+          <option value="EU ID Card">EU ID Card</option>
+        </select>
+      </div>
+      <div class="col-7">
+        <label class="form-label fw-semibold" style="font-size:13px;">Document number <span class="text-danger">*</span></label>
+        <input type="text" id="doc_number" class="form-control" placeholder="e.g. X1234567A">
+      </div>
+    </div>
+  </div>
+  <div class="form-card">
+    <h5>Recipient Type</h5>
+    <div class="radio-group">
+      <label class="radio-opt selected" onclick="selRecipient('particular',this)">
+        <input type="radio" name="rtype" value="particular" checked>
+        <i class="bi bi-person-fill icon"></i><span class="lbl">Individual</span><span class="sub">Particular</span>
+      </label>
+      <label class="radio-opt" onclick="selRecipient('autonomo',this)">
+        <input type="radio" name="rtype" value="autonomo">
+        <i class="bi bi-building icon"></i><span class="lbl">Self-employed</span><span class="sub">Autonomo / Company</span>
+      </label>
+    </div>
+    <div id="autonomo-sec" class="mt-3">
+      <div class="mb-2">
+        <label class="form-label fw-semibold" style="font-size:13px;">CIF <span class="text-danger">*</span></label>
+        <input type="text" id="cif" class="form-control" placeholder="B12345678">
+      </div>
+      <div>
+        <label class="form-label fw-semibold" style="font-size:13px;">Company name</label>
+        <input type="text" id="company_name" class="form-control">
+      </div>
+    </div>
+  </div>
+
+  <!-- UPLOAD -->
+  <div class="form-card" style="border:2px dashed #dee2e6;">
+    <h5>ID Document Upload</h5>
+    <p style="font-size:12px;color:#666;margin-bottom:4px;">Please upload both sides of your ID document (passport photo page, NIE, DNI or ID card front &amp; back). Accepted: PDF, JPG, PNG. Max 10MB each.</p>
+    <p style="font-size:11px;color:#888;font-style:italic;margin-bottom:14px;">Sube ambas caras de tu documento (pasaporte, NIE, DNI). Formatos: PDF, JPG, PNG. Max. 10MB cada uno.</p>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:6px;">Page 1 / Front &mdash; Pagina 1 / Anverso <span style="color:#dc3545;">*</span></div>
+      <div id="upload-area-1" style="border:2px dashed #C9A84C;border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:#fffbf0;" onclick="document.getElementById('doc-file-1').click()">
+        <div id="upload-prompt-1"><i class="bi bi-paperclip" style="font-size:22px;margin-bottom:4px;display:block;"></i><div style="font-size:13px;font-weight:600;color:#856404;">Click to upload</div><div style="font-size:11px;color:#aaa;">PDF, JPG or PNG</div></div>
+        <div id="upload-ok-1" style="display:none;color:#1B998B;font-weight:600;font-size:13px;"></div>
+        <div id="upload-err-1" style="display:none;color:#dc3545;font-size:12px;"></div>
+      </div>
+      <input type="file" id="doc-file-1" accept=".pdf,.jpg,.jpeg,.png,.heic" style="display:none;" onchange="doUpload(this, 1)">
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;color:#856404;margin-bottom:6px;">Page 2 / Back &mdash; Pagina 2 / Reverso <span style="color:#888;font-weight:400;">(optional)</span></div>
+      <div id="upload-area-2" style="border:2px dashed #dee2e6;border-radius:8px;padding:16px;text-align:center;cursor:pointer;background:#fafafa;" onclick="document.getElementById('doc-file-2').click()">
+        <div id="upload-prompt-2"><i class="bi bi-paperclip" style="font-size:22px;margin-bottom:4px;display:block;"></i><div style="font-size:13px;font-weight:600;color:#888;">Click to upload</div><div style="font-size:11px;color:#aaa;">PDF, JPG or PNG</div></div>
+        <div id="upload-ok-2" style="display:none;color:#1B998B;font-weight:600;font-size:13px;"></div>
+        <div id="upload-err-2" style="display:none;color:#dc3545;font-size:12px;"></div>
+      </div>
+      <input type="file" id="doc-file-2" accept=".pdf,.jpg,.jpeg,.png,.heic" style="display:none;" onchange="doUpload(this, 2)">
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-next" id="btn1next" onclick="goStep(2)" disabled>Continue &rarr;</button>
+  </div>
+  <div id="upload-required" style="text-align:center;font-size:12px;color:#C9A84C;margin-top:8px;">
+    ID document upload required / Subida de documento obligatoria
+  </div>
+</div>
+
+<!-- STEP 2: Bank -->
+<div class="step-panel" id="step-2">
+  <div class="form-card">
+    <h5>Bank Account</h5>
+    <p style="font-size:12px;color:#666;margin-bottom:14px;">Your WPC prize will be transferred to this account.</p>
+    <label class="form-label fw-semibold" style="font-size:13px;">IBAN <span class="text-danger">*</span></label>
+    <input type="text" id="iban" class="form-control"
+      placeholder="ES12 3456 7890 1234 5678 9012"
+      oninput="fmtIBAN(this)"
+      style="font-family:monospace;font-size:15px;letter-spacing:1px;">
+    <div id="iban-fb" class="form-text mt-1"></div>
+    <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;font-size:12px;color:#2e7d32;margin-top:12px;">
+      Your bank details are stored securely and only shared with the payment processor.
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(1)">&larr; Back</button>
+    <button class="btn-next" id="btn2next" onclick="goStep(3)" disabled>Continue &rarr;</button>
+  </div>
+</div>
+
+<!-- STEP 3: Consent -->
+<div class="step-panel" id="step-3">
+  <div class="form-card">
+    <h5>Declaration &amp; Consent</h5>
+    <div class="consent-box">
+      <div class="title">Tax Withholding &mdash; WPC Prize</div>
+      <div class="consent-text">
+        I acknowledge that my WPC prize will be paid by <strong>Pickleball Europe</strong> and that the applicable tax (IRPF for Spanish residents, IRNR for non-residents) will be <strong>withheld at source</strong> in accordance with Spanish tax law. The net amount will be transferred to my bank account.
+      </div>
+      <div class="consent-text es">
+        Acepto que mi premio WPC sera abonado por <strong>Pickleball Europe</strong> y que el impuesto aplicable (IRPF para residentes en Espana, IRNR para no residentes) sera <strong>retenido en origen</strong> de acuerdo con la legislacion fiscal espanola. El importe neto sera transferido a mi cuenta bancaria.
+      </div>
+      <div class="consent-check">
+        <input type="checkbox" id="c_wpc" onchange="chkConsent()">
+        <label for="c_wpc">I have read and accept the above. / He leido y acepto lo anterior.</label>
+      </div>
+    </div>
+    <div class="consent-box" style="background:#f0f8ff;border-color:#4a90d9;">
+      <div class="title" style="color:#1a5276;">Data Processing</div>
+      <div class="consent-text">
+        I authorise Pickleball Europe to process my personal and banking data for the sole purpose of paying my WPC prize.
+      </div>
+      <div class="consent-text es">
+        Autorizo a Pickleball Europe a tratar mis datos personales y bancarios con el unico fin de abonar mi premio WPC.
+      </div>
+      <div class="consent-check">
+        <input type="checkbox" id="c_data" onchange="chkConsent()">
+        <label for="c_data">I agree. / Acepto.</label>
+      </div>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(2)">&larr; Back</button>
+    <button class="btn-next" id="btn3next" onclick="goStep(4)" disabled>Continue &rarr;</button>
+  </div>
+</div>
+
+<!-- STEP 4: Review -->
+<div class="step-panel" id="step-4">
+  <div class="form-card">
+    <h5>Review your data</h5>
+    <div id="sum-content"></div>
+  </div>
+  <div style="background:#fff8e1;border-radius:8px;padding:12px 14px;font-size:12px;color:#856404;margin-bottom:14px;">
+    Please verify all details before submitting. Once submitted you cannot make changes.
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(3)">&larr; Back</button>
+    <button class="btn-submit" id="btn-submit" onclick="doSubmit()">Submit</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="step-panel" id="step-ok">
+  <div class="success-screen">
+    <div class="check-circle"><i class="bi bi-check-lg"></i></div>
+    <h3 style="color:#1B998B;margin-bottom:8px;">Submitted!</h3>
+    <p style="color:#666;margin-bottom:6px;">Thank you, {{ player.name }}.</p>
+    <p style="color:#999;font-size:13px;">Our team will process your WPC payment shortly.<br><br>Questions? sergio@wpc-series.com</p>
+  </div>
+</div>
+
+{% endif %}
+</div>
+
+<script>
+const TOKEN = "{{ token }}";
+let cur = 1, rtype = 'particular';
+
+function goStep(n) {
+  if (!validStep(cur)) return;
+  document.getElementById('step-'+cur).classList.remove('active');
+  document.getElementById('sn'+cur).classList.remove('active');
+  document.getElementById('sn'+cur).classList.add('done');
+  cur = n;
+  document.getElementById('step-'+n).classList.add('active');
+  document.getElementById('sn'+n).classList.remove('done');
+  document.getElementById('sn'+n).classList.add('active');
+  if (n === 4) buildSummary();
+  window.scrollTo(0, 0);
+}
+
+function validStep(n) {
+  if (n === 1) {
+    if (!document.getElementById('full_name').value.trim()) { alert('Please enter your full name.'); return false; }
+    if (!document.getElementById('country').value) { alert('Please select your country.'); return false; }
+    if (!document.getElementById('doc_type').value) { alert('Please select document type.'); return false; }
+    if (!document.getElementById('doc_number').value.trim()) { alert('Please enter your document number.'); return false; }
+    if (rtype === 'autonomo' && !document.getElementById('cif').value.trim()) { alert('Please enter your CIF.'); return false; }
+  }
+  if (n === 2 && !validIBAN()) { alert('Please enter a valid IBAN.'); return false; }
+  if (n === 3) {
+    if (!document.getElementById('c_wpc').checked) { alert('Please accept the tax withholding declaration.'); return false; }
+    if (!document.getElementById('c_data').checked) { alert('Please accept the data processing consent.'); return false; }
+  }
+  return true;
+}
+
+function selRecipient(t, el) {
+  rtype = t;
+  document.querySelectorAll('.radio-opt').forEach(r => r.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('autonomo-sec').classList.toggle('vis', t === 'autonomo');
+}
+
+function fmtIBAN(el) {
+  let v = el.value.replace(/\s/g, '').toUpperCase();
+  el.value = v.replace(/(.{4})/g, '$1 ').trim();
+  const ok = validIBAN();
+  const fb = document.getElementById('iban-fb');
+  fb.textContent = ok ? 'Valid IBAN' : '';
+  fb.style.color = '#1B998B';
+  document.getElementById('btn2next').disabled = !ok;
+}
+
+function validIBAN() {
+  const v = document.getElementById('iban').value.replace(/\s/g, '');
+  return v.length >= 15 && v.length <= 34 && /^[A-Z]{2}[0-9]{2}/.test(v);
+}
+
+function chkConsent() {
+  const ok = document.getElementById('c_wpc').checked && document.getElementById('c_data').checked;
+  document.getElementById('btn3next').disabled = !ok;
+}
+
+function buildSummary() {
+  const rows = [
+    ['Full name', document.getElementById('full_name').value],
+    ['Country', document.getElementById('country').value],
+    ['Document', document.getElementById('doc_type').value + ' ' + document.getElementById('doc_number').value],
+    ['Recipient', rtype === 'autonomo' ? 'Autonomo (' + document.getElementById('cif').value + ')' : 'Individual'],
+    ['IBAN', document.getElementById('iban').value],
+  ];
+  document.getElementById('sum-content').innerHTML = rows.map(r =>
+    '<div class="sum-row"><span class="k">'+r[0]+'</span><span class="v '+(r[0]==='IBAN'?'mono':'')+'">'+r[1]+'</span></div>'
+  ).join('');
+}
+
+async function doSubmit() {
+  const btn = document.getElementById('btn-submit');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  const payload = {
+    full_name: document.getElementById('full_name').value,
+    country: document.getElementById('country').value,
+    doc_type: document.getElementById('doc_type').value,
+    doc_number: document.getElementById('doc_number').value,
+    recipient_type: rtype,
+    cif: document.getElementById('cif') ? document.getElementById('cif').value : '',
+    company_name: document.getElementById('company_name') ? document.getElementById('company_name').value : '',
+    iban: document.getElementById('iban').value.replace(/\s/g, '').toUpperCase(),
+    consent_tax: true,
+    consent_data: true,
+    form_type: 'WPC',
+  };
+  try {
+    const res = await fetch('/prize-money/submit/'+TOKEN, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await res.json();
+    if (d.success) {
+      document.getElementById('step-' + cur).classList.remove('active');
+      document.getElementById('step-ok').classList.add('active');
+      window.scrollTo(0, 0);
+    } else {
+      alert('Error: ' + (d.error || 'Unknown error'));
+      btn.disabled = false;
+      btn.textContent = 'Submit';
+    }
+  } catch(e) {
+    alert('Submission failed. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Submit';
+  }
+}
+
+let docUploaded = false;
+async function doUpload(input, page) {
+  page = page || 1;
+  const file = input.files[0];
+  if (!file) return;
+  const prompt = document.getElementById('upload-prompt-' + page);
+  const ok = document.getElementById('upload-ok-' + page);
+  const err = document.getElementById('upload-err-' + page);
+  const area = document.getElementById('upload-area-' + page);
+  if (prompt) prompt.innerHTML = '<div style="font-size:13px;color:#888;">Uploading...</div>';
+  if (err) err.style.display = 'none';
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('page', page);
+  try {
+    const res = await fetch('/prize-money/upload/'+TOKEN, {method:'POST', body:fd});
+    const d = await res.json();
+    if (d.success) {
+      if (area) { area.style.borderColor = '#1B998B'; area.style.background = '#e8f5f3'; }
+      if (prompt) prompt.style.display = 'none';
+      if (ok) { ok.textContent = '\u2713 ' + file.name; ok.style.display = 'block'; }
+      if (page == 1) {
+        docUploaded = true;
+        const btn = document.getElementById('btn1next');
+        if (btn) btn.disabled = false;
+        const req = document.getElementById('upload-required');
+        if (req) req.style.display = 'none';
+      }
+    } else {
+      if (prompt) prompt.innerHTML = '<div style="font-size:13px;color:#856404;">Click to upload</div>';
+      if (err) { err.textContent = d.error || 'Upload failed'; err.style.display = 'block'; }
+    }
+  } catch(e) {
+    if (prompt) prompt.innerHTML = '<div style="font-size:13px;color:#856404;">Click to upload</div>';
+    if (err) { err.textContent = 'Upload failed. Please try again.'; err.style.display = 'block'; }
+  }
+}
+</script>
+{% endblock %}

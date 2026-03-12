@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+{% block title %}Prize Money — {{ player.name }}{% endblock %}
+{% block extra_head %}
+<style>
+  body{background:#f4f6f9;}
+  .pm-header{background:#0D1B2A;color:white;padding:22px 0 18px;text-align:center;}
+  .pm-header .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#C9A84C;margin-bottom:4px;}
+  .pm-header h1{font-size:21px;font-weight:800;margin:0;}
+  .pm-header .pname{font-size:14px;opacity:.75;margin-top:4px;}
+
+  .prize-block{border-radius:10px;padding:16px 18px;margin:10px 0;}
+  .prize-block.wpc{background:#0D1B2A;border:1px solid #C9A84C;}
+  .prize-block.pcl{background:#003d35;border:1px solid #1B998B;}
+  .prize-block .tag{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;opacity:.6;margin-bottom:4px;}
+  .prize-block .amount{font-size:26px;font-weight:800;}
+  .prize-block.wpc .amount{color:#C9A84C;}
+  .prize-block.pcl .amount{color:#1B998B;}
+  .prize-block .detail{font-size:11px;color:#aaa;margin-top:3px;}
+  .prize-block .tax-note{font-size:11px;margin-top:8px;padding:8px 10px;border-radius:6px;}
+  .prize-block.wpc .tax-note{background:rgba(201,168,76,.15);color:#C9A84C;}
+  .prize-block.pcl .tax-note{background:rgba(27,153,139,.15);color:#1B998B;}
+
+  .steps-nav{display:flex;border-radius:8px;overflow:hidden;border:1px solid #dee2e6;margin-bottom:24px;}
+  .step-btn{flex:1;padding:9px 4px;text-align:center;background:white;border:none;font-size:11px;color:#999;font-weight:500;border-right:1px solid #dee2e6;}
+  .step-btn:last-child{border-right:none;}
+  .step-btn.active{background:#0D1B2A;color:white;font-weight:700;}
+  .step-btn.done{background:#1B998B;color:white;}
+  .step-btn .sn{display:block;font-size:15px;font-weight:800;line-height:1;margin-bottom:1px;}
+  .step-panel{display:none;}
+  .step-panel.active{display:block;}
+  .form-card{background:white;border-radius:12px;box-shadow:0 2px 10px rgba(0,0,0,.07);padding:22px;margin-bottom:14px;}
+  .form-card h5{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:#0D1B2A;margin-bottom:14px;font-weight:700;border-bottom:2px solid #C9A84C;padding-bottom:7px;}
+  .radio-group{display:flex;gap:10px;margin-bottom:8px;}
+  .radio-opt{flex:1;border:2px solid #dee2e6;border-radius:8px;padding:12px 8px;text-align:center;cursor:pointer;transition:all .2s;}
+  .radio-opt.selected{border-color:#0D1B2A;background:#f0f4ff;}
+  .radio-opt input{display:none;}
+  .radio-opt .icon{font-size:22px;display:block;margin-bottom:3px;}
+  .radio-opt .lbl{font-size:12px;font-weight:600;}
+  .radio-opt .sub{font-size:10px;color:#888;}
+  .tax-box{background:#f8f9fa;border-left:4px solid #1B998B;border-radius:0 8px 8px 0;padding:12px 14px;margin:10px 0;font-size:13px;}
+  .tax-box .rate{font-size:20px;font-weight:800;color:#0D1B2A;}
+  .tax-box .net{color:#1B998B;font-weight:700;font-size:13px;}
+  canvas#sig-pad{border:2px dashed #ccc;border-radius:8px;background:#fafafa;cursor:crosshair;touch-action:none;width:100%;height:130px;display:block;}
+  canvas#sig-pad.has-sig{border-color:#1B998B;border-style:solid;}
+  .sum-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #f0f0f0;font-size:13px;}
+  .sum-row:last-child{border-bottom:none;}
+  .sum-row .k{color:#666;}
+  .sum-row .v{font-weight:600;color:#0D1B2A;}
+  .sum-row.total .v{color:#1B998B;font-size:16px;}
+  .btn-next{width:100%;padding:13px;background:#0D1B2A;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+  .btn-next:disabled{background:#ccc;cursor:not-allowed;}
+  .btn-back{padding:13px 18px;background:white;color:#666;border:2px solid #dee2e6;border-radius:8px;font-size:13px;cursor:pointer;}
+  .btn-submit{flex:1;padding:13px;background:#1B998B;color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;}
+  .nav-btns{display:flex;gap:10px;margin-top:18px;}
+  #autonomo-sec{display:none;}
+  #autonomo-sec.vis{display:block;}
+  .success-screen{text-align:center;padding:40px 16px;}
+  .success-screen .check{width:68px;height:68px;background:#1B998B;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:white;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="pm-header">
+  <div class="tag">WPC PCL Málaga 2026 · Prize Money</div>
+  <h1>Payment Data Form</h1>
+  <div class="pname">{{ player.name }}</div>
+</div>
+
+<div class="container" style="max-width:580px;padding:18px 14px;">
+
+{% if already_submitted %}
+<div class="success-screen">
+  <div class="check">✓</div>
+  <h3 style="color:#1B998B;margin-bottom:8px;">Already submitted!</h3>
+  <p style="color:#666;margin-bottom:18px;">Submitted on {{ submission.submitted_at[:10] }}. Our team will process your payment.</p>
+  <div class="form-card" style="text-align:left;">
+    {% if submission.wpc_total_gross > 0 %}
+    <div class="sum-row"><span class="k">WPC Net</span><span class="v" style="color:#C9A84C;">€{{ submission.wpc_net_amount }}</span></div>
+    {% endif %}
+    {% if submission.pcl_total_gross > 0 %}
+    <div class="sum-row"><span class="k">PCL Gross (= Net)</span><span class="v" style="color:#1B998B;">€{{ submission.pcl_net_amount }}</span></div>
+    {% endif %}
+    <div class="sum-row"><span class="k">IBAN</span><span class="v" style="font-family:monospace;">{{ submission.iban }}</span></div>
+  </div>
+  <p style="color:#999;font-size:12px;margin-top:14px;">Questions? sergio@wpc-series.com</p>
+</div>
+
+{% else %}
+
+<!-- Prize summary -->
+{% if player.has_wpc %}
+<div class="prize-block wpc">
+  <div class="tag">🏅 WPC Individual Prize · Gross</div>
+  <div class="amount">€{{ player.wpc_total }}</div>
+  <div class="detail">{{ player.wpc_prizes | map(attribute='prizes') | join(' · ') }}</div>
+  <div class="tax-note">⚖️ Tax withheld by Pickleball Europe (Spain) · 19% EU/EEA · 24% Non-EU · Net amount paid to your IBAN</div>
+</div>
+{% endif %}
+{% if player.has_pcl %}
+<div class="prize-block pcl">
+  <div class="tag">🌏 PCL Team Prize · Gross = Net</div>
+  <div class="amount">€{{ player.pcl_total }}</div>
+  <div class="detail">{{ player.pcl_prizes | map(attribute='prizes') | join(' · ') }}</div>
+  <div class="tax-note">✅ Paid in full by PCL (Singapore) · No EU withholding · You must declare this income in your home country per local tax law</div>
+</div>
+{% endif %}
+
+<!-- Steps nav -->
+<div class="steps-nav" style="margin-top:20px;" id="steps-nav">
+  <div class="step-btn active" id="sn1"><span class="sn">1</span>You</div>
+  <div class="step-btn" id="sn2"><span class="sn">2</span>Country</div>
+  <div class="step-btn" id="sn3"><span class="sn">3</span>IBAN</div>
+  <div class="step-btn" id="sn4"><span class="sn">4</span>Sign</div>
+  <div class="step-btn" id="sn5"><span class="sn">5</span>Confirm</div>
+</div>
+
+<!-- STEP 1 -->
+<div class="step-panel active" id="step-1">
+  <div class="form-card">
+    <h5>👤 Identity</h5>
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Full legal name <span class="text-danger">*</span></label>
+      <input type="text" id="full_name" class="form-control" value="{{ player.name }}">
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold">Document type <span class="text-danger">*</span></label>
+      <select id="doc_type" class="form-select">
+        <option value="">Select...</option>
+        <option value="NIE">NIE (Spain)</option>
+        <option value="DNI">DNI (Spain)</option>
+        <option value="Passport">Passport</option>
+        <option value="ID Card">EU ID Card</option>
+      </select>
+    </div>
+    <div class="mb-2">
+      <label class="form-label fw-semibold">Document number</label>
+      <input type="text" id="doc_number" class="form-control" placeholder="Optional but recommended">
+    </div>
+  </div>
+  <div class="form-card">
+    <h5>🏢 Recipient type</h5>
+    <div class="radio-group">
+      <label class="radio-opt selected" onclick="selRecipient('particular',this)">
+        <input type="radio" name="rtype" value="particular" checked>
+        <span class="icon">👤</span><span class="lbl">Individual</span><span class="sub">Particular</span>
+      </label>
+      <label class="radio-opt" onclick="selRecipient('autonomo',this)">
+        <input type="radio" name="rtype" value="autonomo">
+        <span class="icon">🏢</span><span class="lbl">Self-employed</span><span class="sub">Autónomo/Company</span>
+      </label>
+    </div>
+    <div id="autonomo-sec">
+      <div class="mb-2"><label class="form-label fw-semibold">CIF <span class="text-danger">*</span></label>
+        <input type="text" id="cif" class="form-control" placeholder="B12345678"></div>
+      <div class="mb-1"><label class="form-label fw-semibold">Company name</label>
+        <input type="text" id="company_name" class="form-control"></div>
+    </div>
+  </div>
+  <div class="nav-btns"><button class="btn-next" onclick="goStep(2)">Continue →</button></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="step-panel" id="step-2">
+  <div class="form-card">
+    <h5>🌍 Country of Tax Residence</h5>
+    <p style="font-size:12px;color:#666;margin-bottom:12px;">Determines withholding rate for your WPC prize.</p>
+    <select id="country" class="form-select" onchange="updateTax()">
+      <option value="">Select country...</option>
+      {% for c in countries %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+    </select>
+    <div id="tax-box" class="tax-box" style="display:none;margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-size:11px;color:#666;margin-bottom:2px;">WPC withholding tax</div>
+          <div class="rate" id="tax-rate-disp">—</div>
+          <div style="font-size:11px;color:#888;" id="tax-type-disp">—</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:11px;color:#666;">WPC Net payment</div>
+          <div class="net" id="net-disp">—</div>
+          {% if player.has_wpc %}<div style="font-size:10px;color:#aaa;">Gross: €{{ player.wpc_total }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% if player.has_pcl %}
+    <div style="margin-top:12px;background:#e0f2f1;border-radius:8px;padding:10px 12px;font-size:12px;color:#00695c;">
+      🌏 <strong>PCL prize (€{{ player.pcl_total }}):</strong> Paid in full from Singapore — no tax withheld here. Declare in your home country.
+    </div>
+    {% endif %}
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(1)">← Back</button>
+    <button class="btn-next" id="btn2next" onclick="goStep(3)" disabled>Continue →</button>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="step-panel" id="step-3">
+  <div class="form-card">
+    <h5>🏦 Bank Account (IBAN)</h5>
+    <p style="font-size:12px;color:#666;margin-bottom:12px;">
+      {% if player.has_wpc and player.has_pcl %}Both WPC and PCL payments will be sent to this IBAN.
+      {% elif player.has_wpc %}WPC net payment will be sent here.
+      {% else %}PCL payment will be sent here.{% endif %}
+    </p>
+    <input type="text" id="iban" class="form-control" placeholder="ES12 3456 7890 1234 5678 9012"
+      oninput="fmtIBAN(this)" style="font-family:monospace;font-size:16px;letter-spacing:1px;">
+    <div id="iban-fb" class="form-text"></div>
+    <div style="background:#e8f5e9;border-radius:8px;padding:10px 12px;font-size:12px;color:#2e7d32;margin-top:12px;">
+      🔒 Stored securely, only shared with payment processors.
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(2)">← Back</button>
+    <button class="btn-next" id="btn3next" onclick="goStep(4)" disabled>Continue →</button>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="step-panel" id="step-4">
+  <div class="form-card">
+    <h5>✍️ Signature</h5>
+    <canvas id="sig-pad"></canvas>
+    <div style="display:flex;justify-content:space-between;margin-top:6px;">
+      <span style="font-size:11px;color:#999;">Draw your signature</span>
+      <button onclick="clearSig()" style="background:none;border:none;color:#e84855;font-size:12px;cursor:pointer;">✕ Clear</button>
+    </div>
+  </div>
+  <div class="form-card">
+    <h5>✅ Confirmation</h5>
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="c1" onchange="chkConfirm()">
+      <label class="form-check-label" style="font-size:13px;" for="c1">My data is correct and belongs to me.</label>
+    </div>
+    {% if player.has_wpc %}
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="c2" onchange="chkConfirm()">
+      <label class="form-check-label" style="font-size:13px;" for="c2">I accept the WPC tax withholding (19% EU/EEA · 24% Non-EU) by Pickleball Europe.</label>
+    </div>
+    {% endif %}
+    {% if player.has_pcl %}
+    <div class="form-check mb-2">
+      <input class="form-check-input" type="checkbox" id="c3" onchange="chkConfirm()">
+      <label class="form-check-label" style="font-size:13px;" for="c3">I understand PCL pays the full amount from Singapore and I am responsible for declaring it in my home country.</label>
+    </div>
+    {% endif %}
+    <div class="form-check">
+      <input class="form-check-input" type="checkbox" id="c4" onchange="chkConfirm()">
+      <label class="form-check-label" style="font-size:13px;" for="c4">I authorize sharing my data with the relevant payment processors.</label>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(3)">← Back</button>
+    <button class="btn-next" id="btn4next" onclick="goStep(5)" disabled>Review →</button>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="step-panel" id="step-5">
+  <div class="form-card">
+    <h5>📋 Summary</h5>
+    <div id="sum-content"></div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn-back" onclick="goStep(4)">← Back</button>
+    <button class="btn-submit" onclick="doSubmit()">✓ Submit</button>
+  </div>
+</div>
+
+<!-- SUCCESS -->
+<div class="step-panel" id="step-ok">
+  <div class="success-screen">
+    <div class="check">✓</div>
+    <h3 style="color:#1B998B;margin-bottom:8px;">Submitted!</h3>
+    <p style="color:#666;margin-bottom:18px;">Thank you {{ player.name }}. We'll process your payment soon.</p>
+    <div class="form-card" style="text-align:left;" id="ok-summary"></div>
+    <p style="color:#999;font-size:12px;margin-top:14px;">Questions? sergio@wpc-series.com</p>
+  </div>
+</div>
+
+{% endif %}
+</div>
+
+<script>
+const WPC_GROSS = {{ player.wpc_total }};
+const PCL_GROSS = {{ player.pcl_total }};
+const HAS_WPC = {{ 'true' if player.has_wpc else 'false' }};
+const HAS_PCL = {{ 'true' if player.has_pcl else 'false' }};
+const TOKEN = "{{ token }}";
+const EU = {{ (eu_countries)|tojson }};
+
+let cur=1, rtype='particular', taxRate=0, taxType='', wpcNet=0;
+let isDrawing=false, hasSig=false;
+
+function goStep(n){
+  if(!validStep(cur)) return;
+  document.getElementById('step-'+cur).classList.remove('active');
+  document.getElementById('sn'+cur).classList.remove('active');
+  document.getElementById('sn'+cur).classList.add('done');
+  cur=n;
+  document.getElementById('step-'+n).classList.add('active');
+  document.getElementById('sn'+n).classList.remove('done');
+  document.getElementById('sn'+n).classList.add('active');
+  if(n===5) buildSum();
+  window.scrollTo(0,0);
+}
+
+function validStep(n){
+  if(n===1){
+    if(!document.getElementById('full_name').value.trim()){alert('Enter your full name.');return false;}
+    if(!document.getElementById('doc_type').value){alert('Select document type.');return false;}
+    if(rtype==='autonomo'&&!document.getElementById('cif').value.trim()){alert('Enter CIF.');return false;}
+  }
+  if(n===2&&!document.getElementById('country').value){alert('Select your country.');return false;}
+  if(n===3&&!validIBAN()){alert('Enter a valid IBAN.');return false;}
+  if(n===4){
+    if(!hasSig){alert('Please sign.');return false;}
+    const boxes=['c1','c2','c3','c4'].filter(id=>document.getElementById(id));
+    if(!boxes.every(id=>document.getElementById(id).checked)){alert('Check all boxes.');return false;}
+  }
+  return true;
+}
+
+function selRecipient(t,el){
+  rtype=t;
+  document.querySelectorAll('.radio-opt').forEach(r=>r.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('autonomo-sec').classList.toggle('vis',t==='autonomo');
+}
+
+function updateTax(){
+  const c=document.getElementById('country').value;
+  if(!c)return;
+  if(c==='Spain'){taxRate=19;taxType='IRPF (Spain)';}
+  else if(EU.includes(c)){taxRate=19;taxType='IRNR (EU/EEA)';}
+  else{taxRate=24;taxType='IRNR (Non-EU)';}
+  wpcNet=Math.round(WPC_GROSS*(1-taxRate/100)*100)/100;
+  document.getElementById('tax-rate-disp').textContent=taxRate+'%';
+  document.getElementById('tax-type-disp').textContent=taxType;
+  document.getElementById('net-disp').textContent='€'+wpcNet.toFixed(2);
+  document.getElementById('tax-box').style.display='block';
+  document.getElementById('btn2next').disabled=false;
+}
+
+function fmtIBAN(el){
+  let v=el.value.replace(/\s/g,'').toUpperCase();
+  el.value=v.replace(/(.{4})/g,'$1 ').trim();
+  const ok=validIBAN();
+  document.getElementById('iban-fb').textContent=ok?'✓ Valid IBAN':'';
+  document.getElementById('iban-fb').style.color=ok?'#1B998B':'#999';
+  document.getElementById('btn3next').disabled=!ok;
+}
+function validIBAN(){
+  const v=document.getElementById('iban').value.replace(/\s/g,'');
+  return v.length>=15&&v.length<=34&&/^[A-Z]{2}[0-9]{2}/.test(v);
+}
+
+// Signature
+document.addEventListener('DOMContentLoaded',()=>{
+  const c=document.getElementById('sig-pad');
+  if(!c)return;
+  const ctx=c.getContext('2d');
+  c.width=c.offsetWidth; c.height=c.offsetHeight;
+  ctx.strokeStyle='#0D1B2A'; ctx.lineWidth=2; ctx.lineCap='round';
+  const pos=e=>{const r=c.getBoundingClientRect();return e.touches?{x:e.touches[0].clientX-r.left,y:e.touches[0].clientY-r.top}:{x:e.clientX-r.left,y:e.clientY-r.top};};
+  c.addEventListener('mousedown',e=>{isDrawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
+  c.addEventListener('mousemove',e=>{if(!isDrawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();hasSig=true;c.classList.add('has-sig');chkConfirm();});
+  c.addEventListener('mouseup',()=>isDrawing=false);
+  c.addEventListener('touchstart',e=>{e.preventDefault();isDrawing=true;const p=pos(e);ctx.beginPath();ctx.moveTo(p.x,p.y);},{passive:false});
+  c.addEventListener('touchmove',e=>{e.preventDefault();if(!isDrawing)return;const p=pos(e);ctx.lineTo(p.x,p.y);ctx.stroke();hasSig=true;c.classList.add('has-sig');chkConfirm();},{passive:false});
+  c.addEventListener('touchend',()=>isDrawing=false);
+});
+function clearSig(){const c=document.getElementById('sig-pad');c.getContext('2d').clearRect(0,0,c.width,c.height);hasSig=false;c.classList.remove('has-sig');chkConfirm();}
+
+function chkConfirm(){
+  const ids=['c1','c2','c3','c4'].filter(id=>document.getElementById(id));
+  const ok=hasSig&&ids.every(id=>document.getElementById(id).checked);
+  document.getElementById('btn4next').disabled=!ok;
+}
+
+function buildSum(){
+  const rows=[
+    ['Name',document.getElementById('full_name').value],
+    ['Document',document.getElementById('doc_type').value+' '+(document.getElementById('doc_number').value||'')],
+    ['Recipient',rtype==='autonomo'?'Autónomo ('+document.getElementById('cif').value+')':'Individual'],
+    ['Country',document.getElementById('country').value],
+    ['IBAN',document.getElementById('iban').value],
+  ];
+  let html=rows.map(r=>`<div class="sum-row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`).join('');
+  if(HAS_WPC) html+=`<div class="sum-row"><span class="k">WPC Net</span><span class="v" style="color:#C9A84C;">€${wpcNet.toFixed(2)} (after ${taxRate}% tax)</span></div>`;
+  if(HAS_PCL) html+=`<div class="sum-row"><span class="k">PCL Gross = Net</span><span class="v" style="color:#1B998B;">€${PCL_GROSS.toFixed(2)} (no withholding)</span></div>`;
+  document.getElementById('sum-content').innerHTML=html;
+}
+
+async function doSubmit(){
+  const c=document.getElementById('sig-pad');
+  const payload={
+    full_name:document.getElementById('full_name').value,
+    doc_type:document.getElementById('doc_type').value,
+    doc_number:document.getElementById('doc_number').value,
+    recipient_type:rtype,
+    cif:document.getElementById('cif').value,
+    company_name:document.getElementById('company_name').value,
+    country:document.getElementById('country').value,
+    iban:document.getElementById('iban').value,
+    signature_data:c.toDataURL(),
+    confirmed:true,
+  };
+  try{
+    const res=await fetch(`/prize-money/submit/${TOKEN}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d=await res.json();
+    if(d.success){
+      document.getElementById('step-'+cur).classList.remove('active');
+      document.getElementById('step-ok').classList.add('active');
+      let ok='';
+      if(HAS_WPC) ok+=`<div class="sum-row"><span class="k">WPC Net</span><span class="v" style="color:#C9A84C;">€${d.wpc_net.toFixed(2)}</span></div>`;
+      if(HAS_PCL) ok+=`<div class="sum-row"><span class="k">PCL Amount</span><span class="v" style="color:#1B998B;">€${d.pcl_net.toFixed(2)}</span></div>`;
+      document.getElementById('ok-summary').innerHTML=ok;
+      window.scrollTo(0,0);
+    }else{alert('Error: '+(d.error||'Unknown'));}
+  }catch(e){alert('Submission failed. Try again.');}
+}
+</script>
+{% endblock %}

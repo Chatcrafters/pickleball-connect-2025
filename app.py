@@ -1,3 +1,5 @@
+from dotenv import load_dotenv
+load_dotenv()
 import os
 from flask import Flask
 from flask_migrate import Migrate
@@ -28,6 +30,9 @@ if database_url:
     print(f"DEBUG: Database URL starts with: {database_url[:30]}...")
 
 app = Flask(__name__)
+from routes.prize_money import prize_money
+app.register_blueprint(prize_money)
+
 
 # Configuration - SECRET_KEY must be set in environment
 secret_key = os.environ.get('SECRET_KEY')
@@ -103,3 +108,4 @@ if __name__ == '__main__':
     print("=" * 60)
     
     app.run(host='0.0.0.0', port=port, debug=debug)
+

@@ -1,0 +1,10 @@
+{
+  "wpc_admin": {
+    "password": "scrypt:32768:8:1$5TzrasARovk6uKKE$0576c7d641c24499b7054d9b56f292ef4425b47f642f6099a834d0f88fc890ab9e9843b263e08920470a1c66a13bfef890abe19f92e025a6124f1b328aeb8e03",
+    "role": "wpc"
+  },
+  "pcl_admin": {
+    "password": "scrypt:32768:8:1$H6znJr7GtZxGm844$24491feea33ce94ca1a52fbd590930f4a467572c92955f8c8e466dd3798a153bc8f2baf2f05f0b1cf82dd1230d7a5fa45ea87a1e5623ed01e8b14ebbb51dc24e",
+    "role": "pcl"
+  }
+}

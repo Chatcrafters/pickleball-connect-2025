@@ -1,0 +1,444 @@
+"""
+Prize Money Blueprint v2 — WPC + PCL separated
+WPC PCL Málaga 2026
+"""
+
+from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, send_file
+from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
+import json, hashlib, os, csv, io
+
+prize_money = Blueprint('prize_money', __name__, template_folder='../templates')
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_FILE = os.path.join(BASE_DIR, 'players_data.json')
+SUBMISSIONS_FILE = os.path.join(BASE_DIR, 'submissions.json')
+PM_USERS_FILE = os.path.join(BASE_DIR, 'pm_users.json')
+BUCKET = 'prize-money-docs'
+
+# ─── Supabase ─────────────────────────────────────────────────────────────────
+def get_supabase():
+    from supabase import create_client
+    url = os.environ.get('SUPABASE_URL')
+    key = os.environ.get('SUPABASE_SERVICE_KEY') or os.environ.get('SUPABASE_KEY')
+    return create_client(url, key)
+
+def ensure_bucket():
+    try:
+        sb = get_supabase()
+        buckets = sb.storage.list_buckets()
+        names = [b.name for b in buckets]
+        if BUCKET not in names:
+            sb.storage.create_bucket(BUCKET, options={'public': False})
+    except Exception as e:
+        print(f'Bucket check error: {e}')
+
+def upload_doc(player_id, file_bytes, filename, content_type, page=1):
+    try:
+        sb = get_supabase()
+        ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'bin'
+        path = f"{player_id}/id_document_p{page}.{ext}"
+        sb.storage.from_(BUCKET).upload(
+            path, file_bytes,
+            file_options={"content-type": content_type, "upsert": "true"}
+        )
+        return path
+    except Exception as e:
+        print(f'Upload error: {e}')
+        return None
+
+def get_doc_url(path):
+    try:
+        sb = get_supabase()
+        res = sb.storage.from_(BUCKET).create_signed_url(path, 3600)
+        return res.get('signedURL') or res.get('signed_url')
+    except Exception as e:
+        print(f'Signed URL error: {e}')
+        return None
+
+# ─── Countries ────────────────────────────────────────────────────────────────
+EU_COUNTRIES = ["Austria","Belgium","Bulgaria","Croatia","Cyprus","Czech Republic",
+    "Denmark","Estonia","Finland","France","Germany","Greece","Hungary","Ireland",
+    "Italy","Latvia","Lithuania","Luxembourg","Malta","Netherlands","Poland",
+    "Portugal","Romania","Slovakia","Slovenia","Spain","Sweden"]
+EEA_COUNTRIES = ["Iceland","Liechtenstein","Norway"]
+ALL_COUNTRIES = sorted([
+    "Afghanistan","Albania","Algeria","Andorra","Angola","Argentina","Armenia",
+    "Australia","Austria","Azerbaijan","Bahrain","Bangladesh","Belarus","Belgium",
+    "Bolivia","Bosnia and Herzegovina","Brazil","Bulgaria","Canada","Chile","China",
+    "Colombia","Costa Rica","Croatia","Cuba","Cyprus","Czech Republic","Denmark",
+    "Ecuador","Egypt","Estonia","Ethiopia","Finland","France","Georgia","Germany",
+    "Ghana","Greece","Guatemala","Honduras","Hungary","Iceland","India","Indonesia",
+    "Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kazakhstan","Kenya",
+    "Kuwait","Latvia","Lebanon","Liechtenstein","Lithuania","Luxembourg","Malaysia",
+    "Malta","Mexico","Moldova","Morocco","Netherlands","New Zealand","Nigeria","Norway",
+    "Pakistan","Palestine","Panama","Paraguay","Peru","Philippines","Poland","Portugal",
+    "Qatar","Romania","Russia","Saudi Arabia","Serbia","Singapore","Slovakia","Slovenia",
+    "South Africa","South Korea","Spain","Sweden","Switzerland","Taiwan","Thailand",
+    "Tunisia","Turkey","Ukraine","United Arab Emirates","United Kingdom","United States",
+    "Uruguay","Venezuela","Vietnam","Zimbabwe"
+])
+
+def get_tax_info(country):
+    if country == "Spain":
+        return {"rate": 19, "type": "IRPF (Spain)"}
+    elif country in EU_COUNTRIES or country in EEA_COUNTRIES:
+        return {"rate": 19, "type": "IRNR (EU/EEA)"}
+    else:
+        return {"rate": 24, "type": "IRNR (Non-EU)"}
+
+# ─── Auth helpers ──────────────────────────────────────────────────────────────
+def get_pm_role():
+    if session.get('admin_id') or session.get('user_id'):
+        return 'both'
+    return session.get('pm_role')
+
+def load_pm_users():
+    if not os.path.exists(PM_USERS_FILE):
+        default = {
+            'wpc_admin': {'password': generate_password_hash('wpc2026malaga'), 'role': 'wpc'},
+            'pcl_admin': {'password': generate_password_hash('pcl2026malaga'), 'role': 'pcl'},
+            'gestor': {'password': generate_password_hash('gestor2026'), 'role': 'gestor'},
+        }
+        with open(PM_USERS_FILE, 'w') as f:
+            json.dump(default, f, indent=2)
+        return default
+    with open(PM_USERS_FILE) as f:
+        return json.load(f)
+
+# ─── Data helpers ─────────────────────────────────────────────────────────────
+def load_players():
+    with open(DATA_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def generate_token(player_id):
+    secret = os.environ.get('SECRET_KEY', 'PickleballConnect2024Madrid')
+    return hashlib.sha256(f"{player_id}-{secret}".encode()).hexdigest()[:24]
+
+def get_combined_player(token):
+    players = load_players()
+    target = next((p for p in players if generate_token(p['id']) == token), None)
+    if not target:
+        return None
+    name = target['name'].strip().lower()
+    wpc_prizes = [p for p in players if p['name'].strip().lower() == name and p['type'] == 'WPC']
+    pcl_prizes = [p for p in players if p['name'].strip().lower() == name and p['type'] == 'PCL']
+    return {
+        'id': target['id'],
+        'name': target['name'],
+        'email': target['email'],
+        'token': token,
+        'wpc_prizes': wpc_prizes,
+        'pcl_prizes': pcl_prizes,
+        'wpc_total': sum(p['total'] for p in wpc_prizes),
+        'pcl_total': sum(p['total'] for p in pcl_prizes),
+        'has_wpc': len(wpc_prizes) > 0,
+        'has_pcl': len(pcl_prizes) > 0,
+    }
+
+def load_submissions():
+    if not os.path.exists(SUBMISSIONS_FILE):
+        return {}
+    with open(SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+def save_submission(player_id, data):
+    submissions = load_submissions()
+    submissions[player_id] = {**data, 'submitted_at': datetime.now().isoformat()}
+    with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(submissions, f, indent=2, ensure_ascii=False)
+
+# ─── PM Login ─────────────────────────────────────────────────────────────────
+@prize_money.route('/prize-money/login', methods=['GET', 'POST'])
+def pm_login():
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        users = load_pm_users()
+        if username in users and check_password_hash(users[username]['password'], password):
+            session['pm_role'] = users[username]['role']
+            session['pm_username'] = username
+            role = users[username]['role']
+            if role == 'gestor':
+                return redirect('/prize-money/gestor')
+            next_url = request.args.get('next', f'/prize-money/admin/{role}')
+            return redirect(next_url)
+        error = 'Invalid username or password'
+    return render_template('prize_money/pm_login.html', error=error)
+
+@prize_money.route('/prize-money/logout')
+def pm_logout():
+    session.pop('pm_role', None)
+    session.pop('pm_username', None)
+    return redirect('/prize-money/login')
+
+# ─── Player Form ──────────────────────────────────────────────────────────────
+@prize_money.route('/prize-money/form/<token>')
+def player_form(token):
+    player = get_combined_player(token)
+    if not player:
+        return render_template('prize_money/invalid_token.html'), 404
+    submissions = load_submissions()
+    already_submitted = player['id'] in submissions
+    template = 'prize_money/form_wpc.html' if player.get('has_wpc') else 'prize_money/form_pcl.html'
+    return render_template(template,
+        player=player, token=token,
+        already_submitted=already_submitted,
+        submission=submissions.get(player['id']),
+        countries=ALL_COUNTRIES,
+    )
+
+# ─── Document Upload ──────────────────────────────────────────────────────────
+@prize_money.route('/prize-money/upload/<token>', methods=['POST'])
+def upload_document(token):
+    player = get_combined_player(token)
+    if not player:
+        return jsonify({'error': 'Invalid token'}), 404
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file'}), 400
+    f = request.files['file']
+    if not f.filename:
+        return jsonify({'error': 'Empty filename'}), 400
+    allowed = {'pdf','jpg','jpeg','png','heic'}
+    ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
+    if ext not in allowed:
+        return jsonify({'error': 'File type not allowed. Use PDF, JPG or PNG.'}), 400
+    file_bytes = f.read()
+    if len(file_bytes) > 10 * 1024 * 1024:
+        return jsonify({'error': 'File too large (max 10MB)'}), 400
+    ensure_bucket()
+    page_num = request.form.get('page', '1')
+    path = upload_doc(player['id'], file_bytes, f.filename, f.content_type, page_num)
+    if not path:
+        return jsonify({'error': 'Upload failed. Please try again.'}), 500
+    # Save doc path in submissions temp store
+    submissions = load_submissions()
+    if player['id'] not in submissions:
+        submissions[player['id']] = {}
+    key = 'doc_path' if page_num == '1' else 'doc_path_p2'
+    submissions[player['id']][key] = path
+    submissions[player['id']]['doc_uploaded_at'] = datetime.now().isoformat()
+    with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as sf:
+        json.dump(submissions, sf, indent=2, ensure_ascii=False)
+    return jsonify({'success': True, 'path': path})
+
+# ─── Submit Form ──────────────────────────────────────────────────────────────
+@prize_money.route('/prize-money/submit/<token>', methods=['POST'])
+def submit_form(token):
+    player = get_combined_player(token)
+    if not player:
+        return jsonify({'error': 'Invalid token'}), 404
+    data = request.get_json()
+    for field in ['recipient_type', 'country', 'iban', 'full_name', 'doc_type']:
+        if not data.get(field):
+            return jsonify({'error': f'Missing: {field}'}), 400
+    if data.get('recipient_type') == 'autonomo' and not data.get('cif'):
+        return jsonify({'error': 'CIF required'}), 400
+
+    tax = get_tax_info(data['country'])
+    wpc_tax = round(player['wpc_total'] * tax['rate'] / 100, 2)
+    wpc_net = round(player['wpc_total'] - wpc_tax, 2)
+
+    # Get existing doc_path if uploaded
+    submissions = load_submissions()
+    existing = submissions.get(player['id'], {})
+    doc_path = existing.get('doc_path', '')
+    doc_path_p2 = existing.get('doc_path_p2', '')
+
+    save_submission(player['id'], {
+        'player_name': player['name'],
+        'form_type': data.get('form_type', 'WPC'),
+        'wpc_total_gross': player['wpc_total'],
+        'wpc_prizes': ' | '.join(p['prizes'] for p in player['wpc_prizes']),
+        'wpc_tax_rate': tax['rate'],
+        'wpc_tax_type': tax['type'],
+        'wpc_tax_amount': wpc_tax,
+        'wpc_net_amount': wpc_net,
+        'pcl_total_gross': player['pcl_total'],
+        'pcl_prizes': ' | '.join(p['prizes'] for p in player['pcl_prizes']),
+        'pcl_net_amount': player['pcl_total'],
+        'full_name': data['full_name'],
+        'recipient_type': data['recipient_type'],
+        'country': data['country'],
+        'iban': data['iban'].replace(' ', '').upper(),
+        'doc_type': data['doc_type'],
+        'doc_number': data.get('doc_number', ''),
+        'cif': data.get('cif', ''),
+        'company_name': data.get('company_name', ''),
+        'doc_path': doc_path,
+        'doc_path_p2': doc_path_p2,
+        'status': 'SUBMITTED',
+    })
+    return jsonify({'success': True})
+
+# ─── Admin ────────────────────────────────────────────────────────────────────
+def require_role(required_role):
+    role = get_pm_role()
+    if not role:
+        return False
+    return role == 'both' or role == required_role
+
+def build_admin_data(prize_type):
+    players = load_players()
+    submissions = load_submissions()
+    filtered = [p for p in players if p['type'] == prize_type]
+    seen, enriched = set(), []
+    for p in filtered:
+        key = p['name'].strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        sub = submissions.get(p['id'])
+        enriched.append({**p,
+            'token': generate_token(p['id']),
+            'submitted': sub is not None and sub.get('status') == 'SUBMITTED',
+            'submission': sub,
+            'url': f"/prize-money/form/{generate_token(p['id'])}"
+        })
+    total = sum(p['total'] for p in filtered if p['name'].strip().lower() in {e['name'].strip().lower() for e in enriched})
+    done = sum(1 for e in enriched if e['submitted'])
+    return enriched, done, len(enriched), total
+
+@prize_money.route('/prize-money/admin/wpc')
+def admin_wpc():
+    if not require_role('wpc'):
+        return redirect(f'/prize-money/login?next=/prize-money/admin/wpc')
+    players, done, total, pool = build_admin_data('WPC')
+    return render_template('prize_money/admin_wpc.html',
+        players=players, done=done, total=total, pool=pool,
+        username=session.get('pm_username') or 'admin')
+
+@prize_money.route('/prize-money/admin/pcl')
+def admin_pcl():
+    if not require_role('pcl'):
+        return redirect(f'/prize-money/login?next=/prize-money/admin/pcl')
+    players, done, total, pool = build_admin_data('PCL')
+    return render_template('prize_money/admin_pcl.html',
+        players=players, done=done, total=total, pool=pool,
+        username=session.get('pm_username') or 'admin')
+
+# ─── Gestor (tax advisor) view ────────────────────────────────────────────────
+@prize_money.route('/prize-money/gestor')
+def gestor_view():
+    role = get_pm_role()
+    if role not in ('gestor', 'both'):
+        return redirect('/prize-money/login?next=/prize-money/gestor')
+    submissions = load_submissions()
+    players = load_players()
+    records = []
+    for pid, sub in submissions.items():
+        if sub.get('status') != 'SUBMITTED':
+            continue
+        # Get signed URL for document
+        doc_url = None
+        if sub.get('doc_path'):
+            doc_url = get_doc_url(sub['doc_path'])
+        doc_url_p2 = None
+        if sub.get('doc_path_p2'):
+            doc_url_p2 = get_doc_url(sub['doc_path_p2'])
+        records.append({**sub, 'player_id': pid, 'doc_url': doc_url, 'doc_url_p2': doc_url_p2})
+    records.sort(key=lambda r: r.get('submitted_at', ''), reverse=True)
+    return render_template('prize_money/gestor.html', records=records)
+
+@prize_money.route('/prize-money/gestor/doc/<player_id>')
+def gestor_doc(player_id):
+    role = get_pm_role()
+    if role not in ('gestor', 'both'):
+        return redirect('/prize-money/login')
+    submissions = load_submissions()
+    sub = submissions.get(player_id)
+    if not sub or not sub.get('doc_path'):
+        return 'Document not found', 404
+    url = get_doc_url(sub['doc_path'])
+    if not url:
+        return 'Could not generate download link', 500
+    return redirect(url)
+
+# ─── Export CSV ───────────────────────────────────────────────────────────────
+@prize_money.route('/prize-money/admin/export/<prize_type>')
+def export_csv(prize_type):
+    role = get_pm_role()
+    if not role:
+        return redirect('/prize-money/login')
+    submissions = load_submissions()
+    players = load_players()
+    output = io.StringIO()
+    if prize_type == 'WPC':
+        fields = ['Name','Prizes','Gross €','Tax Type','Tax %','Tax €','Net €',
+                  'Full Name','Recipient','Country','Doc Type','Doc No','CIF','IBAN','Submitted','Status']
+        w = csv.DictWriter(output, fieldnames=fields)
+        w.writeheader()
+        seen = set()
+        for p in players:
+            if p['type'] != 'WPC':
+                continue
+            key = p['name'].strip().lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            sub = submissions.get(p['id'], {})
+            tax = get_tax_info(sub.get('country', '')) if sub.get('country') else {'rate': '', 'type': ''}
+            gross = p['total']
+            tax_amt = round(gross * tax['rate'] / 100, 2) if tax['rate'] else ''
+            net = round(gross - tax_amt, 2) if tax_amt != '' else ''
+            w.writerow({'Name': p['name'], 'Prizes': p['prizes'], 'Gross €': gross,
+                'Tax Type': sub.get('wpc_tax_type',''), 'Tax %': sub.get('wpc_tax_rate',''),
+                'Tax €': sub.get('wpc_tax_amount',''), 'Net €': sub.get('wpc_net_amount',''),
+                'Full Name': sub.get('full_name',''), 'Recipient': sub.get('recipient_type',''),
+                'Country': sub.get('country',''), 'Doc Type': sub.get('doc_type',''),
+                'Doc No': sub.get('doc_number',''), 'CIF': sub.get('cif',''),
+                'IBAN': sub.get('iban',''),
+                'Submitted': sub.get('submitted_at','')[:10] if sub.get('submitted_at') else '',
+                'Status': sub.get('status','PENDING')})
+    else:
+        fields = ['Name','Prizes','Gross €','Full Name','Recipient','Country',
+                  'Doc Type','Doc No','CIF','IBAN','Submitted','Status']
+        w = csv.DictWriter(output, fieldnames=fields)
+        w.writeheader()
+        seen = set()
+        for p in players:
+            if p['type'] != 'PCL':
+                continue
+            key = p['name'].strip().lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            sub = submissions.get(p['id'], {})
+            w.writerow({'Name': p['name'], 'Prizes': p['prizes'], 'Gross €': p['total'],
+                'Full Name': sub.get('full_name',''), 'Recipient': sub.get('recipient_type',''),
+                'Country': sub.get('country',''), 'Doc Type': sub.get('doc_type',''),
+                'Doc No': sub.get('doc_number',''), 'CIF': sub.get('cif',''),
+                'IBAN': sub.get('iban',''),
+                'Submitted': sub.get('submitted_at','')[:10] if sub.get('submitted_at') else '',
+                'Status': sub.get('status','PENDING')})
+
+    output.seek(0)
+    ts = datetime.now().strftime('%Y%m%d_%H%M')
+    return send_file(io.BytesIO(output.getvalue().encode('utf-8-sig')),
+        mimetype='text/csv',
+        as_attachment=True,
+        download_name=f'prize_money_{prize_type}_{ts}.csv')
+
+# ─── Copy links API ───────────────────────────────────────────────────────────
+@prize_money.route('/prize-money/api/links')
+def api_links():
+    role = get_pm_role()
+    if not role:
+        return jsonify({'error': 'Unauthorized'}), 401
+    players = load_players()
+    base_url = request.host_url.rstrip('/')
+    submissions = load_submissions()
+    out = []
+    seen = set()
+    for p in players:
+        key = p['name'].strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        sub = submissions.get(p['id'])
+        if sub and sub.get('status') == 'SUBMITTED':
+            continue
+        out.append({'name': p['name'], 'type': p['type'],
+                    'total': p['total'], 'url': f"{base_url}/prize-money/form/{generate_token(p['id'])}"})
+    return jsonify(out)

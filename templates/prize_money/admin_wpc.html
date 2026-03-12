@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}WPC Prize Money Admin{% endblock %}
+{% block extra_head %}
+<style>
+  .pm-bar{background:#0D1B2A;color:white;padding:14px 0;}
+  .pm-bar h1{font-size:18px;font-weight:800;margin:0;}
+  .pm-bar .sub{color:#C9A84C;font-size:12px;margin-top:2px;}
+  .stat-card{background:white;border-radius:10px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.07);text-align:center;}
+  .stat-card .num{font-size:28px;font-weight:800;}
+  .stat-card .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;}
+  .status-done{background:#d1fae5;color:#065f46;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .status-pending{background:#fef3c7;color:#92400e;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+  .copy-btn{background:none;border:none;cursor:pointer;color:#C9A84C;font-size:13px;padding:0 4px;}
+  .link-cell{font-size:11px;color:#aaa;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .info-box{background:#e8f0fe;border-left:4px solid #0D1B2A;border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;margin-bottom:20px;}
+</style>
+{% endblock %}
+{% block content %}
+<div class="pm-bar">
+  <div class="container">
+    <h1>🏅 WPC Individual Prize Money</html>
+    <div class="sub">Paid by Pickleball Europe · Spanish tax withholding applies · Welcome, {{ username }}</div>
+  </div>
+</div>
+<div class="container py-4">
+
+  <div class="info-box">
+    <strong>Payment party:</strong> Pickleball Europe (Spain) &nbsp;·&nbsp;
+    <strong>Tax:</strong> IRPF/IRNR withheld at source (19% EU/EEA · 24% Non-EU) &nbsp;·&nbsp;
+    <strong>Gestor:</strong> Modelo 111/190 (ES residents) · Modelo 216/296 (non-residents)
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#1B998B;">{{ done }}</div><div class="lbl">Submitted</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#F4A261;">{{ pending }}</div><div class="lbl">Pending</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#0D1B2A;">{{ total }}</div><div class="lbl">Total Players</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#C9A84C;">€{{ "{:,}".format(pool) }}</div><div class="lbl">Prize Pool</div></div>
+    </div>
+  </div>
+
+  <div style="background:white;border-radius:10px;padding:12px 16px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+    <div style="height:8px;border-radius:20px;background:#eee;overflow:hidden;">
+      <div style="height:100%;border-radius:20px;background:linear-gradient(90deg,#1B998B,#2dd4bf);width:{{ (done/total*100)|round|int }}%;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#aaa;margin-top:6px;">
+      <span>{{ (done/total*100)|round|int }}% complete</span>
+      <span>{{ done }}/{{ total }}</span>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+    <a href="/prize-money/admin/export/WPC" style="background:#1B998B;color:white;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;text-decoration:none;">⬇ Export CSV for Gestor</a>
+    <button onclick="copyPending()" style="background:#0D1B2A;color:white;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:700;border:none;cursor:pointer;">🔗 Copy pending links</button>
+    <input type="text" id="search" placeholder="🔍 Search..." class="form-control form-control-sm" style="max-width:220px;" oninput="filterTable(this.value)">
+  </div>
+
+  <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+    <table class="table table-hover mb-0" id="ptable">
+      <thead style="background:#f8f9fa;font-size:11px;text-transform:uppercase;color:#666;letter-spacing:.5px;">
+        <tr>
+          <th style="padding:12px 16px;">Player</th>
+          <th>Gross</th>
+          <th>Prizes</th>
+          <th>Status</th>
+          <th>Net (est.)</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in players %}
+        <tr data-name="{{ p.name|lower }}" data-sub="{{ 'yes' if p.submitted else 'no' }}">
+          <td style="padding:10px 16px;">
+            <div style="font-weight:600;font-size:13px;">{{ p.name }}</div>
+            <div style="font-size:11px;color:#999;">{{ p.email or '⚠ no email' }}</div>
+          </td>
+          <td style="font-weight:700;color:#0D1B2A;">€{{ p.total }}</td>
+          <td style="font-size:11px;color:#666;max-width:200px;">{{ p.prizes }}</td>
+          <td>
+            {% if p.submitted %}
+            <span class="status-done">✓ Done</span>
+            <div style="font-size:10px;color:#aaa;margin-top:2px;">{{ p.submission.submitted_at[:10] }}</div>
+            {% else %}
+            <span class="status-pending">Pending</span>
+            {% endif %}
+          </td>
+          <td style="font-size:12px;">
+            {% if p.submitted %}
+            <span style="color:#1B998B;font-weight:700;">€{{ p.submission.wpc_net_amount }}</span>
+            <div style="font-size:10px;color:#aaa;">{{ p.submission.wpc_tax_type }} ({{ p.submission.wpc_tax_rate }}%)</div>
+            {% else %}<span style="color:#ccc;">—</span>{% endif %}
+          </td>
+          <td>
+            <span class="link-cell" title="{{ request.host_url }}prize-money/form/{{ p.token }}">/form/{{ p.token[:8] }}...</span>
+            <button class="copy-btn" onclick="copyLink('{{ request.host_url }}prize-money/form/{{ p.token }}',this)">📋</button>
+          </td>
+        </tr>
+        {% if p.submitted %}
+        <tr id="sub-{{ p.id }}" style="display:none;">
+          <td colspan="6" style="padding:0 16px 12px;background:#f8fffe;">
+            <div style="background:white;border-radius:8px;padding:12px;font-size:12px;border:1px solid #e0e0e0;">
+              <strong>Fiscal name:</strong> {{ p.submission.full_name }} &nbsp;·&nbsp;
+              <strong>Doc:</strong> {{ p.submission.doc_type }} {{ p.submission.doc_number }} &nbsp;·&nbsp;
+              <strong>Country:</strong> {{ p.submission.country }} &nbsp;·&nbsp;
+              <strong>IBAN:</strong> <code>{{ p.submission.iban }}</code> &nbsp;·&nbsp;
+              {% if p.submission.cif %}<strong>CIF:</strong> {{ p.submission.cif }} &nbsp;·&nbsp;{% endif %}
+              <strong>Net:</strong> <span style="color:#1B998B;font-weight:700;">€{{ p.submission.wpc_net_amount }}</span>
+            </div>
+          </td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+function copyLink(url,btn){navigator.clipboard.writeText(url).then(()=>{btn.textContent='✓';setTimeout(()=>btn.textContent='📋',1500);});}
+function copyPending(){
+  const lines=[];
+  document.querySelectorAll('#ptable tbody tr[data-sub="no"]').forEach(r=>{
+    const name=r.querySelector('td:first-child div').textContent.trim();
+    const title=r.querySelector('.link-cell').title;
+    lines.push(name+': '+title);
+  });
+  navigator.clipboard.writeText(lines.join('\n')).then(()=>alert('Copied '+lines.length+' pending links!'));
+}
+function filterTable(q){
+  document.querySelectorAll('#ptable tbody tr[data-name]').forEach(r=>{
+    r.style.display=r.dataset.name.includes(q.toLowerCase())?'':'none';
+  });
+}
+</script>
+{% endblock %}

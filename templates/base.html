@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -63,7 +63,18 @@
                             <i class="bi bi-megaphone"></i> Sponsors
                         </a>
                     </li>
-                    <li class="nav-item">
+                                        <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-currency-euro"></i> Prize Money
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/prize-money/admin/wpc"><i class="bi bi-trophy"></i> WPC Admin</a></li>
+                            <li><a class="dropdown-item" href="/prize-money/admin/pcl"><i class="bi bi-trophy-fill"></i> PCL Admin</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/prize-money/gestor"><i class="bi bi-file-earmark-text"></i> Gestor View</a></li>
+                        </ul>
+                    </li>
+<li class="nav-item">
                         <a class="nav-link" href="{{ url_for('auth.login') }}">
                             <i class="bi bi-person"></i> Login
                         </a>
@@ -111,4 +122,5 @@
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>
+
 

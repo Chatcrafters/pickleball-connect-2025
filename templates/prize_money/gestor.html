@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}Gestor — Prize Money Overview{% endblock %}
+{% block extra_head %}
+<style>
+  body{background:#f4f6f9;}
+  .g-header{background:#1a1a2e;color:white;padding:20px 0 16px;text-align:center;}
+  .g-header .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a0c4ff;margin-bottom:4px;}
+  .g-header h1{font-size:20px;font-weight:800;margin:0;}
+  .stat-card{background:white;border-radius:10px;padding:16px 20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .stat-card .num{font-size:28px;font-weight:800;color:#1a1a2e;}
+  .stat-card .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;}
+  .table th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;background:#f8f9fa;}
+  .doc-btn{font-size:11px;padding:3px 10px;}
+  .badge-wpc{background:#fff3cd;color:#856404;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;}
+  .badge-pcl{background:#d1f2eb;color:#0d6b5e;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;}
+  .no-doc{color:#ccc;font-size:12px;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="g-header">
+  <div class="tag">WPC PCL Málaga 2026</div>
+  <h1>Prize Money — Gestor View</h1>
+</div>
+
+<div class="container-fluid" style="max-width:1100px;padding:20px 16px;">
+
+  <div class="row g-3 mb-4">
+    {% set wpc_recs = records | selectattr('form_type', 'equalto', 'WPC') | list %}
+    {% set pcl_recs = records | selectattr('form_type', 'equalto', 'PCL') | list %}
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="num">{{ records | length }}</div>
+        <div class="lbl">Total Submitted</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="num" style="color:#856404;">{{ wpc_recs | length }}</div>
+        <div class="lbl">WPC Players</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="num" style="color:#0d6b5e;">{{ pcl_recs | length }}</div>
+        <div class="lbl">PCL Players</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card">
+        <div class="num" style="color:#dc3545;">{{ records | selectattr('doc_path', 'undefined') | list | length + records | selectattr('doc_path', 'equalto', '') | list | length }}</div>
+        <div class="lbl">Missing Docs</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <strong>Submitted Records</strong>
+      <small class="text-muted">{{ records | length }} players</small>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Type</th>
+            <th>Country</th>
+            <th>Doc Type</th>
+            <th>Doc Number</th>
+            <th>IBAN</th>
+            <th>Recipient</th>
+            <th>Gross</th>
+            <th>Tax</th>
+            <th>Net</th>
+            <th>Submitted</th>
+            <th>ID Doc</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr>
+            <td>
+              <strong style="font-size:13px;">{{ r.full_name }}</strong>
+              <div style="font-size:11px;color:#888;">{{ r.player_name }}</div>
+            </td>
+            <td>
+              {% if r.form_type == 'WPC' %}
+                <span class="badge-wpc">WPC</span>
+              {% else %}
+                <span class="badge-pcl">PCL</span>
+              {% endif %}
+            </td>
+            <td style="font-size:13px;">{{ r.country }}</td>
+            <td style="font-size:12px;">{{ r.doc_type }}</td>
+            <td style="font-size:12px;font-family:monospace;">{{ r.doc_number }}</td>
+            <td style="font-size:11px;font-family:monospace;">{{ r.iban[:4] }}...{{ r.iban[-4:] if r.iban else '' }}</td>
+            <td style="font-size:12px;">{{ r.recipient_type }}</td>
+            <td style="font-size:13px;font-weight:600;">
+              {% if r.form_type == 'WPC' %}€{{ r.wpc_total_gross }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
+            </td>
+            <td style="font-size:12px;">
+              {% if r.form_type == 'WPC' %}
+                {{ r.wpc_tax_rate }}% ({{ r.wpc_tax_type }})
+              {% else %}
+                <span style="color:#0d6b5e;">None</span>
+              {% endif %}
+            </td>
+            <td style="font-size:13px;font-weight:700;color:#1B998B;">
+              {% if r.form_type == 'WPC' %}€{{ r.wpc_net_amount }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
+            </td>
+            <td style="font-size:11px;color:#888;">{{ r.submitted_at[:10] if r.submitted_at else '' }}</td>
+            <td>
+              {% if r.doc_url %}
+                <a href="{{ r.doc_url }}" target="_blank" class="btn btn-outline-dark doc-btn" style="font-size:11px;padding:2px 7px;">P1</a>
+              {% elif r.doc_path %}
+                <a href="/prize-money/gestor/doc/{{ r.player_id }}" target="_blank" class="btn btn-outline-dark doc-btn" style="font-size:11px;padding:2px 7px;">P1</a>
+              {% else %}
+                <span class="no-doc">&mdash;</span>
+              {% endif %}
+              {% if r.doc_url_p2 %}
+                <a href="{{ r.doc_url_p2 }}" target="_blank" class="btn btn-outline-secondary" style="font-size:11px;padding:2px 7px;margin-left:2px;">P2</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="12" class="text-center py-4 text-muted">No submissions yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-3 text-center">
+    <a href="/prize-money/logout" class="btn btn-outline-secondary btn-sm">Logout</a>
+  </div>
+</div>
+{% endblock %}
