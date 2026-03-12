@@ -250,18 +250,33 @@ def upload_document(token):
     path = upload_doc(player['id'], file_bytes, f.filename, f.content_type, page_num)
     if not path:
         return jsonify({'error': 'Upload failed. Please try again.'}), 500
-    # Save doc path in submissions temp store (best effort - may fail on Vercel)
+    # Save doc_path immediately to Supabase (upsert partial record)
     try:
-        submissions = load_submissions()
-        if player['id'] not in submissions:
-            submissions[player['id']] = {}
         key = 'doc_path' if page_num == '1' else 'doc_path_p2'
-        submissions[player['id']][key] = path
-        submissions[player['id']]['doc_uploaded_at'] = datetime.now().isoformat()
-        with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as sf:
-            json.dump(submissions, sf, indent=2, ensure_ascii=False)
+        base = supabase_url()
+        headers = get_supabase_headers()
+        headers['Prefer'] = 'resolution=merge-duplicates'
+        # Load existing data first to merge
+        resp = requests.get(
+            f"{base}/rest/v1/prize_money_submissions?player_id=eq.{player['id']}&select=data",
+            headers=headers
+        )
+        existing_data = {}
+        if resp.status_code == 200 and resp.json():
+            existing_data = resp.json()[0].get('data', {})
+        existing_data[key] = path
+        existing_data['doc_uploaded_at'] = datetime.now().isoformat()
+        payload = {
+            'player_id': player['id'],
+            'data': existing_data,
+            'submitted_at': existing_data.get('submitted_at', datetime.now().isoformat()),
+        }
+        requests.post(
+            f"{base}/rest/v1/prize_money_submissions",
+            json=payload, headers=headers
+        )
     except Exception as e:
-        print(f'Warning: could not save doc_path to submissions: {e}')
+        print(f'Warning: could not save doc_path to Supabase: {e}')
     return jsonify({'success': True, 'path': path})
 
 # â”€â”€â”€ Submit Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
