@@ -94,19 +94,13 @@ def get_pm_role():
     return session.get('pm_role')
 
 def load_pm_users():
-    if not os.path.exists(PM_USERS_FILE):
-        default = {
-            'wpc_admin': {'password': generate_password_hash('wpc2026malaga'), 'role': 'wpc'},
-            'pcl_admin': {'password': generate_password_hash('pcl2026malaga'), 'role': 'pcl'},
-            'gestor': {'password': generate_password_hash('gestor2026'), 'role': 'gestor'},
-        }
-        with open(PM_USERS_FILE, 'w') as f:
-            json.dump(default, f, indent=2)
-        return default
-    with open(PM_USERS_FILE) as f:
-        return json.load(f)
+    # Hardcoded users - no filesystem needed (works on Vercel)
+    return {
+        'wpc_admin': {'password': 'wpc2026malaga', 'role': 'wpc'},
+        'pcl_admin': {'password': 'pcl2026malaga', 'role': 'pcl'},
+        'gestor': {'password': 'gestor2026', 'role': 'gestor'},
+    }
 
-# ─── Data helpers ─────────────────────────────────────────────────────────────
 def load_players():
     with open(DATA_FILE, 'r', encoding='utf-8') as f:
         return json.load(f)
@@ -156,7 +150,7 @@ def pm_login():
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         users = load_pm_users()
-        if username in users and check_password_hash(users[username]['password'], password):
+        if username in users and users[username]['password'] == password:
             session['pm_role'] = users[username]['role']
             session['pm_username'] = username
             role = users[username]['role']
