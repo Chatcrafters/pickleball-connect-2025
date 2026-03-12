@@ -10,4 +10,3 @@ flask-migrate==4.1.0
 cryptography==42.0.0
 openpyxl
 
-supabase==1.2.0

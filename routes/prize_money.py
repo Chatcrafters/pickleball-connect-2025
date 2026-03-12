@@ -16,44 +16,65 @@ SUBMISSIONS_FILE = os.path.join(BASE_DIR, 'submissions.json')
 PM_USERS_FILE = os.path.join(BASE_DIR, 'pm_users.json')
 BUCKET = 'prize-money-docs'
 
-# ─── Supabase ─────────────────────────────────────────────────────────────────
+# ─── Supabase REST ───────────────────────────────────────────────────────────
+def get_supabase_headers():
+    key = os.environ.get('SUPABASE_SERVICE_KEY') or os.environ.get('SUPABASE_KEY', '')
+    return {
+        'apikey': key,
+        'Authorization': f'Bearer {key}',
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation',
+    }
+
+def supabase_url():
+    return os.environ.get('SUPABASE_URL', '').rstrip('/')
+
 def get_supabase():
-    from supabase import create_client
-    url = os.environ.get('SUPABASE_URL')
-    key = os.environ.get('SUPABASE_SERVICE_KEY') or os.environ.get('SUPABASE_KEY')
-    return create_client(url, key)
+    """Returns a simple dict-based client for REST calls"""
+    return {'url': supabase_url(), 'headers': get_supabase_headers()}
 
 def ensure_bucket():
-    try:
-        sb = get_supabase()
-        buckets = sb.storage.list_buckets()
-        names = [b.name for b in buckets]
-        if BUCKET not in names:
-            sb.storage.create_bucket(BUCKET, options={'public': False})
-    except Exception as e:
-        print(f'Bucket check error: {e}')
+    pass  # Bucket already exists
 
 def upload_doc(player_id, file_bytes, filename, content_type, page=1):
     try:
-        sb = get_supabase()
         ext = filename.rsplit('.', 1)[-1].lower() if '.' in filename else 'bin'
         path = f"{player_id}/id_document_p{page}.{ext}"
-        sb.storage.from_(BUCKET).upload(
-            path, file_bytes,
-            file_options={"content-type": content_type, "upsert": "true"}
-        )
-        return path
+        base = supabase_url()
+        headers = get_supabase_headers()
+        headers['Content-Type'] = content_type
+        headers['x-upsert'] = 'true'
+        url = f"{base}/storage/v1/object/{BUCKET}/{path}"
+        resp = requests.post(url, data=file_bytes, headers=headers)
+        if resp.status_code in (200, 201):
+            return path
+        # Try PUT for upsert
+        resp = requests.put(url, data=file_bytes, headers=headers)
+        if resp.status_code in (200, 201):
+            return path
+        print(f'Upload error: {resp.status_code} {resp.text}')
+        return None
     except Exception as e:
         print(f'Upload error: {e}')
         return None
 
 def get_doc_url(path):
     try:
-        sb = get_supabase()
-        res = sb.storage.from_(BUCKET).create_signed_url(path, 3600)
-        return res.get('signedURL') or res.get('signed_url')
+        base = supabase_url()
+        headers = get_supabase_headers()
+        url = f"{base}/storage/v1/object/sign/{BUCKET}/{path}"
+        resp = requests.post(url, json={'expiresIn': 3600}, headers=headers)
+        if resp.status_code == 200:
+            data = resp.json()
+            signed = data.get('signedURL') or data.get('signedUrl') or data.get('signed_url')
+            if signed:
+                if signed.startswith('/'):
+                    return f"{base}/storage/v1{signed}"
+                return signed
+        print(f'Doc URL error: {resp.status_code} {resp.text}')
+        return None
     except Exception as e:
-        print(f'Signed URL error: {e}')
+        print(f'Doc URL error: {e}')
         return None
 
 # ─── Countries ────────────────────────────────────────────────────────────────
@@ -132,39 +153,37 @@ def get_combined_player(token):
 
 def load_submissions():
     try:
-        sb = get_supabase()
-        result = sb.table('prize_money_submissions').select('*').execute()
-        return {row['player_id']: row['data'] for row in result.data}
+        base = supabase_url()
+        if not base:
+            raise Exception('SUPABASE_URL not set')
+        headers = get_supabase_headers()
+        resp = requests.get(f"{base}/rest/v1/prize_money_submissions?select=*", headers=headers)
+        if resp.status_code == 200:
+            return {row['player_id']: row['data'] for row in resp.json()}
+        print(f'Warning: load_submissions HTTP {resp.status_code}')
+        return {}
     except Exception as e:
         print(f'Warning: could not load submissions from Supabase: {e}')
-        # Fallback to local file
-        if os.path.exists(SUBMISSIONS_FILE):
-            with open(SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
         return {}
 
 def save_submission(player_id, data):
     record = {**data, 'submitted_at': datetime.now().isoformat()}
     try:
-        sb = get_supabase()
-        sb.table('prize_money_submissions').upsert({
+        base = supabase_url()
+        if not base:
+            raise Exception('SUPABASE_URL not set')
+        headers = get_supabase_headers()
+        headers['Prefer'] = 'resolution=merge-duplicates'
+        payload = {
             'player_id': player_id,
             'data': record,
             'submitted_at': record['submitted_at'],
-        }).execute()
+        }
+        resp = requests.post(f"{base}/rest/v1/prize_money_submissions", json=payload, headers=headers)
+        if resp.status_code not in (200, 201):
+            print(f'Warning: save_submission HTTP {resp.status_code} {resp.text}')
     except Exception as e:
         print(f'Warning: could not save to Supabase: {e}')
-        # Fallback to local file
-        try:
-            submissions = {}
-            if os.path.exists(SUBMISSIONS_FILE):
-                with open(SUBMISSIONS_FILE, 'r', encoding='utf-8') as f:
-                    submissions = json.load(f)
-            submissions[player_id] = record
-            with open(SUBMISSIONS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(submissions, f, indent=2, ensure_ascii=False)
-        except Exception as e2:
-            print(f'Warning: local fallback also failed: {e2}')
 
 # ─── PM Login ─────────────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/login', methods=['GET', 'POST'])
