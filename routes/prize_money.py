@@ -1,7 +1,7 @@
-﻿import requests
+import requests
 """
-Prize Money Blueprint v2 â€” WPC + PCL separated
-WPC PCL MÃ¡laga 2026
+Prize Money Blueprint v2 — WPC + PCL separated
+WPC PCL Málaga 2026
 """
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, session, send_file
@@ -17,7 +17,7 @@ SUBMISSIONS_FILE = os.path.join(BASE_DIR, 'submissions.json')
 PM_USERS_FILE = os.path.join(BASE_DIR, 'pm_users.json')
 BUCKET = 'prize-money-docs'
 
-# â”€â”€â”€ Supabase REST â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Supabase REST ───────────────────────────────────────────────────────────
 def get_supabase_headers():
     key = os.environ.get('SUPABASE_SERVICE_KEY') or os.environ.get('SUPABASE_KEY', '')
     return {
@@ -78,7 +78,7 @@ def get_doc_url(path):
         print(f'Doc URL error: {e}')
         return None
 
-# â”€â”€â”€ Countries â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Countries ────────────────────────────────────────────────────────────────
 EU_COUNTRIES = ["Austria","Belgium","Bulgaria","Croatia","Cyprus","Czech Republic",
     "Denmark","Estonia","Finland","France","Germany","Greece","Hungary","Ireland",
     "Italy","Latvia","Lithuania","Luxembourg","Malta","Netherlands","Poland",
@@ -109,7 +109,7 @@ def get_tax_info(country):
     else:
         return {"rate": 24, "type": "IRNR (Non-EU)"}
 
-# â”€â”€â”€ Auth helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Auth helpers ──────────────────────────────────────────────────────────────
 def get_pm_role():
     if session.get('admin_id') or session.get('user_id'):
         return 'both'
@@ -160,7 +160,7 @@ def load_submissions():
         headers = get_supabase_headers()
         resp = requests.get(f"{base}/rest/v1/prize_money_submissions?select=*", headers=headers)
         if resp.status_code == 200:
-            return {row['player_id']: row['data'] for row in resp.json()}
+            return {row['player_id']: {**row['data'], 'submitted_at': row.get('submitted_at', '')} for row in resp.json()}
         print(f'Warning: load_submissions HTTP {resp.status_code}')
         return {}
     except Exception as e:
@@ -186,7 +186,7 @@ def save_submission(player_id, data):
     except Exception as e:
         print(f'Warning: could not save to Supabase: {e}')
 
-# â”€â”€â”€ PM Login â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── PM Login ─────────────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/login', methods=['GET', 'POST'])
 def pm_login():
     error = None
@@ -211,7 +211,7 @@ def pm_logout():
     session.pop('pm_username', None)
     return redirect('/prize-money/login')
 
-# â”€â”€â”€ Player Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Player Form ──────────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/form/<token>')
 def player_form(token):
     player = get_combined_player(token)
@@ -227,7 +227,7 @@ def player_form(token):
         countries=ALL_COUNTRIES,
     )
 
-# â”€â”€â”€ Document Upload â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Document Upload ──────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/upload/<token>', methods=['POST'])
 def upload_document(token):
     player = get_combined_player(token)
@@ -279,7 +279,7 @@ def upload_document(token):
         print(f'Warning: could not save doc_path to Supabase: {e}')
     return jsonify({'success': True, 'path': path})
 
-# â”€â”€â”€ Submit Form â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Submit Form ──────────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/submit/<token>', methods=['POST'])
 def submit_form(token):
     player = get_combined_player(token)
@@ -328,7 +328,7 @@ def submit_form(token):
     })
     return jsonify({'success': True})
 
-# â”€â”€â”€ Admin â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Admin ────────────────────────────────────────────────────────────────────
 def require_role(required_role):
     role = get_pm_role()
     if not role:
@@ -374,7 +374,7 @@ def admin_pcl():
         players=players, done=done, total=total, pool=pool,
         username=session.get('pm_username') or 'admin')
 
-# â”€â”€â”€ Gestor (tax advisor) view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Gestor (tax advisor) view ────────────────────────────────────────────────
 @prize_money.route('/prize-money/gestor')
 def gestor_view():
     role = get_pm_role()
@@ -411,7 +411,7 @@ def gestor_doc(player_id):
         return 'Could not generate download link', 500
     return redirect(url)
 
-# â”€â”€â”€ Export CSV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Export CSV ───────────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/admin/export/<prize_type>')
 def export_csv(prize_type):
     role = get_pm_role()
@@ -421,7 +421,7 @@ def export_csv(prize_type):
     players = load_players()
     output = io.StringIO()
     if prize_type == 'WPC':
-        fields = ['Name','Prizes','Gross â‚¬','Tax Type','Tax %','Tax â‚¬','Net â‚¬',
+        fields = ['Name','Prizes','Gross €','Tax Type','Tax %','Tax €','Net €',
                   'Full Name','Recipient','Country','Doc Type','Doc No','CIF','IBAN','Submitted','Status']
         w = csv.DictWriter(output, fieldnames=fields)
         w.writeheader()
@@ -438,9 +438,9 @@ def export_csv(prize_type):
             gross = p['total']
             tax_amt = round(gross * tax['rate'] / 100, 2) if tax['rate'] else ''
             net = round(gross - tax_amt, 2) if tax_amt != '' else ''
-            w.writerow({'Name': p['name'], 'Prizes': p['prizes'], 'Gross â‚¬': gross,
+            w.writerow({'Name': p['name'], 'Prizes': p['prizes'], 'Gross €': gross,
                 'Tax Type': sub.get('wpc_tax_type',''), 'Tax %': sub.get('wpc_tax_rate',''),
-                'Tax â‚¬': sub.get('wpc_tax_amount',''), 'Net â‚¬': sub.get('wpc_net_amount',''),
+                'Tax €': sub.get('wpc_tax_amount',''), 'Net €': sub.get('wpc_net_amount',''),
                 'Full Name': sub.get('full_name',''), 'Recipient': sub.get('recipient_type',''),
                 'Country': sub.get('country',''), 'Doc Type': sub.get('doc_type',''),
                 'Doc No': sub.get('doc_number',''), 'CIF': sub.get('cif',''),
@@ -448,7 +448,7 @@ def export_csv(prize_type):
                 'Submitted': sub.get('submitted_at','')[:10] if sub.get('submitted_at') else '',
                 'Status': sub.get('status','PENDING')})
     else:
-        fields = ['Name','Prizes','Gross â‚¬','Full Name','Recipient','Country',
+        fields = ['Name','Prizes','Gross €','Full Name','Recipient','Country',
                   'Doc Type','Doc No','CIF','IBAN','Submitted','Status']
         w = csv.DictWriter(output, fieldnames=fields)
         w.writeheader()
@@ -461,7 +461,7 @@ def export_csv(prize_type):
                 continue
             seen.add(key)
             sub = submissions.get(p['id'], {})
-            w.writerow({'Name': p['name'], 'Prizes': p['prizes'], 'Gross â‚¬': p['total'],
+            w.writerow({'Name': p['name'], 'Prizes': p['prizes'], 'Gross €': p['total'],
                 'Full Name': sub.get('full_name',''), 'Recipient': sub.get('recipient_type',''),
                 'Country': sub.get('country',''), 'Doc Type': sub.get('doc_type',''),
                 'Doc No': sub.get('doc_number',''), 'CIF': sub.get('cif',''),
@@ -476,7 +476,7 @@ def export_csv(prize_type):
         as_attachment=True,
         download_name=f'prize_money_{prize_type}_{ts}.csv')
 
-# â”€â”€â”€ Copy links API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+# ─── Copy links API ───────────────────────────────────────────────────────────
 @prize_money.route('/prize-money/api/links')
 def api_links():
     role = get_pm_role()
@@ -499,7 +499,7 @@ def api_links():
                     'total': p['total'], 'url': f"{base_url}/prize-money/form/{generate_token(p['id'])}"})
     return jsonify(out)
 
-# ─── Mark as Paid ────────────────────────────────────────────────────────────
+# --- Mark as Paid ------------------------------------------------------------
 @prize_money.route('/prize-money/gestor/mark-paid/<player_id>', methods=['POST'])
 def mark_paid(player_id):
     role = get_pm_role()
