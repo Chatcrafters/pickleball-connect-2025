@@ -160,7 +160,7 @@ def load_submissions():
         headers = get_supabase_headers()
         resp = requests.get(f"{base}/rest/v1/prize_money_submissions?select=*", headers=headers)
         if resp.status_code == 200:
-            return {row['player_id']: {**(row.get('data') or {}), 'submitted_at': row.get('submitted_at', ''), 'status': row.get('status', ''), 'paid_at': row.get('paid_at', '')} for row in resp.json()}
+            return {row['player_id']: {**(row.get('data') or {}), 'submitted_at': row.get('submitted_at', ''), 'paid_at': row.get('paid_at', '')} for row in resp.json()}
         print(f'Warning: load_submissions HTTP {resp.status_code}')
         return {}
     except Exception as e:
