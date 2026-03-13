@@ -16,6 +16,9 @@
   .doc-btn{font-size:11px;padding:2px 7px;}
   tbody tr{cursor:pointer;transition:background .12s;}
   tbody tr:hover{background:#f0f4ff !important;}
+  tr.is-paid{background:#f0fff4 !important;}
+  tr.is-paid:hover{background:#e0f7ea !important;}
+  .paid-badge{display:inline-block;background:#198754;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
   .detail-field{margin-bottom:12px;}
   .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px;}
   .detail-value{font-size:15px;font-weight:600;color:#1a1a2e;word-break:break-all;}
@@ -40,15 +43,16 @@
   <div class="row g-3 mb-4">
     {% set wpc_recs = records | selectattr('form_type', 'equalto', 'WPC') | list %}
     {% set pcl_recs = records | selectattr('form_type', 'equalto', 'PCL') | list %}
+    {% set paid_recs = records | selectattr('paid_at') | list %}
     {% set missing = records | selectattr('doc_path', 'equalto', '') | list | length %}
     <div class="col-6 col-md-3">
       <div class="stat-card"><div class="num">{{ records | length }}</div><div class="lbl">Total Submitted</div></div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="stat-card"><div class="num" style="color:#856404;">{{ wpc_recs | length }}</div><div class="lbl">WPC Players</div></div>
+      <div class="stat-card"><div class="num" style="color:#198754;">{{ paid_recs | length }}</div><div class="lbl">Paid</div></div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="stat-card"><div class="num" style="color:#0d6b5e;">{{ pcl_recs | length }}</div><div class="lbl">PCL Players</div></div>
+      <div class="stat-card"><div class="num" style="color:#856404;">{{ records | length - paid_recs | length }}</div><div class="lbl">Pending Payment</div></div>
     </div>
     <div class="col-6 col-md-3">
       <div class="stat-card"><div class="num" style="color:#dc3545;">{{ missing }}</div><div class="lbl">Missing Docs</div></div>
@@ -65,12 +69,12 @@
         <thead>
           <tr>
             <th>Player</th><th>Type</th><th>Country</th><th>Doc Number</th>
-            <th>IBAN</th><th>Gross</th><th>Tax</th><th>Net</th><th>Submitted</th><th>ID Doc</th>
+            <th>IBAN</th><th>Gross</th><th>Tax</th><th>Net</th><th>Submitted</th><th>Status</th><th>ID Doc</th>
           </tr>
         </thead>
         <tbody>
           {% for r in records %}
-          <tr onclick="openDetail({{ loop.index0 }})" title="Click for full details">
+          <tr onclick="openDetail({{ loop.index0 }})" class="{{ 'is-paid' if r.paid_at else '' }}" id="row-{{ r.player_id }}">
             <td>
               <strong style="font-size:13px;">{{ r.full_name }}</strong>
               <div style="font-size:11px;color:#888;">{{ r.player_name }}</div>
@@ -93,6 +97,13 @@
               {% if r.form_type == 'WPC' %}€{{ r.wpc_net_amount }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
             </td>
             <td style="font-size:11px;color:#888;">{{ r.submitted_at[:10] if r.submitted_at else '' }}</td>
+            <td>
+              {% if r.paid_at %}
+                <span class="paid-badge"><i class="bi bi-check2"></i> Paid</span>
+              {% else %}
+                <span style="font-size:11px;color:#aaa;">Pending</span>
+              {% endif %}
+            </td>
             <td onclick="event.stopPropagation()">
               {% if r.doc_url %}<a href="{{ r.doc_url }}" target="_blank" class="btn btn-outline-dark doc-btn">P1</a>
               {% elif r.doc_path %}<a href="/prize-money/gestor/doc/{{ r.player_id }}" target="_blank" class="btn btn-outline-dark doc-btn">P1</a>
@@ -103,7 +114,7 @@
             </td>
           </tr>
           {% else %}
-          <tr><td colspan="10" class="text-center py-4 text-muted">No submissions yet.</td></tr>
+          <tr><td colspan="11" class="text-center py-4 text-muted">No submissions yet.</td></tr>
           {% endfor %}
         </tbody>
       </table>
@@ -124,7 +135,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="modalBody" style="padding:24px;"></div>
-      <div class="modal-footer">
+      <div class="modal-footer" id="modalFooter">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
@@ -154,6 +165,7 @@ const RECORDS = [
     wpc_prizes: {{ (r.wpc_prizes or '') | tojson }},
     pcl_prizes: {{ (r.pcl_prizes or '') | tojson }},
     submitted_at: {{ (r.submitted_at or '') | tojson }},
+    paid_at: {{ (r.paid_at or '') | tojson }},
     doc_url: {{ (r.doc_url or '') | tojson }},
     doc_url_p2: {{ (r.doc_url_p2 or '') | tojson }},
     doc_path: {{ (r.doc_path or '') | tojson }},
@@ -162,6 +174,8 @@ const RECORDS = [
   }{% if not loop.last %},{% endif %}
   {% endfor %}
 ];
+
+let currentIdx = null;
 
 function copyField(id, btn) {
   const el = document.getElementById(id);
@@ -184,6 +198,7 @@ function field(label, id, value, mono=false) {
 }
 
 function openDetail(idx) {
+  currentIdx = idx;
   const r = RECORDS[idx];
   const isWPC = r.form_type === 'WPC';
   const gross = isWPC ? r.wpc_total_gross : r.pcl_total_gross;
@@ -203,8 +218,13 @@ function openDetail(idx) {
   if (p2url) docHtml += `<a href="${p2url}" target="_blank" class="btn btn-outline-dark btn-sm"><i class="bi bi-file-earmark-image me-1"></i>Page 2 / Back</a>`;
   if (!docHtml) docHtml = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>No document uploaded</span>';
 
+  const paidHtml = r.paid_at
+    ? `<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle-fill me-2"></i>Paid on ${r.paid_at.substring(0,10)}</div>`
+    : '';
+
   document.getElementById('modalTitle').innerHTML = `${r.full_name}${badge}`;
   document.getElementById('modalBody').innerHTML = `
+    ${paidHtml ? '<div class="mb-3">' + paidHtml + '</div>' : ''}
     <div class="row">
       <div class="col-md-6">
         <div class="detail-field">
@@ -241,7 +261,7 @@ function openDetail(idx) {
           <div class="detail-label">Net Amount to Transfer</div>
           <div>
             <span class="net-display" id="df_net">€${net}</span>
-            <button class="copy-btn ms-2" onclick="copyField('df_net',this)" title="Copy net amount"><i class="bi bi-clipboard"></i></button>
+            <button class="copy-btn ms-2" onclick="copyField('df_net',this)" title="Copy"><i class="bi bi-clipboard"></i></button>
           </div>
         </div>
         <div class="detail-sep"></div>
@@ -256,7 +276,54 @@ function openDetail(idx) {
       </div>
     </div>`;
 
+  // Footer: paid button
+  const footer = document.getElementById('modalFooter');
+  if (r.paid_at) {
+    footer.innerHTML = `
+      <button class="btn btn-outline-danger btn-sm me-auto" onclick="togglePaid(false)">
+        <i class="bi bi-x-circle me-1"></i>Mark as Unpaid
+      </button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`;
+  } else {
+    footer.innerHTML = `
+      <button class="btn btn-success me-auto" onclick="togglePaid(true)">
+        <i class="bi bi-check-circle me-1"></i>Mark as Paid
+      </button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`;
+  }
+
   new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+
+function togglePaid(markPaid) {
+  const r = RECORDS[currentIdx];
+  const url = markPaid
+    ? `/prize-money/gestor/mark-paid/${r.player_id}`
+    : `/prize-money/gestor/mark-unpaid/${r.player_id}`;
+
+  fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}})
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Update local record
+        RECORDS[currentIdx].paid_at = markPaid ? (data.paid_at || new Date().toISOString()) : '';
+        // Update row styling
+        const row = document.getElementById(`row-${r.player_id}`);
+        if (row) {
+          if (markPaid) {
+            row.classList.add('is-paid');
+            row.querySelector('td:nth-child(10)').innerHTML = '<span class="paid-badge"><i class="bi bi-check2"></i> Paid</span>';
+          } else {
+            row.classList.remove('is-paid');
+            row.querySelector('td:nth-child(10)').innerHTML = '<span style="font-size:11px;color:#aaa;">Pending</span>';
+          }
+        }
+        // Close modal and reopen with updated data
+        bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+        setTimeout(() => openDetail(currentIdx), 300);
+      }
+    })
+    .catch(err => alert('Error: ' + err));
 }
 </script>
 {% endblock %}
