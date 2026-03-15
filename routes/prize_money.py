@@ -121,6 +121,7 @@ def load_pm_users():
         'wpc_admin': {'password': 'wpc2026malaga', 'role': 'wpc'},
         'pcl_admin': {'password': 'pcl2026malaga', 'role': 'pcl'},
         'gestor': {'password': 'gestor2026', 'role': 'gestor'},
+        'gestor_pcl': {'password': 'pclgestor2026', 'role': 'gestor_pcl'},
     }
 
 def load_players():
@@ -396,6 +397,28 @@ def gestor_view():
         records.append({**sub, 'player_id': pid, 'doc_url': doc_url, 'doc_url_p2': doc_url_p2})
     records.sort(key=lambda r: r.get('submitted_at', ''), reverse=True)
     return render_template('prize_money/gestor.html', records=records)
+
+@prize_money.route('/prize-money/gestor/pcl')
+def gestor_pcl_view():
+    role = get_pm_role()
+    if role not in ('gestor_pcl', 'both'):
+        return redirect('/prize-money/login?next=/prize-money/gestor/pcl')
+    submissions = load_submissions()
+    records = []
+    for pid, sub in submissions.items():
+        if sub.get('status') != 'SUBMITTED':
+            continue
+        if sub.get('form_type') != 'PCL':
+            continue
+        doc_url = None
+        if sub.get('doc_path'):
+            doc_url = get_doc_url(sub['doc_path'])
+        doc_url_p2 = None
+        if sub.get('doc_path_p2'):
+            doc_url_p2 = get_doc_url(sub['doc_path_p2'])
+        records.append({**sub, 'player_id': pid, 'doc_url': doc_url, 'doc_url_p2': doc_url_p2})
+    records.sort(key=lambda r: r.get('submitted_at', ''), reverse=True)
+    return render_template('prize_money/gestor_pcl.html', records=records)
 
 @prize_money.route('/prize-money/gestor/doc/<player_id>')
 def gestor_doc(player_id):

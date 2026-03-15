@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+{% block title %}Gestor — Prize Money Overview{% endblock %}
+{% block extra_head %}
+<style>
+  body{background:#f4f6f9;}
+  .g-header{background:#1a1a2e;color:white;padding:20px 0 16px;text-align:center;}
+  .g-header .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a0c4ff;margin-bottom:4px;}
+  .g-header h1{font-size:20px;font-weight:800;margin:0;}
+  .stat-card{background:white;border-radius:10px;padding:16px 20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .stat-card .num{font-size:28px;font-weight:800;color:#1a1a2e;}
+  .stat-card .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:1px;}
+  .table th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888;background:#f8f9fa;}
+  .badge-wpc{background:#fff3cd;color:#856404;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;}
+  .badge-pcl{background:#d1f2eb;color:#0d6b5e;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:700;}
+  .no-doc{color:#ccc;font-size:12px;}
+  .doc-btn{font-size:11px;padding:2px 7px;}
+  tbody tr{cursor:pointer;transition:background .12s;}
+  tbody tr:hover{background:#f0f4ff !important;}
+  tr.is-paid{background:#f0fff4 !important;}
+  tr.is-paid:hover{background:#e0f7ea !important;}
+  .paid-badge{display:inline-block;background:#198754;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:600;}
+  .detail-field{margin-bottom:12px;}
+  .detail-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#888;margin-bottom:2px;}
+  .detail-value{font-size:15px;font-weight:600;color:#1a1a2e;word-break:break-all;}
+  .copy-btn{border:none;background:none;padding:2px 6px;cursor:pointer;color:#6c757d;font-size:13px;vertical-align:middle;border-radius:4px;transition:background .1s;}
+  .copy-btn:hover{background:#e9ecef;color:#333;}
+  .copy-btn.copied{color:#198754;}
+  .detail-sep{border-top:1px solid #eee;margin:14px 0;}
+  .iban-display{font-family:monospace;font-size:16px;letter-spacing:2px;background:#f8f9fa;padding:8px 12px;border-radius:6px;display:inline-block;}
+  .net-display{font-size:22px;font-weight:800;color:#1B998B;}
+  .tax-display{font-size:13px;color:#666;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="g-header">
+  <div class="tag">WPC PCL Málaga 2026</div>
+  <h1>Prize Money — Gestor View</h1>
+</div>
+
+<div class="container-fluid" style="max-width:1100px;padding:20px 16px;">
+
+  <div class="row g-3 mb-4">
+    {% set wpc_recs = records | selectattr('form_type', 'equalto', 'WPC') | list %}
+    {% set pcl_recs = records | selectattr('form_type', 'equalto', 'PCL') | list %}
+    {% set paid_recs = records | selectattr('paid_at') | list %}
+    {% set missing = records | selectattr('doc_path', 'equalto', '') | list | length %}
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num">{{ records | length }}</div><div class="lbl">Total Submitted</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#198754;">{{ paid_recs | length }}</div><div class="lbl">Paid</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#856404;">{{ records | length - paid_recs | length }}</div><div class="lbl">Pending Payment</div></div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="stat-card"><div class="num" style="color:#dc3545;">{{ missing }}</div><div class="lbl">Missing Docs</div></div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+      <strong>Submitted Records</strong>
+      <small class="text-muted">{{ records | length }} players — click row for details</small>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Player</th><th>Type</th><th>Country</th><th>Doc Number</th>
+            <th>IBAN</th><th>Gross</th><th>Tax</th><th>Net</th><th>Submitted</th><th>Status</th><th>ID Doc</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in records %}
+          <tr onclick="openDetail({{ loop.index0 }})" class="{{ 'is-paid' if r.paid_at else '' }}" id="row-{{ r.player_id }}">
+            <td>
+              <strong style="font-size:13px;">{{ r.full_name }}</strong>
+              <div style="font-size:11px;color:#888;">{{ r.player_name }}</div>
+            </td>
+            <td>
+              {% if r.form_type == 'WPC' %}<span class="badge-wpc">WPC</span>
+              {% else %}<span class="badge-pcl">PCL</span>{% endif %}
+            </td>
+            <td style="font-size:13px;">{{ r.country }}</td>
+            <td style="font-size:12px;font-family:monospace;">{{ r.doc_number }}</td>
+            <td style="font-size:11px;font-family:monospace;">{{ r.iban[:4] if r.iban else '' }}...{{ r.iban[-4:] if r.iban and r.iban|length > 8 else '' }}</td>
+            <td style="font-size:13px;font-weight:600;">
+              {% if r.form_type == 'WPC' %}€{{ r.wpc_total_gross }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
+            </td>
+            <td style="font-size:12px;">
+              {% if r.form_type == 'WPC' %}{{ r.wpc_tax_rate }}% ({{ r.wpc_tax_type }})
+              {% else %}<span style="color:#0d6b5e;">None</span>{% endif %}
+            </td>
+            <td style="font-size:13px;font-weight:700;color:#1B998B;">
+              {% if r.form_type == 'WPC' %}€{{ r.wpc_net_amount }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
+            </td>
+            <td style="font-size:11px;color:#888;">{{ r.submitted_at[:10] if r.submitted_at else '' }}</td>
+            <td>
+              {% if r.paid_at %}
+                <span class="paid-badge"><i class="bi bi-check2"></i> Paid</span>
+              {% else %}
+                <span style="font-size:11px;color:#aaa;">Pending</span>
+              {% endif %}
+            </td>
+            <td onclick="event.stopPropagation()">
+              {% if r.doc_url %}<a href="{{ r.doc_url }}" target="_blank" class="btn btn-outline-dark doc-btn">P1</a>
+              {% elif r.doc_path %}<a href="/prize-money/gestor/doc/{{ r.player_id }}" target="_blank" class="btn btn-outline-dark doc-btn">P1</a>
+              {% else %}<span class="no-doc">&mdash;</span>{% endif %}
+              {% if r.doc_url_p2 %}<a href="{{ r.doc_url_p2 }}" target="_blank" class="btn btn-outline-secondary doc-btn ms-1">P2</a>
+              {% elif r.doc_path_p2 %}<a href="/prize-money/gestor/doc2/{{ r.player_id }}" target="_blank" class="btn btn-outline-secondary doc-btn ms-1">P2</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="11" class="text-center py-4 text-muted">No submissions yet.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="mt-3 text-center">
+    <a href="/prize-money/logout" class="btn btn-outline-secondary btn-sm">Logout</a>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background:#1a1a2e;color:white;">
+        <h5 class="modal-title" id="modalTitle">Player Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="modalBody" style="padding:24px;"></div>
+      <div class="modal-footer" id="modalFooter">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const RECORDS = [
+  {% for r in records %}
+  {
+    full_name: {{ r.full_name | default('') | tojson }},
+    player_name: {{ r.player_name | default('') | tojson }},
+    form_type: {{ r.form_type | default('') | tojson }},
+    country: {{ r.country | default('') | tojson }},
+    doc_type: {{ r.doc_type | default('') | tojson }},
+    doc_number: {{ r.doc_number | default('') | tojson }},
+    iban: {{ r.iban | default('') | tojson }},
+    recipient_type: {{ r.recipient_type | default('') | tojson }},
+    company_name: {{ (r.company_name or '') | default('') | tojson }},
+    cif: {{ (r.cif or '') | default('') | tojson }},
+    wpc_total_gross: {{ r.wpc_total_gross | default('') | tojson }},
+    wpc_tax_rate: {{ (r.wpc_tax_rate or 0) | default('') | tojson }},
+    wpc_tax_type: {{ (r.wpc_tax_type or '') | default('') | tojson }},
+    wpc_tax_amount: {{ (r.wpc_tax_amount or 0) | default('') | tojson }},
+    wpc_net_amount: {{ (r.wpc_net_amount or 0) | default('') | tojson }},
+    pcl_total_gross: {{ r.pcl_total_gross | default('') | tojson }},
+    wpc_prizes: {{ (r.wpc_prizes or '') | default('') | tojson }},
+    pcl_prizes: {{ (r.pcl_prizes or '') | default('') | tojson }},
+    submitted_at: {{ (r.submitted_at or '') | default('') | tojson }},
+    paid_at: {{ (r.paid_at or '') | default('') | tojson }},
+    doc_url: {{ (r.doc_url or '') | default('') | tojson }},
+    doc_url_p2: {{ (r.doc_url_p2 or '') | default('') | tojson }},
+    doc_path: {{ (r.doc_path or '') | default('') | tojson }},
+    doc_path_p2: {{ (r.doc_path_p2 or '') | default('') | tojson }},
+    player_id: {{ r.player_id | default('') | tojson }},
+  }{% if not loop.last %},{% endif %}
+  {% endfor %}
+];
+
+let currentIdx = null;
+
+function copyField(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+    btn.classList.add('copied');
+    btn.innerHTML = '<i class="bi bi-check2"></i>';
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = '<i class="bi bi-clipboard"></i>'; }, 1800);
+  });
+}
+
+function field(label, id, value, mono=false) {
+  if (!value) return `<div class="detail-field"><div class="detail-label">${label}</div><div class="detail-value" style="color:#ccc;">—</div></div>`;
+  const style = mono ? 'font-family:monospace;letter-spacing:1px;' : '';
+  return `<div class="detail-field">
+    <div class="detail-label">${label}</div>
+    <span class="detail-value" id="${id}" style="${style}">${value}</span>
+    <button class="copy-btn" onclick="copyField('${id}',this)" title="Copy"><i class="bi bi-clipboard"></i></button>
+  </div>`;
+}
+
+function openDetail(idx) {
+  currentIdx = idx;
+  const r = RECORDS[idx];
+  const isWPC = r.form_type === 'WPC';
+  const gross = isWPC ? r.wpc_total_gross : r.pcl_total_gross;
+  const net = isWPC ? r.wpc_net_amount : r.pcl_total_gross;
+  const taxLine = isWPC
+    ? `${r.wpc_tax_rate}% ${r.wpc_tax_type} = €${r.wpc_tax_amount}`
+    : 'None — PCL pays gross directly';
+  const prizes = isWPC ? r.wpc_prizes : r.pcl_prizes;
+  const badge = isWPC
+    ? '<span class="badge-wpc ms-2" style="font-size:12px;">WPC</span>'
+    : '<span class="badge-pcl ms-2" style="font-size:12px;">PCL</span>';
+
+  const p1url = r.doc_url || (r.doc_path ? `/prize-money/gestor/doc/${r.player_id}` : '');
+  const p2url = r.doc_url_p2 || (r.doc_path_p2 ? `/prize-money/gestor/doc2/${r.player_id}` : '');
+  let docHtml = '';
+  if (p1url) docHtml += `<a href="${p1url}" target="_blank" class="btn btn-dark btn-sm me-2"><i class="bi bi-file-earmark-image me-1"></i>Page 1 / Front</a>`;
+  if (p2url) docHtml += `<a href="${p2url}" target="_blank" class="btn btn-outline-dark btn-sm"><i class="bi bi-file-earmark-image me-1"></i>Page 2 / Back</a>`;
+  if (!docHtml) docHtml = '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>No document uploaded</span>';
+
+  const paidHtml = r.paid_at
+    ? `<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle-fill me-2"></i>Paid on ${r.paid_at.substring(0,10)}</div>`
+    : '';
+
+  document.getElementById('modalTitle').innerHTML = `${r.full_name}${badge}`;
+  document.getElementById('modalBody').innerHTML = `
+    ${paidHtml ? '<div class="mb-3">' + paidHtml + '</div>' : ''}
+    <div class="row">
+      <div class="col-md-6">
+        <div class="detail-field">
+          <div class="detail-label">Prize / Category</div>
+          <div class="detail-value" style="font-size:13px;color:#555;">${prizes || '—'}</div>
+        </div>
+        <div class="detail-sep"></div>
+        ${field('Full Legal Name', 'df_name', r.full_name)}
+        ${field('Recipient Type', 'df_rtype', r.recipient_type)}
+        ${r.company_name ? field('Company Name', 'df_company', r.company_name) : ''}
+        ${r.cif ? field('CIF / VAT Number', 'df_cif', r.cif, true) : ''}
+        ${field('Country of Tax Residence', 'df_country', r.country)}
+        ${field('Document Type', 'df_dtype', r.doc_type)}
+        ${field('Document Number', 'df_dnum', r.doc_number, true)}
+      </div>
+      <div class="col-md-6">
+        <div class="detail-field">
+          <div class="detail-label">IBAN</div>
+          <div style="margin-top:4px;">
+            <span class="iban-display" id="df_iban">${r.iban || '—'}</span>
+            ${r.iban ? `<button class="copy-btn ms-2" onclick="copyField('df_iban',this)" title="Copy IBAN"><i class="bi bi-clipboard"></i></button>` : ''}
+          </div>
+        </div>
+        <div class="detail-sep"></div>
+        <div class="detail-field">
+          <div class="detail-label">Gross Prize Amount</div>
+          <div class="detail-value" style="font-size:20px;">€${gross}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Tax Withholding</div>
+          <div class="tax-display">${taxLine}</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-label">Net Amount to Transfer</div>
+          <div>
+            <span class="net-display" id="df_net">€${net}</span>
+            <button class="copy-btn ms-2" onclick="copyField('df_net',this)" title="Copy"><i class="bi bi-clipboard"></i></button>
+          </div>
+        </div>
+        <div class="detail-sep"></div>
+        <div class="detail-field">
+          <div class="detail-label">ID Document</div>
+          <div class="mt-2">${docHtml}</div>
+        </div>
+        <div class="detail-field mt-3">
+          <div class="detail-label">Submitted</div>
+          <div style="font-size:13px;color:#555;">${r.submitted_at ? r.submitted_at.substring(0,16).replace('T',' ') : '—'}</div>
+        </div>
+      </div>
+    </div>`;
+
+  // Footer: paid button
+  const footer = document.getElementById('modalFooter');
+  if (r.paid_at) {
+    footer.innerHTML = `
+      <button class="btn btn-outline-danger btn-sm me-auto" onclick="togglePaid(false)">
+        <i class="bi bi-x-circle me-1"></i>Mark as Unpaid
+      </button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`;
+  } else {
+    footer.innerHTML = `
+      <button class="btn btn-success me-auto" onclick="togglePaid(true)">
+        <i class="bi bi-check-circle me-1"></i>Mark as Paid
+      </button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>`;
+  }
+
+  new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+
+function togglePaid(markPaid) {
+  const r = RECORDS[currentIdx];
+  const url = markPaid
+    ? `/prize-money/gestor/mark-paid/${r.player_id}`
+    : `/prize-money/gestor/mark-unpaid/${r.player_id}`;
+
+  fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}})
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Update local record
+        RECORDS[currentIdx].paid_at = markPaid ? (data.paid_at || new Date().toISOString()) : '';
+        // Update row styling
+        const row = document.getElementById(`row-${r.player_id}`);
+        if (row) {
+          if (markPaid) {
+            row.classList.add('is-paid');
+            row.querySelector('td:nth-child(10)').innerHTML = '<span class="paid-badge"><i class="bi bi-check2"></i> Paid</span>';
+          } else {
+            row.classList.remove('is-paid');
+            row.querySelector('td:nth-child(10)').innerHTML = '<span style="font-size:11px;color:#aaa;">Pending</span>';
+          }
+        }
+        // Close modal and reopen with updated data
+        bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+        setTimeout(() => openDetail(currentIdx), 300);
+      }
+    })
+    .catch(err => alert('Error: ' + err));
+}
+</script>
+{% endblock %}
