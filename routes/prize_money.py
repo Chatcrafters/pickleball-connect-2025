@@ -387,6 +387,8 @@ def gestor_view():
     for pid, sub in submissions.items():
         if sub.get('status') != 'SUBMITTED':
             continue
+        if sub.get('form_type') not in ('WPC', 'BOTH'):
+            continue
         # Get signed URL for document
         doc_url = None
         if sub.get('doc_path'):
@@ -408,7 +410,7 @@ def gestor_pcl_view():
     for pid, sub in submissions.items():
         if sub.get('status') != 'SUBMITTED':
             continue
-        if sub.get('form_type') != 'PCL':
+        if sub.get('form_type') not in ('PCL', 'BOTH'):
             continue
         doc_url = None
         if sub.get('doc_path'):
