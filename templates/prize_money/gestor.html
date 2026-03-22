@@ -41,8 +41,8 @@
 <div class="container-fluid" style="max-width:1100px;padding:20px 16px;">
 
   <div class="row g-3 mb-4">
-    {% set wpc_recs = records | selectattr('form_type', 'equalto', 'WPC') | list %}
-    {% set pcl_recs = records | selectattr('form_type', 'equalto', 'PCL') | list %}
+    {% set wpc_recs = records | selectattr('form_type', 'in', ['WPC', 'BOTH']) | list %}
+    {% set pcl_recs = [] %}
     {% set paid_recs = records | selectattr('paid_at') | list %}
     {% set missing = records | selectattr('doc_path', 'equalto', '') | list | length %}
     <div class="col-6 col-md-3">
@@ -80,21 +80,20 @@
               <div style="font-size:11px;color:#888;">{{ r.player_name }}</div>
             </td>
             <td>
-              {% if r.form_type == 'WPC' %}<span class="badge-wpc">WPC</span>
-              {% else %}<span class="badge-pcl">PCL</span>{% endif %}
+              <span class="badge-wpc">WPC</span>
             </td>
             <td style="font-size:13px;">{{ r.country }}</td>
             <td style="font-size:12px;font-family:monospace;">{{ r.doc_number }}</td>
             <td style="font-size:11px;font-family:monospace;">{{ r.iban[:4] if r.iban else '' }}...{{ r.iban[-4:] if r.iban and r.iban|length > 8 else '' }}</td>
             <td style="font-size:13px;font-weight:600;">
-              {% if r.form_type == 'WPC' %}€{{ r.wpc_total_gross }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
+              €{{ r.wpc_total_gross }}
             </td>
             <td style="font-size:12px;">
-              {% if r.form_type == 'WPC' %}{{ r.wpc_tax_rate }}% ({{ r.wpc_tax_type }})
+              {{ r.wpc_tax_rate }}% ({{ r.wpc_tax_type }})
               {% else %}<span style="color:#0d6b5e;">None</span>{% endif %}
             </td>
             <td style="font-size:13px;font-weight:700;color:#1B998B;">
-              {% if r.form_type == 'WPC' %}€{{ r.wpc_net_amount }}{% else %}€{{ r.pcl_total_gross }}{% endif %}
+              €{{ r.wpc_net_amount }}
             </td>
             <td style="font-size:11px;color:#888;">{{ r.submitted_at[:10] if r.submitted_at else '' }}</td>
             <td>
@@ -200,7 +199,7 @@ function field(label, id, value, mono=false) {
 function openDetail(idx) {
   currentIdx = idx;
   const r = RECORDS[idx];
-  const isWPC = r.form_type === 'WPC';
+  const isWPC = r.form_type === 'WPC' || r.form_type === 'BOTH';
   const gross = isWPC ? r.wpc_total_gross : r.pcl_total_gross;
   const net = isWPC ? r.wpc_net_amount : r.pcl_total_gross;
   const taxLine = isWPC
