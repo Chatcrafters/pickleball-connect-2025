@@ -41,7 +41,7 @@
 <div class="container-fluid" style="max-width:1100px;padding:20px 16px;">
 
   <div class="row g-3 mb-4">
-    {% set wpc_recs = records | selectattr('form_type', 'in', ['WPC', 'BOTH']) | list %}
+    {% set wpc_recs = records | selectattr('form_type', 'ne', 'PCL') | list %}
     {% set pcl_recs = [] %}
     {% set paid_recs = records | selectattr('paid_at') | list %}
     {% set missing = records | selectattr('doc_path', 'equalto', '') | list | length %}
