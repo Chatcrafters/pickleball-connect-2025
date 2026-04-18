@@ -314,15 +314,9 @@
                                     <td>
                                         <i class="bi bi-tshirt"></i>
                                         <strong>{{ reg.shirt_size or '-' }}</strong>
-                                        {% if reg.shirt_size_2 %}
-                                        <br>
-                                        <small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>
-                                        <br>
-                                        <small class="text-success fw-semibold">30 EUR</small>
-                                        {% elif reg.shirt_size %}
-                                        <br>
-                                        <small class="text-success fw-semibold">15 EUR</small>
-                                        {% endif %}
+                                        {% if reg.shirt_size_2 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>{% endif %}
+                                        {% if reg.shirt_size_3 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_3 }}</small>{% endif %}
+                                        {% if reg.shirt_size %}<br><small class="text-success fw-semibold">{{ ((1 if reg.shirt_size else 0) + (1 if reg.shirt_size_2 else 0) + (1 if reg.shirt_size_3 else 0)) * 15 }} EUR</small>{% endif %}
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
@@ -401,15 +395,9 @@
                                     <td>
                                         <i class="bi bi-tshirt"></i>
                                         <strong>{{ reg.shirt_size or '-' }}</strong>
-                                        {% if reg.shirt_size_2 %}
-                                        <br>
-                                        <small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>
-                                        <br>
-                                        <small class="text-success fw-semibold">30 EUR</small>
-                                        {% elif reg.shirt_size %}
-                                        <br>
-                                        <small class="text-success fw-semibold">15 EUR</small>
-                                        {% endif %}
+                                        {% if reg.shirt_size_2 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>{% endif %}
+                                        {% if reg.shirt_size_3 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_3 }}</small>{% endif %}
+                                        {% if reg.shirt_size %}<br><small class="text-success fw-semibold">{{ ((1 if reg.shirt_size else 0) + (1 if reg.shirt_size_2 else 0) + (1 if reg.shirt_size_3 else 0)) * 15 }} EUR</small>{% endif %}
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}

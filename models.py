@@ -327,6 +327,7 @@ class PCLRegistration(db.Model):
     # Shirt info (can be filled later)
     shirt_size = db.Column(db.String(10), nullable=True)
     shirt_size_2 = db.Column(db.String(10), nullable=True)
+    shirt_size_3 = db.Column(db.String(10), nullable=True)
     
     # Profile (can be filled later)
     photo_filename = db.Column(db.String(255), nullable=True)

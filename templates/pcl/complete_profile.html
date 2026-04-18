@@ -294,7 +294,7 @@
                         </div>
                         
                         <div class="row mb-3">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="shirt_size" class="form-label"><i class="bi bi-tshirt"></i> {{ t.shirt_size if t.shirt_size else 'Shirt-Größe' }} *</label>
                                 <select class="form-select form-select-lg" id="shirt_size" name="shirt_size" required>
                                     <option value="">{{ t.select if t.select else 'Auswählen' }}...</option>
@@ -303,7 +303,7 @@
                                     {% endfor %}
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="shirt_size_2" class="form-label"><i class="bi bi-tshirt"></i> {{ t.shirt_second if t.shirt_second else 'Second Shirt (optional)' }}</label>
                                 <select class="form-select form-select-lg" id="shirt_size_2" name="shirt_size_2">
                                     <option value="">-</option>
@@ -312,11 +312,20 @@
                                     {% endfor %}
                                 </select>
                             </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="shirt_size_3" class="form-label"><i class="bi bi-tshirt"></i> {{ t.shirt_third if t.shirt_third else 'Third Shirt (optional)' }}</label>
+                                <select class="form-select form-select-lg" id="shirt_size_3" name="shirt_size_3">
+                                    <option value="">-</option>
+                                    {% for size in shirt_sizes %}
+                                    <option value="{{ size }}" {% if registration.shirt_size_3 == size %}selected{% endif %}>{{ size }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                         <div class="alert alert-info py-2 mb-4">
                             <i class="bi bi-info-circle"></i>
                             <strong>{{ t.shirt_total_price if t.shirt_total_price else 'Total' }}:</strong>
-                            <span id="shirt-total">{% if registration.shirt_size_2 %}30{% elif registration.shirt_size %}15{% else %}0{% endif %}</span> EUR
+                            <span id="shirt-total">{{ ((1 if registration.shirt_size else 0) + (1 if registration.shirt_size_2 else 0) + (1 if registration.shirt_size_3 else 0)) * 15 }}</span> EUR
                             <small class="d-block text-muted">{{ t.shirt_payment_info if t.shirt_payment_info else 'Each shirt costs 15 EUR. Payment on site at the tournament.' }}</small>
                         </div>
 
@@ -653,13 +662,15 @@
         (function() {
             var s1 = document.getElementById('shirt_size');
             var s2 = document.getElementById('shirt_size_2');
+            var s3 = document.getElementById('shirt_size_3');
             var total = document.getElementById('shirt-total');
             function update() {
-                var count = (s1.value ? 1 : 0) + (s2.value ? 1 : 0);
+                var count = (s1.value ? 1 : 0) + (s2.value ? 1 : 0) + (s3.value ? 1 : 0);
                 total.textContent = count * 15;
             }
             if (s1) s1.addEventListener('change', update);
             if (s2) s2.addEventListener('change', update);
+            if (s3) s3.addEventListener('change', update);
         })();
     </script>
 </body>

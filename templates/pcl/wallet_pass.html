@@ -354,9 +354,15 @@
                 <div class="info-value large">{{ registration.shirt_size_2 }}</div>
             </div>
             {% endif %}
+            {% if registration.shirt_size_3 %}
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-tshirt"></i> Size 3</div>
+                <div class="info-value large">{{ registration.shirt_size_3 }}</div>
+            </div>
+            {% endif %}
             <div class="info-item">
                 <div class="info-label">Total</div>
-                <div class="info-value">{% if registration.shirt_size_2 %}30{% elif registration.shirt_size %}15{% else %}0{% endif %} EUR</div>
+                <div class="info-value">{{ ((1 if registration.shirt_size else 0) + (1 if registration.shirt_size_2 else 0) + (1 if registration.shirt_size_3 else 0)) * 15 }} EUR</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Gender</div>

@@ -92,8 +92,9 @@ TRANSLATIONS = {
         'shirt_info': 'Shirt Information',
         'shirt_size': 'Shirt Size',
         'shirt_second': 'Second Shirt (optional)',
+        'shirt_third': 'Third Shirt (optional)',
         'shirt_total_price': 'Total',
-        'shirt_payment_info': 'Each shirt costs 15 EUR. Payment on site at the tournament.',
+        'shirt_payment_info': 'Each shirt costs 15 EUR. Shirts are ordered and printed by us according to official PCL specifications. Payment is settled through your team captain.',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -180,8 +181,9 @@ TRANSLATIONS = {
         'shirt_info': 'Shirt-Informationen',
         'shirt_size': 'Shirt-Größe',
         'shirt_second': 'Zweites Shirt (optional)',
+        'shirt_third': 'Drittes Shirt (optional)',
         'shirt_total_price': 'Gesamt',
-        'shirt_payment_info': 'Jedes Shirt kostet 15 EUR. Bezahlung vor Ort beim Turnier.',
+        'shirt_payment_info': 'Jedes Shirt kostet 15 EUR. Die Shirts werden von uns gemäß den offiziellen PCL-Vorgaben bestellt und bedruckt. Die Abrechnung erfolgt über den Teamkapitän.',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -268,8 +270,9 @@ TRANSLATIONS = {
         'shirt_info': 'Información de la Camiseta',
         'shirt_size': 'Talla de camiseta',
         'shirt_second': 'Segunda camiseta (opcional)',
+        'shirt_third': 'Tercera camiseta (opcional)',
         'shirt_total_price': 'Total',
-        'shirt_payment_info': 'Cada camiseta cuesta 15 EUR. Pago en el torneo.',
+        'shirt_payment_info': 'Cada camiseta cuesta 15 EUR. Las camisetas son pedidas e impresas por nosotros según las especificaciones oficiales de la PCL. El pago se gestiona a través del capitán del equipo.',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
@@ -356,8 +359,9 @@ TRANSLATIONS = {
         'shirt_info': 'Informations Maillot',
         'shirt_size': 'Taille du maillot',
         'shirt_second': 'Second maillot (optionnel)',
+        'shirt_third': 'Troisième maillot (optionnel)',
         'shirt_total_price': 'Total',
-        'shirt_payment_info': 'Chaque maillot coûte 15 EUR. Paiement sur place au tournoi.',
+        'shirt_payment_info': 'Chaque maillot coûte 15 EUR. Les maillots sont commandés et imprimés par nous selon les spécifications officielles de la PCL. Le paiement est géré par le capitaine de l\'équipe.',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
@@ -747,14 +751,14 @@ def export_team_data(team_id):
     
     writer.writerow([
         'First Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Birth Year',
-        'Captain', 'Shirt Size', 'Shirt Size 2', 'Bio',
+        'Captain', 'Shirt Size', 'Shirt Size 2', 'Shirt Size 3', 'Bio',
         'Instagram', 'TikTok', 'YouTube', 'Twitter', 'DUPR', 'Status', 'Photo URL'
     ])
 
     for reg in team.registrations.all():
         writer.writerow([
             reg.first_name, reg.last_name, reg.email or '', reg.phone or '', reg.gender, reg.birth_year or '',
-            'Yes' if reg.is_captain else 'No', reg.shirt_size or '', reg.shirt_size_2 or '', reg.bio or '',
+            'Yes' if reg.is_captain else 'No', reg.shirt_size or '', reg.shirt_size_2 or '', reg.shirt_size_3 or '', reg.bio or '',
             reg.instagram or '', reg.tiktok or '', reg.youtube or '', reg.twitter or '',
             reg.dupr_rating or '', reg.status, reg.photo_filename or ''
         ])
@@ -791,6 +795,7 @@ def export_shirt_list(tournament_id):
             }
             size1 = (reg.shirt_size or '').strip()
             size2 = (reg.shirt_size_2 or '').strip()
+            size3 = (reg.shirt_size_3 or '').strip()
 
             if size1:
                 all_regs.append({**base, 'size': size1, 'shirt_no': 1})
@@ -799,6 +804,9 @@ def export_shirt_list(tournament_id):
 
             if size2:
                 all_regs.append({**base, 'size': size2, 'shirt_no': 2})
+
+            if size3:
+                all_regs.append({**base, 'size': size3, 'shirt_no': 3})
     
     # Create workbook
     wb = Workbook()
@@ -1236,6 +1244,7 @@ def complete_profile(profile_token):
         # Update other fields
         registration.shirt_size = request.form.get('shirt_size') or registration.shirt_size
         registration.shirt_size_2 = request.form.get('shirt_size_2') or registration.shirt_size_2
+        registration.shirt_size_3 = request.form.get('shirt_size_3') or registration.shirt_size_3
         registration.bio = request.form.get('bio', '').strip() or registration.bio
         registration.email = request.form.get('email', '').strip() or registration.email
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else registration.birth_year
@@ -1455,6 +1464,7 @@ def player_register(token):
             is_captain=request.form.get('is_captain') == 'on',
             shirt_size=request.form.get('shirt_size'),
             shirt_size_2=request.form.get('shirt_size_2') or None,
+            shirt_size_3=request.form.get('shirt_size_3') or None,
             photo_filename=photo_url,
             bio=request.form.get('bio'),
             instagram=request.form.get('instagram', '').replace('@', ''),
@@ -1522,6 +1532,7 @@ def edit_registration(registration_id):
         registration.is_playing = request.form.get('is_playing') == 'on'
         registration.shirt_size = request.form.get('shirt_size')
         registration.shirt_size_2 = request.form.get('shirt_size_2') or None
+        registration.shirt_size_3 = request.form.get('shirt_size_3') or None
         registration.bio = request.form.get('bio')
         registration.instagram = request.form.get('instagram', '').replace('@', '')
         registration.tiktok = request.form.get('tiktok', '').replace('@', '')
@@ -1580,6 +1591,7 @@ def admin_edit_registration(registration_id):
         registration.is_captain = request.form.get('is_captain') == 'on'
         registration.shirt_size = request.form.get('shirt_size')
         registration.shirt_size_2 = request.form.get('shirt_size_2') or None
+        registration.shirt_size_3 = request.form.get('shirt_size_3') or None
         registration.bio = request.form.get('bio')
         registration.instagram = request.form.get('instagram', '').replace('@', '')
         registration.tiktok = request.form.get('tiktok', '').replace('@', '')
@@ -1989,6 +2001,7 @@ def api_team_players(token):
             'has_bio': bool(reg.bio),
             'shirt_size': reg.shirt_size,
             'shirt_size_2': reg.shirt_size_2,
+            'shirt_size_3': reg.shirt_size_3,
             'missing_fields': reg.get_missing_fields()
         })
     
@@ -2389,6 +2402,7 @@ def staff_search_player(tournament_id):
             'team': f"{reg.team.country_flag} {reg.team.country_name} {reg.team.age_category}",
             'shirt_size': reg.shirt_size,
             'shirt_size_2': reg.shirt_size_2,
+            'shirt_size_3': reg.shirt_size_3,
             'checked_in': reg.checked_in,
             'checked_in_at': reg.checked_in_at.strftime('%H:%M') if reg.checked_in_at else None,
             'photo': reg.photo_filename

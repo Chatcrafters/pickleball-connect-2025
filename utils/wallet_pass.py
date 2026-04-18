@@ -97,9 +97,13 @@ def create_pkpass(registration, team, tournament):
                     "label": "SIZE 2",
                     "value": registration.shirt_size_2 or "-"
                 }, {
+                    "key": "size3",
+                    "label": "SIZE 3",
+                    "value": registration.shirt_size_3 or "-"
+                }, {
                     "key": "total",
                     "label": "TOTAL",
-                    "value": f"{(15 if registration.shirt_size else 0) + (15 if registration.shirt_size_2 else 0)} EUR"
+                    "value": f"{(15 if registration.shirt_size else 0) + (15 if registration.shirt_size_2 else 0) + (15 if registration.shirt_size_3 else 0)} EUR"
                 }]
             }
         }

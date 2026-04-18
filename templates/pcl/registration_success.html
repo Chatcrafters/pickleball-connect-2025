@@ -34,20 +34,26 @@
                             <hr>
                             
                             <div class="row">
-                                <div class="col-6">
+                                <div class="col-md-4 col-6">
                                     <small class="text-muted"><i class="bi bi-tshirt"></i> Shirt Size</small>
                                     <p class="mb-2"><strong>{{ registration.shirt_size or '-' }}</strong></p>
                                 </div>
                                 {% if registration.shirt_size_2 %}
-                                <div class="col-6">
+                                <div class="col-md-4 col-6">
                                     <small class="text-muted"><i class="bi bi-tshirt"></i> Second Shirt</small>
                                     <p class="mb-2"><strong>{{ registration.shirt_size_2 }}</strong></p>
                                 </div>
                                 {% endif %}
+                                {% if registration.shirt_size_3 %}
+                                <div class="col-md-4 col-6">
+                                    <small class="text-muted"><i class="bi bi-tshirt"></i> Third Shirt</small>
+                                    <p class="mb-2"><strong>{{ registration.shirt_size_3 }}</strong></p>
+                                </div>
+                                {% endif %}
                                 <div class="col-12">
                                     <small class="text-muted">Total</small>
-                                    <p class="mb-0"><strong class="text-success">{% if registration.shirt_size_2 %}30{% elif registration.shirt_size %}15{% else %}0{% endif %} EUR</strong>
-                                    <small class="text-muted">— payment on site at the tournament</small></p>
+                                    <p class="mb-0"><strong class="text-success">{{ ((1 if registration.shirt_size else 0) + (1 if registration.shirt_size_2 else 0) + (1 if registration.shirt_size_3 else 0)) * 15 }} EUR</strong>
+                                    <small class="text-muted">— settled through your team captain</small></p>
                                 </div>
                             </div>
                             
