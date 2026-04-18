@@ -309,8 +309,10 @@
                         <div class="player-team">{{ reg.team.country_flag }} {{ reg.team.country_name }} {{ reg.team.age_category }}</div>
                     </div>
                     <div class="text-center">
-                        <div class="shirt-size">{{ reg.shirt_size or '-' }}</div>
-                        <small class="text-muted">{{ reg.shirt_name or '' }}</small>
+                        <div class="shirt-size"><i class="bi bi-tshirt"></i> {{ reg.shirt_size or '-' }}</div>
+                        {% if reg.shirt_size_2 %}
+                        <small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>
+                        {% endif %}
                     </div>
                     <button class="checkin-btn {% if reg.checked_in %}checked{% else %}pending{% endif %}" 
                             {% if reg.checked_in %}disabled{% endif %}>
@@ -403,8 +405,8 @@
                                 <div class="player-team">${player.team}</div>
                             </div>
                             <div class="text-center">
-                                <div class="shirt-size">${player.shirt_size || '-'}</div>
-                                <small class="text-muted">${player.shirt_name || ''}</small>
+                                <div class="shirt-size"><i class="bi bi-tshirt"></i> ${player.shirt_size || '-'}</div>
+                                ${player.shirt_size_2 ? `<small class="text-muted"><i class="bi bi-plus"></i> ${player.shirt_size_2}</small>` : ''}
                             </div>
                             <button class="checkin-btn ${player.checked_in ? 'checked' : 'pending'}" 
                                     ${player.checked_in ? 'disabled' : ''}>

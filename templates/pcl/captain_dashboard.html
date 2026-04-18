@@ -173,8 +173,9 @@
                                             {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
                                         </h6>
                                         <small class="text-muted">
-                                            {% if reg.shirt_name %}{{ reg.shirt_name }}{% endif %}
-                                            {% if reg.shirt_size %}({{ reg.shirt_size }}){% endif %}
+                                            {% if reg.shirt_size %}<i class="bi bi-tshirt"></i> {{ reg.shirt_size }}{% endif %}
+                                            {% if reg.shirt_size_2 %} <i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}{% endif %}
+                                            {% if reg.shirt_size %}<span class="text-success">({% if reg.shirt_size_2 %}30{% else %}15{% endif %} EUR)</span>{% endif %}
                                         </small>
                                     </div>
                                 </div>
@@ -277,8 +278,9 @@
                                             {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
                                         </h6>
                                         <small class="text-muted">
-                                            {% if reg.shirt_name %}{{ reg.shirt_name }}{% endif %}
-                                            {% if reg.shirt_size %}({{ reg.shirt_size }}){% endif %}
+                                            {% if reg.shirt_size %}<i class="bi bi-tshirt"></i> {{ reg.shirt_size }}{% endif %}
+                                            {% if reg.shirt_size_2 %} <i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}{% endif %}
+                                            {% if reg.shirt_size %}<span class="text-success">({% if reg.shirt_size_2 %}30{% else %}15{% endif %} EUR)</span>{% endif %}
                                         </small>
                                     </div>
                                 </div>

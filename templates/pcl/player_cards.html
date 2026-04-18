@@ -612,7 +612,7 @@
                                         <div class="placeholder-img"><i class="bi bi-person"></i></div>
                                         {% endif %}
                                         <div>
-                                            <strong style="font-size: 14px;">{{ reg.shirt_name or reg.first_name|upper }}</strong>
+                                            <strong style="font-size: 14px;">{{ reg.first_name|upper }}</strong>
                                             <span class="badge bg-{{ 'primary' if reg.gender == 'male' else 'danger' }} ms-1" style="font-size: 10px;">{{ '♂' if reg.gender == 'male' else '♀' }}</span>
                                             <br><small class="text-muted">{{ reg.first_name }} {{ reg.last_name }}</small>
                                         </div>
@@ -693,7 +693,7 @@
                             {% else %}
                             <div class="rounded-circle bg-secondary mx-auto mb-1" style="width:50px;height:50px;"></div>
                             {% endif %}
-                            <div class="small text-warning">{{ reg.shirt_name or reg.first_name|upper }}</div>
+                            <div class="small text-warning">{{ reg.first_name|upper }}</div>
                         </div>
                         {% endfor %}
                     </div>
@@ -738,7 +738,7 @@ var players = [
     {% for reg in registrations %}
     {
         id: {{ reg.id }},
-        shirt: {{ (reg.shirt_name or reg.first_name|upper)|tojson }},
+        shirt: {{ (reg.first_name|upper)|tojson }},
         name: {{ (reg.first_name ~ ' ' ~ reg.last_name)|tojson }},
         gender: {{ reg.gender|tojson }},
         instagram: {{ (reg.instagram or '')|tojson }},

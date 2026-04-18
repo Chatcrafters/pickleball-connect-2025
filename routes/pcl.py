@@ -90,9 +90,10 @@ TRANSLATIONS = {
         'player': 'Player',
         'captain': 'Captain',
         'shirt_info': 'Shirt Information',
-        'shirt_name': 'Name on Shirt',
-        'shirt_name_help': 'How your name appears on the jersey (max 15 chars)',
         'shirt_size': 'Shirt Size',
+        'shirt_second': 'Second Shirt (optional)',
+        'shirt_total_price': 'Total',
+        'shirt_payment_info': 'Each shirt costs 15 EUR. Payment on site at the tournament.',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -177,9 +178,10 @@ TRANSLATIONS = {
         'player': 'Spieler',
         'captain': 'KapitÃ¤n',
         'shirt_info': 'Shirt-Informationen',
-        'shirt_name': 'Name auf dem Shirt',
-        'shirt_name_help': 'So erscheint dein Name auf dem Trikot (max 15 Zeichen)',
-        'shirt_size': 'Shirt-GrÃ¶ÃŸe',
+        'shirt_size': 'Shirt-Größe',
+        'shirt_second': 'Zweites Shirt (optional)',
+        'shirt_total_price': 'Gesamt',
+        'shirt_payment_info': 'Jedes Shirt kostet 15 EUR. Bezahlung vor Ort beim Turnier.',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -263,10 +265,11 @@ TRANSLATIONS = {
         'role': 'Rol',
         'player': 'Jugador',
         'captain': 'CapitÃ¡n',
-        'shirt_info': 'InformaciÃ³n de la Camiseta',
-        'shirt_name': 'Nombre en la camiseta',
-        'shirt_name_help': 'AsÃ­ aparecerÃ¡ tu nombre (mÃ¡x 15 caracteres)',
+        'shirt_info': 'Información de la Camiseta',
         'shirt_size': 'Talla de camiseta',
+        'shirt_second': 'Segunda camiseta (opcional)',
+        'shirt_total_price': 'Total',
+        'shirt_payment_info': 'Cada camiseta cuesta 15 EUR. Pago en el torneo.',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃ¡x 5MB. Formato cuadrado recomendado.',
@@ -351,9 +354,10 @@ TRANSLATIONS = {
         'player': 'Joueur',
         'captain': 'Capitaine',
         'shirt_info': 'Informations Maillot',
-        'shirt_name': 'Nom sur le maillot',
-        'shirt_name_help': 'Comment votre nom apparaÃ®tra (max 15 caractÃ¨res)',
         'shirt_size': 'Taille du maillot',
+        'shirt_second': 'Second maillot (optionnel)',
+        'shirt_total_price': 'Total',
+        'shirt_payment_info': 'Chaque maillot coûte 15 EUR. Paiement sur place au tournoi.',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carrÃ© recommandÃ©.',
@@ -743,14 +747,14 @@ def export_team_data(team_id):
     
     writer.writerow([
         'First Name', 'Last Name', 'Email', 'Phone', 'Gender', 'Birth Year',
-        'Captain', 'Shirt Name', 'Shirt Size', 'Bio',
+        'Captain', 'Shirt Size', 'Shirt Size 2', 'Bio',
         'Instagram', 'TikTok', 'YouTube', 'Twitter', 'DUPR', 'Status', 'Photo URL'
     ])
-    
+
     for reg in team.registrations.all():
         writer.writerow([
             reg.first_name, reg.last_name, reg.email or '', reg.phone or '', reg.gender, reg.birth_year or '',
-            'Yes' if reg.is_captain else 'No', reg.shirt_name or '', reg.shirt_size or '', reg.bio or '',
+            'Yes' if reg.is_captain else 'No', reg.shirt_size or '', reg.shirt_size_2 or '', reg.bio or '',
             reg.instagram or '', reg.tiktok or '', reg.youtube or '', reg.twitter or '',
             reg.dupr_rating or '', reg.status, reg.photo_filename or ''
         ])
@@ -780,18 +784,21 @@ def export_shirt_list(tournament_id):
     
     for team in tournament.teams.all():
         for reg in team.registrations.all():
-            entry = {
+            base = {
                 'team': f"{team.country_flag} {team.country_name}",
                 'category': team.age_category,
-                'shirt_name': (reg.shirt_name or '').strip(),
-                'size': (reg.shirt_size or '').strip(),
                 'player': f"{reg.first_name} {reg.last_name}"
             }
-            
-            if entry['shirt_name'] and entry['size']:
-                all_regs.append(entry)
+            size1 = (reg.shirt_size or '').strip()
+            size2 = (reg.shirt_size_2 or '').strip()
+
+            if size1:
+                all_regs.append({**base, 'size': size1, 'shirt_no': 1})
             else:
-                incomplete.append(entry)
+                incomplete.append({**base, 'size': '', 'shirt_no': 1})
+
+            if size2:
+                all_regs.append({**base, 'size': size2, 'shirt_no': 2})
     
     # Create workbook
     wb = Workbook()
@@ -870,11 +877,9 @@ def export_shirt_list(tournament_id):
         row += 1
         for inc in incomplete:
             missing = []
-            if not inc['shirt_name']:
-                missing.append('Shirt Name')
             if not inc['size']:
                 missing.append('Größe')
-            
+
             ws1.cell(row=row, column=1, value=inc['player']).border = thin_border
             ws1.cell(row=row, column=2, value=inc['team']).border = thin_border
             ws1.cell(row=row, column=3, value=inc['category']).border = thin_border
@@ -903,15 +908,15 @@ def export_shirt_list(tournament_id):
         ws2.merge_cells(f'A{row}:D{row}')
         row += 1
         
-        for col, header in enumerate(['Shirt Name', 'Spieler', 'Team', 'Kat.'], 1):
+        for col, header in enumerate(['Spieler', 'Shirt #', 'Team', 'Kat.'], 1):
             cell = ws2.cell(row=row, column=col, value=header)
             cell.font = Font(bold=True)
             cell.border = thin_border
         row += 1
-        
-        for reg in sorted(size_regs, key=lambda x: (x['team'], x['player'])):
-            ws2.cell(row=row, column=1, value=reg['shirt_name']).border = thin_border
-            ws2.cell(row=row, column=2, value=reg['player']).border = thin_border
+
+        for reg in sorted(size_regs, key=lambda x: (x['team'], x['player'], x['shirt_no'])):
+            ws2.cell(row=row, column=1, value=reg['player']).border = thin_border
+            ws2.cell(row=row, column=2, value=reg['shirt_no']).border = thin_border
             ws2.cell(row=row, column=3, value=reg['team']).border = thin_border
             ws2.cell(row=row, column=4, value=reg['category']).border = thin_border
             row += 1
@@ -925,20 +930,20 @@ def export_shirt_list(tournament_id):
     # === SHEET 3: Nach Team sortiert ===
     ws3 = wb.create_sheet("Nach Team")
     
-    headers = ['Team', 'Kategorie', 'Shirt Name', 'Größe', 'Spieler']
+    headers = ['Team', 'Kategorie', 'Spieler', 'Größe', 'Shirt #']
     for col, h in enumerate(headers, 1):
         cell = ws3.cell(row=1, column=col, value=h)
         cell.font = header_font
         cell.fill = header_fill
         cell.border = thin_border
-    
-    sorted_regs = sorted(all_regs, key=lambda x: (x['team'], x['category'], x['player']))
+
+    sorted_regs = sorted(all_regs, key=lambda x: (x['team'], x['category'], x['player'], x['shirt_no']))
     for r, reg in enumerate(sorted_regs, 2):
         ws3.cell(row=r, column=1, value=reg['team']).border = thin_border
         ws3.cell(row=r, column=2, value=reg['category']).border = thin_border
-        ws3.cell(row=r, column=3, value=reg['shirt_name']).border = thin_border
+        ws3.cell(row=r, column=3, value=reg['player']).border = thin_border
         ws3.cell(row=r, column=4, value=reg['size']).border = thin_border
-        ws3.cell(row=r, column=5, value=reg['player']).border = thin_border
+        ws3.cell(row=r, column=5, value=reg['shirt_no']).border = thin_border
     
     ws3.column_dimensions['A'].width = 20
     ws3.column_dimensions['B'].width = 10
@@ -1185,7 +1190,7 @@ def complete_profile(profile_token):
     
     # Calculate completion percentage
     missing_fields = registration.get_missing_fields()
-    total_required = 4  # photo, shirt_name, shirt_size, bio
+    total_required = 3  # photo, shirt_size, bio
     completed = total_required - len(missing_fields)
     completion_percent = int((completed / total_required) * 100)
     
@@ -1229,8 +1234,8 @@ def complete_profile(profile_token):
         registration.additional_photos = json.dumps(additional_photos_list) if additional_photos_list else None
         
         # Update other fields
-        registration.shirt_name = request.form.get('shirt_name', '').strip().upper()[:15] or registration.shirt_name
         registration.shirt_size = request.form.get('shirt_size') or registration.shirt_size
+        registration.shirt_size_2 = request.form.get('shirt_size_2') or registration.shirt_size_2
         registration.bio = request.form.get('bio', '').strip() or registration.bio
         registration.email = request.form.get('email', '').strip() or registration.email
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else registration.birth_year
@@ -1448,8 +1453,8 @@ def player_register(token):
             gender=request.form['gender'],
             birth_year=int(request.form['birth_year']) if request.form.get('birth_year') else None,
             is_captain=request.form.get('is_captain') == 'on',
-            shirt_name=request.form.get('shirt_name', '').upper()[:15],
             shirt_size=request.form.get('shirt_size'),
+            shirt_size_2=request.form.get('shirt_size_2') or None,
             photo_filename=photo_url,
             bio=request.form.get('bio'),
             instagram=request.form.get('instagram', '').replace('@', ''),
@@ -1515,8 +1520,8 @@ def edit_registration(registration_id):
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
         registration.is_captain = request.form.get('is_captain') == 'on'
         registration.is_playing = request.form.get('is_playing') == 'on'
-        registration.shirt_name = request.form.get('shirt_name', '').upper()[:15]
         registration.shirt_size = request.form.get('shirt_size')
+        registration.shirt_size_2 = request.form.get('shirt_size_2') or None
         registration.bio = request.form.get('bio')
         registration.instagram = request.form.get('instagram', '').replace('@', '')
         registration.tiktok = request.form.get('tiktok', '').replace('@', '')
@@ -1573,8 +1578,8 @@ def admin_edit_registration(registration_id):
         registration.gender = request.form['gender']
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
         registration.is_captain = request.form.get('is_captain') == 'on'
-        registration.shirt_name = request.form.get('shirt_name', '').upper()[:15]
         registration.shirt_size = request.form.get('shirt_size')
+        registration.shirt_size_2 = request.form.get('shirt_size_2') or None
         registration.bio = request.form.get('bio')
         registration.instagram = request.form.get('instagram', '').replace('@', '')
         registration.tiktok = request.form.get('tiktok', '').replace('@', '')
@@ -1982,8 +1987,8 @@ def api_team_players(token):
             'status': reg.status,
             'has_photo': bool(reg.photo_filename),
             'has_bio': bool(reg.bio),
-            'shirt_name': reg.shirt_name,
             'shirt_size': reg.shirt_size,
+            'shirt_size_2': reg.shirt_size_2,
             'missing_fields': reg.get_missing_fields()
         })
     
@@ -2372,11 +2377,10 @@ def staff_search_player(tournament_id):
         PCLTeam.tournament_id == tournament_id,
         db.or_(
             PCLRegistration.first_name.ilike(f'%{query}%'),
-            PCLRegistration.last_name.ilike(f'%{query}%'),
-            PCLRegistration.shirt_name.ilike(f'%{query}%')
+            PCLRegistration.last_name.ilike(f'%{query}%')
         )
     ).limit(10).all()
-    
+
     players = []
     for reg in registrations:
         players.append({
@@ -2384,7 +2388,7 @@ def staff_search_player(tournament_id):
             'name': f"{reg.first_name} {reg.last_name}",
             'team': f"{reg.team.country_flag} {reg.team.country_name} {reg.team.age_category}",
             'shirt_size': reg.shirt_size,
-            'shirt_name': reg.shirt_name,
+            'shirt_size_2': reg.shirt_size_2,
             'checked_in': reg.checked_in,
             'checked_in_at': reg.checked_in_at.strftime('%H:%M') if reg.checked_in_at else None,
             'photo': reg.photo_filename

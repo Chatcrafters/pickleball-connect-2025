@@ -89,13 +89,17 @@ def create_pkpass(registration, team, tournament):
                     "value": team.age_category
                 }],
                 "auxiliaryFields": [{
-                    "key": "shirt",
-                    "label": "SHIRT",
-                    "value": registration.shirt_name or registration.last_name.upper()
-                }, {
                     "key": "size",
                     "label": "SIZE",
                     "value": registration.shirt_size or "-"
+                }, {
+                    "key": "size2",
+                    "label": "SIZE 2",
+                    "value": registration.shirt_size_2 or "-"
+                }, {
+                    "key": "total",
+                    "label": "TOTAL",
+                    "value": f"{(15 if registration.shirt_size else 0) + (15 if registration.shirt_size_2 else 0)} EUR"
                 }]
             }
         }

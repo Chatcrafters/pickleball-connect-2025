@@ -312,9 +312,17 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <strong>{{ reg.shirt_name or '-' }}</strong>
+                                        <i class="bi bi-tshirt"></i>
+                                        <strong>{{ reg.shirt_size or '-' }}</strong>
+                                        {% if reg.shirt_size_2 %}
                                         <br>
-                                        <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
+                                        <small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>
+                                        <br>
+                                        <small class="text-success fw-semibold">30 EUR</small>
+                                        {% elif reg.shirt_size %}
+                                        <br>
+                                        <small class="text-success fw-semibold">15 EUR</small>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
@@ -391,9 +399,17 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <strong>{{ reg.shirt_name or '-' }}</strong>
+                                        <i class="bi bi-tshirt"></i>
+                                        <strong>{{ reg.shirt_size or '-' }}</strong>
+                                        {% if reg.shirt_size_2 %}
                                         <br>
-                                        <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
+                                        <small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>
+                                        <br>
+                                        <small class="text-success fw-semibold">30 EUR</small>
+                                        {% elif reg.shirt_size %}
+                                        <br>
+                                        <small class="text-success fw-semibold">15 EUR</small>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}

@@ -35,12 +35,19 @@
                             
                             <div class="row">
                                 <div class="col-6">
-                                    <small class="text-muted">Shirt Name</small>
-                                    <p class="mb-2"><strong>{{ registration.shirt_name }}</strong></p>
+                                    <small class="text-muted"><i class="bi bi-tshirt"></i> Shirt Size</small>
+                                    <p class="mb-2"><strong>{{ registration.shirt_size or '-' }}</strong></p>
                                 </div>
+                                {% if registration.shirt_size_2 %}
                                 <div class="col-6">
-                                    <small class="text-muted">Shirt Size</small>
-                                    <p class="mb-2"><strong>{{ registration.shirt_size }}</strong></p>
+                                    <small class="text-muted"><i class="bi bi-tshirt"></i> Second Shirt</small>
+                                    <p class="mb-2"><strong>{{ registration.shirt_size_2 }}</strong></p>
+                                </div>
+                                {% endif %}
+                                <div class="col-12">
+                                    <small class="text-muted">Total</small>
+                                    <p class="mb-0"><strong class="text-success">{% if registration.shirt_size_2 %}30{% elif registration.shirt_size %}15{% else %}0{% endif %} EUR</strong>
+                                    <small class="text-muted">— payment on site at the tournament</small></p>
                                 </div>
                             </div>
                             

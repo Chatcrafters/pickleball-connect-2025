@@ -392,9 +392,6 @@
                             {{ player.first_name }} {{ player.last_name }}
                             {% if player.is_captain %}<span class="captain-badge">👑 Captain</span>{% endif %}
                         </div>
-                        {% if player.shirt_name %}
-                        <div class="player-shirt-name">"{{ player.shirt_name }}"</div>
-                        {% endif %}
                         <div class="player-country">
                             <span class="player-country-flag">{{ team_data.team.country_flag }}</span>
                             {{ team_data.team.country_name }}
@@ -492,7 +489,6 @@ const playersData = {
     {% for player in team_data.players %}
     {{ player.id }}: {
         name: {{ (player.first_name ~ ' ' ~ player.last_name)|tojson }},
-        shirtName: {{ (player.shirt_name or '')|tojson }},
         country: {{ (team_data.team.country_flag ~ ' ' ~ team_data.team.country_name)|tojson }},
         team: {{ (team_data.team.country_name ~ ' ' ~ team_data.team.age_category)|tojson }},
         dupr: {{ (player.dupr_rating or '')|tojson }},
@@ -514,7 +510,6 @@ function copyPlayerInfo(playerId) {
     if (!p) return;
     
     let info = `🏓 ${p.name}\n`;
-    if (p.shirtName) info += `   Jersey: "${p.shirtName}"\n`;
     info += `\n${p.country}\n`;
     info += `Team: ${p.team}\n`;
     if (p.gender) info += `Gender: ${p.gender === 'male' ? '♂️ Male' : '♀️ Female'}\n`;

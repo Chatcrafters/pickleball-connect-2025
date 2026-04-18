@@ -325,8 +325,8 @@ class PCLRegistration(db.Model):
     is_captain = db.Column(db.Boolean, default=False)
     
     # Shirt info (can be filled later)
-    shirt_name = db.Column(db.String(50), nullable=True)
     shirt_size = db.Column(db.String(10), nullable=True)
+    shirt_size_2 = db.Column(db.String(10), nullable=True)
     
     # Profile (can be filled later)
     photo_filename = db.Column(db.String(255), nullable=True)
@@ -394,7 +394,6 @@ class PCLRegistration(db.Model):
             self.first_name,
             self.last_name,
             self.gender,
-            self.shirt_name,
             self.shirt_size,
             self.photo_filename,
             self.bio
@@ -414,8 +413,6 @@ class PCLRegistration(db.Model):
             missing.append('photo')
         if not self.bio:
             missing.append('bio')
-        if not self.shirt_name:
-            missing.append('shirt_name')
         if not self.shirt_size:
             missing.append('shirt_size')
         return missing
@@ -423,10 +420,10 @@ class PCLRegistration(db.Model):
     def get_missing_fields_translated(self, lang='EN'):
         """Get translated list of missing fields"""
         translations = {
-            'EN': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Shirt Name', 'shirt_size': 'Shirt Size'},
-            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Shirt-Name', 'shirt_size': 'Shirt-GrÃƒÂ¶ÃƒÅ¸e'},
-            'ES': {'photo': 'Foto', 'bio': 'Bio', 'shirt_name': 'Nombre camiseta', 'shirt_size': 'Talla'},
-            'FR': {'photo': 'Photo', 'bio': 'Bio', 'shirt_name': 'Nom maillot', 'shirt_size': 'Taille'}
+            'EN': {'photo': 'Photo', 'bio': 'Bio', 'shirt_size': 'Shirt Size'},
+            'DE': {'photo': 'Foto', 'bio': 'Bio', 'shirt_size': 'Shirt-Größe'},
+            'ES': {'photo': 'Foto', 'bio': 'Bio', 'shirt_size': 'Talla'},
+            'FR': {'photo': 'Photo', 'bio': 'Bio', 'shirt_size': 'Taille'}
         }
         t = translations.get(lang, translations['EN'])
         return [t.get(f, f) for f in self.get_missing_fields()]

@@ -345,16 +345,22 @@
         <!-- Info Strip -->
         <div class="info-strip">
             <div class="info-item">
-                <div class="info-label">Shirt</div>
-                <div class="info-value">{{ registration.shirt_name or registration.last_name|upper }}</div>
-            </div>
-            <div class="info-item">
-                <div class="info-label">Size</div>
+                <div class="info-label"><i class="bi bi-tshirt"></i> Size</div>
                 <div class="info-value large">{{ registration.shirt_size or '-' }}</div>
+            </div>
+            {% if registration.shirt_size_2 %}
+            <div class="info-item">
+                <div class="info-label"><i class="bi bi-tshirt"></i> Size 2</div>
+                <div class="info-value large">{{ registration.shirt_size_2 }}</div>
+            </div>
+            {% endif %}
+            <div class="info-item">
+                <div class="info-label">Total</div>
+                <div class="info-value">{% if registration.shirt_size_2 %}30{% elif registration.shirt_size %}15{% else %}0{% endif %} EUR</div>
             </div>
             <div class="info-item">
                 <div class="info-label">Gender</div>
-                <div class="info-value">{% if registration.gender == 'male' %}👨{% else %}👩{% endif %}</div>
+                <div class="info-value"><i class="bi bi-gender-{% if registration.gender == 'male' %}male{% else %}female{% endif %}"></i></div>
             </div>
         </div>
         
