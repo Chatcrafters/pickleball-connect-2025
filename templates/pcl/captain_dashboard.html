@@ -7,10 +7,10 @@
     <!-- Language Switcher -->
     <div class="text-end mb-3">
         <div class="btn-group btn-group-sm">
-            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇬🇧 EN</a>
-            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇩🇪 DE</a>
-            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇪🇸 ES</a>
-            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">🇫🇷 FR</a>
+            <a href="?lang=EN" class="btn {% if current_lang == 'EN' %}btn-primary{% else %}btn-outline-primary{% endif %}">EN</a>
+            <a href="?lang=DE" class="btn {% if current_lang == 'DE' %}btn-primary{% else %}btn-outline-primary{% endif %}">DE</a>
+            <a href="?lang=ES" class="btn {% if current_lang == 'ES' %}btn-primary{% else %}btn-outline-primary{% endif %}">ES</a>
+            <a href="?lang=FR" class="btn {% if current_lang == 'FR' %}btn-primary{% else %}btn-outline-primary{% endif %}">FR</a>
         </div>
     </div>
     <!-- Team Switcher (if captain manages multiple teams) -->
@@ -99,7 +99,6 @@
     </div>
 
     <!-- Hidden inputs for copy functions -->
-    <input type="hidden" id="registrationUrl" value="{{ registration_url }}?lang={{ current_lang }}">
     <input type="hidden" id="shareMessage" value="{{ share_message }}">
 
     <!-- Team Status -->
@@ -116,7 +115,7 @@
             <div class="card text-center h-100 {% if stats.men >= team.min_men %}border-success{% else %}border-danger{% endif %}">
                 <div class="card-body py-3">
                     <h2 class="mb-0">{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h2>
-                    <small>👨 {{ t.men }}</small>
+                    <small><i class="bi bi-gender-male"></i> {{ t.men }}</small>
                 </div>
             </div>
         </div>
@@ -124,7 +123,7 @@
             <div class="card text-center h-100 {% if stats.women >= team.min_women %}border-success{% else %}border-danger{% endif %}">
                 <div class="card-body py-3">
                     <h2 class="mb-0">{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h2>
-                    <small>👩 {{ t.women }}</small>
+                    <small><i class="bi bi-gender-female"></i> {{ t.women }}</small>
                 </div>
             </div>
         </div>
@@ -132,9 +131,31 @@
             <div class="card text-center h-100">
                 <div class="card-body py-3">
                     <h2 class="mb-0">{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h2>
-                    <small>✓ {{ t.complete }}</small>
+                    <small><i class="bi bi-check"></i> {{ t.complete }}</small>
                 </div>
             </div>
+        </div>
+    </div>
+
+
+    <!-- Player Registration Link -->
+    <div class="card mb-4">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0"><i class="bi bi-whatsapp"></i> Player Registration Link - Forward to your team</h5>
+        </div>
+        <div class="card-body">
+            <label class="form-label small text-muted mb-1">Registration URL</label>
+            <div class="input-group mb-3">
+                <input type="text" class="form-control" id="registrationUrl" value="{{ registration_url }}?lang={{ current_lang }}" readonly>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="copyLink()" title="Copy link">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+            <label class="form-label small text-muted mb-1">Message preview</label>
+            <textarea class="form-control mb-3" rows="4" readonly>{{ share_message }}</textarea>
+            <a href="https://wa.me/?text={{ share_message_encoded }}" target="_blank" class="btn btn-success w-100">
+                <i class="bi bi-whatsapp"></i> Send to team WhatsApp group
+            </a>
         </div>
     </div>
 
@@ -144,7 +165,7 @@
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">👨 {{ t.men }} ({{ stats.men }}/{{ team.min_men }}-{{ team.max_men }})</h5>
+                    <h5 class="mb-0"><i class="bi bi-gender-male"></i> {{ t.men }} ({{ stats.men }}/{{ team.min_men }}-{{ team.max_men }})</h5>
                     {% if stats.men < team.max_men %}
                     <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-sm btn-light">
                         <i class="bi bi-plus"></i>
@@ -170,7 +191,7 @@
                                     <div>
                                         <h6 class="mb-0">
                                             {{ reg.first_name }} {{ reg.last_name }}
-                                            {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
+                                            {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-star-fill"></i></span>{% endif %}
                                         </h6>
                                         <small class="text-muted">
                                             {% if reg.shirt_size %}<i class="bi bi-tshirt"></i> {{ reg.shirt_size }}{% endif %}
@@ -182,7 +203,7 @@
                                 </div>
                                 <div class="d-flex align-items-center">
                                     {% if reg.status == 'complete' %}
-                                    <span class="badge bg-success">✓ {{ t.complete if t.complete else 'Vollständig' }}</span>
+                                    <span class="badge bg-success"><i class="bi bi-check"></i> {{ t.complete if t.complete else 'Vollständig' }}</span>
                                     {% else %}
                                     <span class="badge bg-warning text-dark" title="{{ reg.get_missing_fields()|join(', ') }}">
                                         {{ t.incomplete if t.incomplete else 'Unvollständig' }}
@@ -250,7 +271,7 @@
         <div class="col-md-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">👩 {{ t.women }} ({{ stats.women }}/{{ team.min_women }}-{{ team.max_women }})</h5>
+                    <h5 class="mb-0"><i class="bi bi-gender-female"></i> {{ t.women }} ({{ stats.women }}/{{ team.min_women }}-{{ team.max_women }})</h5>
                     {% if stats.women < team.max_women %}
                     <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-sm btn-light">
                         <i class="bi bi-plus"></i>
@@ -276,7 +297,7 @@
                                     <div>
                                         <h6 class="mb-0">
                                             {{ reg.first_name }} {{ reg.last_name }}
-                                            {% if reg.is_captain %}<span class="badge bg-warning">🎖️</span>{% endif %}
+                                            {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-star-fill"></i></span>{% endif %}
                                         </h6>
                                         <small class="text-muted">
                                             {% if reg.shirt_size %}<i class="bi bi-tshirt"></i> {{ reg.shirt_size }}{% endif %}
@@ -288,7 +309,7 @@
                                 </div>
                                 <div class="d-flex align-items-center">
                                     {% if reg.status == 'complete' %}
-                                    <span class="badge bg-success">✓ {{ t.complete if t.complete else 'Vollständig' }}</span>
+                                    <span class="badge bg-success"><i class="bi bi-check"></i> {{ t.complete if t.complete else 'Vollständig' }}</span>
                                     {% else %}
                                     <span class="badge bg-warning text-dark" title="{{ reg.get_missing_fields()|join(', ') }}">
                                         {{ t.incomplete if t.incomplete else 'Unvollständig' }}
@@ -363,17 +384,17 @@
                 <div class="col-md-6">
                     <h6>{{ t.team_size if t.team_size else 'Teamgröße' }}:</h6>
                     <ul>
-                        <li>👨 {{ t.men if t.men else 'Männer' }}: {{ team.min_men }}-{{ team.max_men }}</li>
-                        <li>👩 {{ t.women if t.women else 'Frauen' }}: {{ team.min_women }}-{{ team.max_women }}</li>
+                        <li><i class="bi bi-gender-male"></i> {{ t.men if t.men else 'Männer' }}: {{ team.min_men }}-{{ team.max_men }}</li>
+                        <li><i class="bi bi-gender-female"></i> {{ t.women if t.women else 'Frauen' }}: {{ team.min_women }}-{{ team.max_women }}</li>
                     </ul>
                 </div>
                 <div class="col-md-6">
                     <h6>{{ t.required_per_player if t.required_per_player else 'Pro Spieler erforderlich' }}:</h6>
                     <ul>
-                        <li>✓ {{ t.photo if t.photo else 'Profilbild' }}</li>
-                        <li>✓ {{ t.bio if t.bio else 'Kurze Bio' }}</li>
-                        <li>✓ {{ t.shirt_info if t.shirt_info else 'Name auf dem Shirt & Shirt-Größe' }}</li>
-                        <li>○ {{ t.social_media if t.social_media else 'Social Media' }} ({{ t.optional if t.optional else 'Optional' }})</li>
+                        <li><i class="bi bi-check"></i> {{ t.photo if t.photo else 'Profilbild' }}</li>
+                        <li><i class="bi bi-check"></i> {{ t.bio if t.bio else 'Kurze Bio' }}</li>
+                        <li><i class="bi bi-check"></i> {{ t.shirt_info if t.shirt_info else 'Shirt-Größe' }}</li>
+                        <li><i class="bi bi-circle"></i> {{ t.social_media if t.social_media else 'Social Media' }} ({{ t.optional if t.optional else 'Optional' }})</li>
                     </ul>
                 </div>
             </div>
