@@ -32,7 +32,7 @@
                             <i class="bi bi-person-fill text-dark"></i>
                         </div>
                         {% endif %}
-                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;">ðŸ‘‘</span>
+                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;"><i class="bi bi-award-fill"></i></span>
                     </div>
                     {% endfor %}
                 </div>
@@ -86,14 +86,14 @@
                             <!-- Status Badges -->
                             <div class="mb-2">
                                 {% if captain.status == 'complete' %}
-                                <span class="badge bg-success">âœ“ Profile Complete</span>
+                                <span class="badge bg-success"><i class="bi bi-check"></i> Profile Complete</span>
                                 {% else %}
-                                <span class="badge bg-warning">âš  Profile Incomplete</span>
+                                <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Profile Incomplete</span>
                                 {% endif %}
                                 
                                 {% if captain.whatsapp_sent_at %}
                                 <span class="badge bg-info" title="Sent: {{ captain.whatsapp_sent_at.strftime('%d.%m.%Y %H:%M') }}">
-                                    ðŸ“± WhatsApp Sent
+                                    <i class="bi bi-whatsapp"></i> WhatsApp Sent
                                 </span>
                                 {% endif %}
                             </div>
@@ -173,17 +173,17 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Gender *</label>
                                 <select class="form-select" name="gender" required>
-                                    <option value="male">ðŸ‘¨ Male</option>
-                                    <option value="female">ðŸ‘© Female</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Language</label>
                                 <select class="form-select" name="language">
-                                    <option value="EN">ðŸ‡¬ðŸ‡§ English</option>
-                                    <option value="DE">ðŸ‡©ðŸ‡ª Deutsch</option>
-                                    <option value="ES">ðŸ‡ªðŸ‡¸ EspaÃ±ol</option>
-                                    <option value="FR">ðŸ‡«ðŸ‡· FranÃ§ais</option>
+                                    <option value="EN">English</option>
+                                    <option value="DE">Deutsch</option>
+                                    <option value="ES">Español</option>
+                                    <option value="FR">Français</option>
                                 </select>
                             </div>
                         </div>
@@ -191,7 +191,7 @@
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" name="is_playing" id="isPlaying" checked>
                             <label class="form-check-label" for="isPlaying">
-                                ðŸ‘Ÿ Also plays in team (counts as player)
+                                <i class="bi bi-check-circle"></i> Also plays in team (counts as player)
                             </label>
                         </div>
                         
@@ -244,8 +244,8 @@
             <div class="card text-center {% if stats.men >= team.min_men %}border-success border-3{% else %}border-warning border-3{% endif %}">
                 <div class="card-body">
                     <h3>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
-                    <p class="mb-0">ðŸ‘¨ Men</p>
-                    <small class="text-muted">{% if stats.men >= team.min_men %}âœ… OK{% else %}âš ï¸ Need {{ team.min_men - stats.men }}{% endif %}</small>
+                    <p class="mb-0"><i class="bi bi-gender-male"></i> Men</p>
+                    <small class="text-muted">{% if stats.men >= team.min_men %}<i class="bi bi-check-circle-fill"></i> OK{% else %}<i class="bi bi-exclamation-triangle"></i> Need {{ team.min_men - stats.men }}{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -253,8 +253,8 @@
             <div class="card text-center {% if stats.women >= team.min_women %}border-success border-3{% else %}border-warning border-3{% endif %}">
                 <div class="card-body">
                     <h3>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
-                    <p class="mb-0">ðŸ‘© Women</p>
-                    <small class="text-muted">{% if stats.women >= team.min_women %}âœ… OK{% else %}âš ï¸ Need {{ team.min_women - stats.women }}{% endif %}</small>
+                    <p class="mb-0"><i class="bi bi-gender-female"></i> Women</p>
+                    <small class="text-muted">{% if stats.women >= team.min_women %}<i class="bi bi-check-circle-fill"></i> OK{% else %}<i class="bi bi-exclamation-triangle"></i> Need {{ team.min_women - stats.women }}{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -263,7 +263,7 @@
                 <div class="card-body">
                     <h3>{{ stats.men_complete + stats.women_complete }}/{{ stats.total }}</h3>
 <p class="mb-0">Complete</p>
-<small>{% if stats.is_complete %}âœ… Ready{% else %}{{ stats.total - (stats.men_complete + stats.women_complete) }} incomplete{% endif %}</small>
+<small>{% if stats.is_complete %}<i class="bi bi-check-circle-fill"></i> Ready{% else %}{{ stats.total - (stats.men_complete + stats.women_complete) }} incomplete{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -275,7 +275,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">ðŸ‘¨ Men ({{ stats.men }})</h5>
+                    <h5 class="mb-0"><i class="bi bi-gender-male"></i> Men ({{ stats.men }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.men_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
@@ -305,7 +305,7 @@
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning">ðŸ‘‘</span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-award-fill"></i></span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
@@ -320,9 +320,9 @@
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success">âœ“</span>
+                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
                                         {% else %}
-                                        <span class="badge bg-warning">âš </span>
+                                        <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i></span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -356,7 +356,7 @@
         <div class="col-lg-6 mb-4">
             <div class="card h-100">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">ðŸ‘© Women ({{ stats.women }})</h5>
+                    <h5 class="mb-0"><i class="bi bi-gender-female"></i> Women ({{ stats.women }})</h5>
                     <span class="badge bg-light text-dark">{{ stats.women_complete }} Complete</span>
                 </div>
                 <div class="card-body p-0">
@@ -386,7 +386,7 @@
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning">ðŸ‘‘</span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-award-fill"></i></span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
@@ -401,9 +401,9 @@
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success">âœ“</span>
+                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
                                         {% else %}
-                                        <span class="badge bg-warning">âš </span>
+                                        <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i></span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -451,10 +451,10 @@
                 <div class="col-md-6">
                     <h6>Required Profile Fields:</h6>
                     <ul class="mb-0">
-                        <li>âœ“ Profile Photo</li>
-                        <li>âœ“ Bio</li>
-                        <li>âœ“ Shirt Name & Size</li>
-                        <li>â—‹ Social Media (optional)</li>
+                        <li><i class="bi bi-check"></i> Profile Photo</li>
+                        <li><i class="bi bi-check"></i> Bio</li>
+                        <li><i class="bi bi-check"></i> Shirt Size</li>
+                        <li><i class="bi bi-circle"></i> Social Media (optional)</li>
                     </ul>
                 </div>
             </div>
