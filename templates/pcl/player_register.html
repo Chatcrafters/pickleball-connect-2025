@@ -519,11 +519,13 @@ document.getElementById('bio').addEventListener('input', function() {
         var count = (s1.value ? 1 : 0) + (s2.value ? 1 : 0) + (s3.value ? 1 : 0);
         total.textContent = count * 15;
     }
+    update();
     if (s1) s1.addEventListener('change', update);
     if (s2) s2.addEventListener('change', update);
     if (s3) s3.addEventListener('change', update);
 })();
 </script>
 {% endblock %}
+
 
 
