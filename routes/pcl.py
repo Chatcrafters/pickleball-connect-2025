@@ -650,7 +650,6 @@ def add_captain(team_id):
         phone=phone,
         gender=gender,
         is_captain=True,
-        is_playing=is_playing,
         preferred_language=language,
         status='incomplete'
     )
