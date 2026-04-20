@@ -278,15 +278,16 @@ class PCLTeam(db.Model):
         """Get team registration statistics"""
         # Use direct query to avoid lazy loading issues
         registrations = PCLRegistration.query.filter_by(team_id=self.id).all()
-        men = [r for r in registrations if r.gender == 'male']
-        women = [r for r in registrations if r.gender == 'female']
+        playing = [r for r in registrations if not (r.is_captain and not r.is_playing)]
+        men = [r for r in playing if r.gender == 'male']
+        women = [r for r in playing if r.gender == 'female']
         captains = [r for r in registrations if r.is_captain]
-        
+
         men_complete = len([r for r in men if r.status == 'complete'])
         women_complete = len([r for r in women if r.status == 'complete'])
-        
+
         return {
-            'total': len(registrations),
+            'total': len(playing),
             'men': len(men),
             'women': len(women),
             'captains': len(captains),
@@ -295,7 +296,7 @@ class PCLTeam(db.Model):
             'men_with_photo': len([r for r in men if r.photo_filename]),
             'women_with_photo': len([r for r in women if r.photo_filename]),
             'is_complete': (
-                len(men) >= self.min_men and 
+                len(men) >= self.min_men and
                 len(women) >= self.min_women and
                 men_complete >= self.min_men and
                 women_complete >= self.min_women
