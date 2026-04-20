@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}{{ t.page_title }} - {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}{% endblock %}
 
@@ -187,7 +187,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="alert alert-info py-2 mb-3">
+                        <div class="alert alert-info py-2 mb-3" style="position:sticky;top:0;z-index:100;">
                             <i class="bi bi-info-circle"></i>
                             <strong>{{ t.shirt_total_price if t.shirt_total_price else 'Total' }}:</strong>
                             <span id="shirt-total">{{ ((1 if registration and registration.shirt_size else 0) + (1 if registration and registration.shirt_size_2 else 0) + (1 if registration and registration.shirt_size_3 else 0)) * 15 }}</span> EUR
@@ -208,7 +208,7 @@
                                 <img src="#" class="profile-photo-preview d-none" id="photoPreview" alt="Preview">
                                 <div>
                                     <label for="photo" class="btn btn-outline-success">
-                                        <i class="bi bi-upload"></i> {{ t.upload_photo if t.upload_photo else 'Foto wählen' }}
+                                        <i class="bi bi-upload"></i> {{ t.upload_photo if t.upload_photo else 'Foto wÃ¤hlen' }}
                                     </label>
                                     <input type="file" id="photo" name="photo" accept="image/*" 
                                            class="d-none" required onchange="previewProfilePhoto(this)">
@@ -226,14 +226,14 @@
                             </label>
                             <p class="text-muted small mb-2">
                                 <i class="bi bi-info-circle"></i>
-                                {{ t.social_media_photos_help if t.social_media_photos_help else 'Lade bis zu 5 Fotos hoch, die wir für Social Media Posts verwenden dürfen (Action Shots, Spielfotos, etc.)' }}
+                                {{ t.social_media_photos_help if t.social_media_photos_help else 'Lade bis zu 5 Fotos hoch, die wir fÃ¼r Social Media Posts verwenden dÃ¼rfen (Action Shots, Spielfotos, etc.)' }}
                             </p>
                             
                             <div class="additional-photos-grid" id="additionalPhotosGrid">
                                 <!-- Add photo button -->
                                 <label class="add-photo-btn" id="addPhotoBtn">
                                     <i class="bi bi-plus-circle"></i>
-                                    <span>{{ t.add_photo if t.add_photo else 'Hinzufügen' }}</span>
+                                    <span>{{ t.add_photo if t.add_photo else 'HinzufÃ¼gen' }}</span>
                                     <input type="file" name="additional_photos" accept="image/*" multiple 
                                            class="d-none" id="additionalPhotosInput" onchange="handleAdditionalPhotos(this)">
                                 </label>
@@ -247,7 +247,7 @@
                         <div class="mb-3">
                             <label class="form-label">{{ t.bio }} <span class="text-danger">*</span></label>
                             <textarea class="form-control" name="bio" rows="4" id="bio"
-                                      placeholder="{{ t.bio_placeholder if t.bio_placeholder else 'Erzähl uns etwas über dich...' }}" 
+                                      placeholder="{{ t.bio_placeholder if t.bio_placeholder else 'ErzÃ¤hl uns etwas Ã¼ber dich...' }}" 
                                       required minlength="50" maxlength="500"></textarea>
                             <div class="d-flex justify-content-between">
                                 <small class="form-text text-muted">{{ t.bio_help if t.bio_help else '50-500 Zeichen' }}</small>
@@ -332,7 +332,7 @@
             <!-- Back Link -->
             <div class="text-center mt-3">
                 <a href="{{ url_for('pcl.captain_dashboard', token=team.captain_token, lang=current_lang) }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> {{ t.back if t.back else 'Zurück zum Team' }}
+                    <i class="bi bi-arrow-left"></i> {{ t.back if t.back else 'ZurÃ¼ck zum Team' }}
                 </a>
             </div>
         </div>
