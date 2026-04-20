@@ -187,7 +187,7 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="alert alert-info py-2 mb-0" id="shirt-price-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:1050;border-radius:0;">
+                        <div class="bg-info bg-opacity-25 border-top border-info py-2 px-3" id="shirt-price-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:1050;border-radius:0;">
                             <i class="bi bi-info-circle"></i>
                             <strong>{{ t.shirt_total_price if t.shirt_total_price else 'Total' }}:</strong>
                             <span id="shirt-total">{{ ((1 if registration and registration.shirt_size else 0) + (1 if registration and registration.shirt_size_2 else 0) + (1 if registration and registration.shirt_size_3 else 0)) * 15 }}</span> EUR
@@ -525,4 +525,5 @@ document.getElementById('bio').addEventListener('input', function() {
 })();
 </script>
 {% endblock %}
+
 
