@@ -32,7 +32,7 @@
                             <i class="bi bi-person-fill text-dark"></i>
                         </div>
                         {% endif %}
-                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;"><i class="bi bi-award-fill"></i></span>
+                        <span class="position-absolute bottom-0 end-0 badge bg-warning rounded-pill" style="font-size: 0.6rem;"><i class="bi bi-crown-fill"></i></span>
                     </div>
                     {% endfor %}
                 </div>
@@ -86,14 +86,14 @@
                             <!-- Status Badges -->
                             <div class="mb-2">
                                 {% if captain.status == 'complete' %}
-                                <span class="badge bg-success"><i class="bi bi-check"></i> Profile Complete</span>
+                                <span class="badge bg-success"><i class="bi bi-check-lg"></i> Profile Complete</span>
                                 {% else %}
-                                <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Profile Incomplete</span>
+                                <span class="badge bg-warning"><i class="bi bi-exclamation-triangle-fill"></i> Profile Incomplete</span>
                                 {% endif %}
                                 
                                 {% if captain.whatsapp_sent_at %}
                                 <span class="badge bg-info" title="Sent: {{ captain.whatsapp_sent_at.strftime('%d.%m.%Y %H:%M') }}">
-                                    <i class="bi bi-whatsapp"></i> WhatsApp Sent
+                                    <i class="bi bi-phone"></i> WhatsApp Sent
                                 </span>
                                 {% endif %}
                             </div>
@@ -180,10 +180,10 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Language</label>
                                 <select class="form-select" name="language">
-                                    <option value="EN">English</option>
-                                    <option value="DE">Deutsch</option>
-                                    <option value="ES">Español</option>
-                                    <option value="FR">Français</option>
+                                    <option value="EN"> English</option>
+                                    <option value="DE"> Deutsch</option>
+                                    <option value="ES"> Español</option>
+                                    <option value="FR"> Français</option>
                                 </select>
                             </div>
                         </div>
@@ -191,7 +191,7 @@
                         <div class="form-check form-switch mb-3">
                             <input class="form-check-input" type="checkbox" name="is_playing" id="isPlaying" checked>
                             <label class="form-check-label" for="isPlaying">
-                                <i class="bi bi-check-circle"></i> Also plays in team (counts as player)
+                                 Also plays in team (counts as player)
                             </label>
                         </div>
                         
@@ -222,7 +222,7 @@
             <div class="input-group mb-2">
                 <input type="text" class="form-control" id="captainLink" 
                        value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" readonly>
-                <button class="btn btn-outline-secondary" type="button" onclick="copyCaptainLink(this)">
+                <button class="btn btn-outline-secondary" type="button" onclick="copyCaptainLink()">
                     <i class="bi bi-clipboard"></i> Copy
                 </button>
             </div>
@@ -245,7 +245,7 @@
                 <div class="card-body">
                     <h3>{{ stats.men }}/{{ team.min_men }}-{{ team.max_men }}</h3>
                     <p class="mb-0"><i class="bi bi-gender-male"></i> Men</p>
-                    <small class="text-muted">{% if stats.men >= team.min_men %}<i class="bi bi-check-circle-fill"></i> OK{% else %}<i class="bi bi-exclamation-triangle"></i> Need {{ team.min_men - stats.men }}{% endif %}</small>
+                    <small class="text-muted">{% if stats.men >= team.min_men %}<i class="bi bi-check-circle-fill"></i> OK{% else %}<i class="bi bi-exclamation-triangle-fill"></i> Need {{ team.min_men - stats.men }}{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -254,7 +254,7 @@
                 <div class="card-body">
                     <h3>{{ stats.women }}/{{ team.min_women }}-{{ team.max_women }}</h3>
                     <p class="mb-0"><i class="bi bi-gender-female"></i> Women</p>
-                    <small class="text-muted">{% if stats.women >= team.min_women %}<i class="bi bi-check-circle-fill"></i> OK{% else %}<i class="bi bi-exclamation-triangle"></i> Need {{ team.min_women - stats.women }}{% endif %}</small>
+                    <small class="text-muted">{% if stats.women >= team.min_women %}<i class="bi bi-check-circle-fill"></i> OK{% else %}<i class="bi bi-exclamation-triangle-fill"></i> Need {{ team.min_women - stats.women }}{% endif %}</small>
                 </div>
             </div>
         </div>
@@ -292,11 +292,12 @@
                             </thead>
                             <tbody>
                                 {% for reg in men %}
+                                {% if not (reg.is_captain and not reg.is_playing) %}
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             {% if reg.photo_filename %}
-                                            <img src="{{ reg.photo_filename }}" 
+                                            <img src="{{ reg.photo_filename }}"
                                                  class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
                                             {% else %}
                                             <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
@@ -305,24 +306,22 @@
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-award-fill"></i></span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-crown-fill"></i></span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <i class="bi bi-tshirt"></i>
-                                        <strong>{{ reg.shirt_size or '-' }}</strong>
-                                        {% if reg.shirt_size_2 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>{% endif %}
-                                        {% if reg.shirt_size_3 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_3 }}</small>{% endif %}
-                                        {% if reg.shirt_size %}<br><small class="text-success fw-semibold">{{ ((1 if reg.shirt_size else 0) + (1 if reg.shirt_size_2 else 0) + (1 if reg.shirt_size_3 else 0)) * 15 }} EUR</small>{% endif %}
+                                        <strong>{{ reg.shirt_name or '-' }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
+                                        <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
                                         {% else %}
-                                        <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i></span>
+                                        <span class="badge bg-warning"><i class="bi bi-exclamation-triangle-fill"></i></span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -341,6 +340,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -373,11 +373,12 @@
                             </thead>
                             <tbody>
                                 {% for reg in women %}
+                                {% if not (reg.is_captain and not reg.is_playing) %}
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             {% if reg.photo_filename %}
-                                            <img src="{{ reg.photo_filename }}" 
+                                            <img src="{{ reg.photo_filename }}"
                                                  class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
                                             {% else %}
                                             <div class="rounded-circle bg-secondary me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
@@ -386,24 +387,22 @@
                                             {% endif %}
                                             <div>
                                                 <strong>{{ reg.first_name }} {{ reg.last_name }}</strong>
-                                                {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-award-fill"></i></span>{% endif %}
+                                                {% if reg.is_captain %}<span class="badge bg-warning"><i class="bi bi-crown-fill"></i></span>{% endif %}
                                                 <br>
                                                 <small class="text-muted">{{ reg.phone or reg.email or '-' }}</small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        <i class="bi bi-tshirt"></i>
-                                        <strong>{{ reg.shirt_size or '-' }}</strong>
-                                        {% if reg.shirt_size_2 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_2 }}</small>{% endif %}
-                                        {% if reg.shirt_size_3 %}<br><small class="text-muted"><i class="bi bi-plus"></i> {{ reg.shirt_size_3 }}</small>{% endif %}
-                                        {% if reg.shirt_size %}<br><small class="text-success fw-semibold">{{ ((1 if reg.shirt_size else 0) + (1 if reg.shirt_size_2 else 0) + (1 if reg.shirt_size_3 else 0)) * 15 }} EUR</small>{% endif %}
+                                        <strong>{{ reg.shirt_name or '-' }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ reg.shirt_size or '-' }}</small>
                                     </td>
                                     <td>
                                         {% if reg.status == 'complete' %}
-                                        <span class="badge bg-success"><i class="bi bi-check"></i></span>
+                                        <span class="badge bg-success"><i class="bi bi-check-lg"></i></span>
                                         {% else %}
-                                        <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i></span>
+                                        <span class="badge bg-warning"><i class="bi bi-exclamation-triangle-fill"></i></span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -422,6 +421,7 @@
                                         </div>
                                     </td>
                                 </tr>
+                                {% endif %}
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -451,9 +451,9 @@
                 <div class="col-md-6">
                     <h6>Required Profile Fields:</h6>
                     <ul class="mb-0">
-                        <li><i class="bi bi-check"></i> Profile Photo</li>
-                        <li><i class="bi bi-check"></i> Bio</li>
-                        <li><i class="bi bi-check"></i> Shirt Size</li>
+                        <li><i class="bi bi-check-lg"></i> Profile Photo</li>
+                        <li><i class="bi bi-check-lg"></i> Bio</li>
+                        <li><i class="bi bi-check-lg"></i> Shirt Name & Size</li>
                         <li><i class="bi bi-circle"></i> Social Media (optional)</li>
                     </ul>
                 </div>
@@ -471,49 +471,26 @@
 
 <!-- JavaScript -->
 <script>
-function copyCaptainLink(btn) {
+function copyCaptainLink() {
     const linkInput = document.getElementById('captainLink');
-    const text = linkInput.value;
-
-    function onSuccess() {
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999);
+    
+    navigator.clipboard.writeText(linkInput.value).then(() => {
+        const btn = event.target.closest('button');
         const originalHTML = btn.innerHTML;
         btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
         btn.classList.remove('btn-outline-secondary');
         btn.classList.add('btn-success');
+        
         setTimeout(() => {
             btn.innerHTML = originalHTML;
             btn.classList.remove('btn-success');
             btn.classList.add('btn-outline-secondary');
         }, 2000);
-    }
-
-    if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text).then(onSuccess).catch(() => {
-            fallbackCopy(text, onSuccess);
-        });
-    } else {
-        fallbackCopy(text, onSuccess);
-    }
-}
-
-function fallbackCopy(text, onSuccess) {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.focus();
-    textarea.select();
-    try {
-        document.execCommand('copy');
-        onSuccess();
-    } catch (e) {
-        // Last resort: select the input so user can copy manually
-        const linkInput = document.getElementById('captainLink');
-        linkInput.select();
-        linkInput.setSelectionRange(0, 99999);
-    }
-    document.body.removeChild(textarea);
+    }).catch(err => {
+        alert('Failed to copy link');
+    });
 }
 
 function sendCaptainLink(captainId, name, phone) {

@@ -608,8 +608,9 @@ def admin_team_detail(team_id):
     """Admin view of a specific team with captain management"""
     team = PCLTeam.query.get_or_404(team_id)
     
-    men = team.registrations.filter_by(gender='male').all()
-    women = team.registrations.filter_by(gender='female').all()
+    playing_filter = db.or_(PCLRegistration.is_playing == True, PCLRegistration.is_captain == False)
+    men = team.registrations.filter_by(gender='male').filter(playing_filter).all()
+    women = team.registrations.filter_by(gender='female').filter(playing_filter).all()
     captains = team.registrations.filter_by(is_captain=True).all()
     stats = team.get_stats()
     
@@ -650,6 +651,7 @@ def add_captain(team_id):
         phone=phone,
         gender=gender,
         is_captain=True,
+        is_playing=is_playing,
         preferred_language=language,
         status='incomplete'
     )

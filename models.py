@@ -323,7 +323,8 @@ class PCLRegistration(db.Model):
     
     # Role
     is_captain = db.Column(db.Boolean, default=False)
-    
+    is_playing = db.Column(db.Boolean, default=True)
+
     # Shirt info (can be filled later)
     shirt_size = db.Column(db.String(10), nullable=True)
     shirt_size_2 = db.Column(db.String(10), nullable=True)
