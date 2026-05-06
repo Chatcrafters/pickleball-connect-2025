@@ -187,12 +187,6 @@
                                 </select>
                             </div>
                         </div>
-                        <div class="bg-info bg-opacity-25 border-top border-info py-2 px-3" id="shirt-price-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:1050;border-radius:0;">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>{{ t.shirt_total_price if t.shirt_total_price else 'Total' }}:</strong>
-                            <span id="shirt-total">{{ ((1 if registration and registration.shirt_size else 0) + (1 if registration and registration.shirt_size_2 else 0) + (1 if registration and registration.shirt_size_3 else 0)) * 15 }}</span> EUR
-                            <small class="d-block text-muted">{{ t.shirt_payment_info if t.shirt_payment_info else 'Each shirt costs 15 EUR. Payment on site at the tournament.' }}</small>
-                        </div>
 
                         <hr class="my-4">
 
@@ -319,7 +313,11 @@
                             </div>
                         </div>
 
-                        <!-- Submit -->
+                        <!-- Shirt total + Submit -->
+                        <div class="alert alert-info mb-3" id="shirt-price-bar">
+                            <strong><i class="bi bi-info-circle"></i> {{ t.shirt_total_price if t.shirt_total_price else 'Total' }}: <span id="shirt-total">{{ ((1 if registration and registration.shirt_size else 0) + (1 if registration and registration.shirt_size_2 else 0) + (1 if registration and registration.shirt_size_3 else 0)) * 15 }}</span> EUR</strong><br>
+                            <small>{{ t.shirt_payment_info if t.shirt_payment_info else 'Each shirt costs 15 EUR. Payment on site at the tournament.' }}</small>
+                        </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success btn-lg">
                                 <i class="bi bi-check-circle"></i> {{ t.submit if t.submit else 'Registrieren' }}
