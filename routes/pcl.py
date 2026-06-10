@@ -70,6 +70,7 @@ TRANSLATIONS = {
         'select': 'Select',
         'success_title': 'Registration Complete!',
         'success_message': 'Thank you for registering for PCL.',
+        'registration_whatsapp_sent': 'Registration successful! Check WhatsApp for your personal profile link.',
         'missing_fields': 'Please complete all required fields',
         'captain_dashboard': 'Captain Dashboard',
         'team_status': 'Team Status',
@@ -114,6 +115,10 @@ TRANSLATIONS = {
         'profile_progress': 'Profile Progress',
         'save_profile': 'Save Profile',
         'profile_saved': 'Profile saved successfully!',
+        'profile_updated': 'Profile updated!',
+        'edit_profile_title': 'Edit Profile',
+        'current_photo': 'Current photo',
+        'leave_empty_to_keep': 'Leave empty to keep',
         'data_protection': 'Your data is securely stored',
         'contact': 'Contact',
     },
@@ -159,6 +164,7 @@ TRANSLATIONS = {
         'select': 'Auswaehlen',
         'success_title': 'Registrierung erfolgreich!',
         'success_message': 'Danke fuer deine Registrierung zur PCL.',
+        'registration_whatsapp_sent': 'Registrierung erfolgreich! Schau auf WhatsApp fuer deinen persoenlichen Profil-Link.',
         'missing_fields': 'Bitte fuelle alle Pflichtfelder aus',
         'captain_dashboard': 'Kapitaen Dashboard',
         'team_status': 'Team-Status',
@@ -203,6 +209,10 @@ TRANSLATIONS = {
         'profile_progress': 'Profil-Fortschritt',
         'save_profile': 'Profil speichern',
         'profile_saved': 'Profil erfolgreich gespeichert!',
+        'profile_updated': 'Profil aktualisiert!',
+        'edit_profile_title': 'Profil bearbeiten',
+        'current_photo': 'Aktuelles Foto',
+        'leave_empty_to_keep': 'Leer lassen um beizubehalten',
         'data_protection': 'Deine Daten werden sicher gespeichert',
         'contact': 'Kontakt',
     },
@@ -248,6 +258,7 @@ TRANSLATIONS = {
         'select': 'Seleccionar',
         'success_title': 'Registro completado!',
         'success_message': 'Gracias por registrarte en PCL.',
+        'registration_whatsapp_sent': 'Registro exitoso! Revisa WhatsApp para tu enlace de perfil personal.',
         'missing_fields': 'Por favor completa todos los campos obligatorios',
         'captain_dashboard': 'Panel del CapitÃƒÂ¡n',
         'team_status': 'Estado del Equipo',
@@ -292,6 +303,10 @@ TRANSLATIONS = {
         'profile_progress': 'Progreso del perfil',
         'save_profile': 'Guardar perfil',
         'profile_saved': 'Perfil guardado exitosamente!',
+        'profile_updated': 'Perfil actualizado!',
+        'edit_profile_title': 'Editar perfil',
+        'current_photo': 'Foto actual',
+        'leave_empty_to_keep': 'Dejar vacio para mantener',
         'data_protection': 'Tus datos estÃƒÂ¡n almacenados de forma segura',
         'contact': 'Contacto',
     },
@@ -337,6 +352,7 @@ TRANSLATIONS = {
         'select': 'Selectionner',
         'success_title': 'Inscription reussie!',
         'success_message': 'Merci pour votre inscription a PCL.',
+        'registration_whatsapp_sent': 'Inscription reussie! Consultez WhatsApp pour votre lien de profil personnel.',
         'missing_fields': 'Veuillez remplir tous les champs obligatoires',
         'captain_dashboard': 'Tableau de bord Capitaine',
         'team_status': "Statut de l'equipe",
@@ -381,6 +397,10 @@ TRANSLATIONS = {
         'profile_progress': 'Progression du profil',
         'save_profile': 'Enregistrer le profil',
         'profile_saved': 'Profil enregistre avec succÃƒÂ¨s!',
+        'profile_updated': 'Profil mis a jour!',
+        'edit_profile_title': 'Modifier le profil',
+        'current_photo': 'Photo actuelle',
+        'leave_empty_to_keep': 'Laisser vide pour conserver',
         'data_protection': 'Vos donnees sont stockees en toute securite',
         'contact': 'Contact',
     }
@@ -1174,7 +1194,10 @@ def complete_profile(profile_token):
             additional_photos_list = json.loads(registration.additional_photos)
         except:
             additional_photos_list = []
-    
+
+    # Was the profile already complete before this request? (drives edit vs. complete wording)
+    was_complete = registration.status == 'complete'
+
     if request.method == 'POST':
         # Handle profile photo upload
         if 'photo' in request.files:
@@ -1225,7 +1248,8 @@ def complete_profile(profile_token):
         
         try:
             db.session.commit()
-            flash(t['profile_saved'], 'success')
+            # If the profile was already complete, this was an edit -> "updated"; otherwise "saved"
+            flash(t['profile_updated'] if was_complete else t['profile_saved'], 'success')
             return redirect(url_for('pcl.complete_profile', profile_token=profile_token, lang=lang))
         except Exception as e:
             db.session.rollback()
@@ -1238,6 +1262,7 @@ def complete_profile(profile_token):
                          missing_fields=missing_fields,
                          completion_percent=completion_percent,
                          additional_photos_list=additional_photos_list,
+                         is_edit=was_complete,
                          t=t,
                          current_lang=lang)
 
@@ -1448,8 +1473,33 @@ def player_register(token):
         try:
             db.session.add(registration)
             db.session.commit()
-            
-            return redirect(url_for('pcl.registration_success', 
+
+            # Send the player their personal profile link via WhatsApp so they can edit anytime.
+            # A WhatsApp failure must NOT undo the already-committed registration.
+            whatsapp_sent = False
+            if registration.phone:
+                try:
+                    profile_url = request.host_url.rstrip('/') + url_for('pcl.complete_profile', profile_token=registration.profile_token)
+                    message = get_profile_completion_message(registration, profile_url, registration.preferred_language or 'EN')
+                    sponsor_block = get_whatsapp_sponsor_block(pcl_tournament_id=team.tournament_id, language=registration.preferred_language or 'EN')
+                    message += sponsor_block
+
+                    result = send_whatsapp_message(registration.phone, message, test_mode=False)
+
+                    if result.get('status') in ['sent', 'queued']:
+                        registration.whatsapp_sent_at = datetime.now()
+                        db.session.commit()
+                        whatsapp_sent = True
+                except Exception as wa_error:
+                    db.session.rollback()
+                    print(f'WhatsApp send failed for registration {registration.id}: {wa_error}')
+
+            if whatsapp_sent:
+                flash(t['registration_whatsapp_sent'], 'success')
+            else:
+                flash(t['success_message'], 'success')
+
+            return redirect(url_for('pcl.registration_success',
                                   registration_id=registration.id,
                                   lang=lang))
         except Exception as e:
@@ -1479,58 +1529,93 @@ def registration_success(registration_id):
 
 @pcl.route('/register/edit/<int:registration_id>', methods=['GET', 'POST'])
 def edit_registration(registration_id):
-    """Edit existing registration"""
+    """Edit existing registration (captain) - pre-fills with the player's existing data"""
     registration = PCLRegistration.query.get_or_404(registration_id)
     team = registration.team
-    
-    lang = request.args.get('lang', registration.preferred_language).upper()
+
+    lang = request.args.get('lang', registration.preferred_language or 'EN').upper()
+    if lang not in TRANSLATIONS:
+        lang = 'EN'
     t = get_translations(lang)
-    
+
+    # Parse existing additional photos so the template can render them as thumbnails
+    additional_photos_list = []
+    if registration.additional_photos:
+        try:
+            additional_photos_list = json.loads(registration.additional_photos)
+        except:
+            additional_photos_list = []
+
     if request.method == 'POST':
-        registration.first_name = request.form['first_name']
-        registration.last_name = request.form['last_name']
-        registration.email = request.form.get('email')
-        registration.phone = request.form.get('phone')
-        registration.gender = request.form['gender']
-        registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else None
-        registration.is_captain = request.form.get('is_captain') == 'on'
-        registration.is_playing = request.form.get('is_playing') == 'on'
-        registration.shirt_size = request.form.get('shirt_size')
-        registration.shirt_size_2 = request.form.get('shirt_size_2') or None
-        registration.shirt_size_3 = request.form.get('shirt_size_3') or None
-        registration.bio = request.form.get('bio')
-        registration.instagram = request.form.get('instagram', '').replace('@', '')
-        registration.tiktok = request.form.get('tiktok', '').replace('@', '')
-        registration.youtube = request.form.get('youtube')
-        registration.twitter = request.form.get('twitter', '').replace('@', '')
-        registration.video_url = request.form.get('video_url')
-        registration.dupr_rating = request.form.get('dupr_rating')
+        # Preserve-on-empty: only overwrite a field when a new value was submitted
+        registration.first_name = request.form.get('first_name') or registration.first_name
+        registration.last_name = request.form.get('last_name') or registration.last_name
+        registration.email = request.form.get('email') or registration.email
+        registration.phone = request.form.get('phone') or registration.phone
+        registration.gender = request.form.get('gender') or registration.gender
+        registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else registration.birth_year
+        # is_captain / is_playing have no control on this form -> preserve existing values
+        if 'is_captain' in request.form:
+            registration.is_captain = request.form.get('is_captain') == 'on'
+        if 'is_playing' in request.form:
+            registration.is_playing = request.form.get('is_playing') == 'on'
+        registration.shirt_size = request.form.get('shirt_size') or registration.shirt_size
+        registration.shirt_size_2 = request.form.get('shirt_size_2') or registration.shirt_size_2
+        registration.shirt_size_3 = request.form.get('shirt_size_3') or registration.shirt_size_3
+        registration.bio = request.form.get('bio', '').strip() or registration.bio
+        registration.instagram = request.form.get('instagram', '').strip().replace('@', '') or registration.instagram
+        registration.tiktok = request.form.get('tiktok', '').strip().replace('@', '') or registration.tiktok
+        registration.youtube = request.form.get('youtube', '').strip() or registration.youtube
+        registration.twitter = request.form.get('twitter', '').strip().replace('@', '') or registration.twitter
+        registration.video_url = request.form.get('video_url', '').strip() or registration.video_url
+        registration.dupr_rating = request.form.get('dupr_rating', '').strip() or registration.dupr_rating
         registration.preferred_language = lang
-        
-        # Handle new photo upload
+
+        # Handle new profile photo upload (leave empty to keep current one)
         if 'photo' in request.files:
             file = request.files['photo']
             if file and file.filename and allowed_file(file.filename):
                 result = upload_photo_to_supabase(file, folder='players')
                 if result['success']:
                     registration.photo_filename = result['url']
-        
+                else:
+                    flash(f'Photo upload failed: {result["error"]}', 'warning')
+
+        # Handle additional photos to delete
+        photos_to_delete = request.form.get('photos_to_delete', '')
+        if photos_to_delete:
+            urls_to_delete = photos_to_delete.split('|||')
+            additional_photos_list = [url for url in additional_photos_list if url not in urls_to_delete]
+
+        # Handle additional photos upload
+        if 'additional_photos' in request.files:
+            files = request.files.getlist('additional_photos')
+            for file in files:
+                if file and file.filename and allowed_file(file.filename):
+                    if len(additional_photos_list) >= 5:
+                        break  # Max 5 photos
+                    result = upload_photo_to_supabase(file, folder='players/social')
+                    if result['success']:
+                        additional_photos_list.append(result['url'])
+
+        registration.additional_photos = json.dumps(additional_photos_list) if additional_photos_list else None
+
         registration.check_completeness()
-        
+
         try:
             db.session.commit()
-            flash(t['success_message'], 'success')
-            return redirect(url_for('pcl.registration_success', 
-                                  registration_id=registration.id,
-                                  lang=lang))
+            flash(t['profile_updated'], 'success')
+            # Back to the captain dashboard so the captain sees the updated player in the team list
+            return redirect(url_for('pcl.captain_dashboard', token=team.captain_token, lang=lang))
         except Exception as e:
             db.session.rollback()
             flash(f'Error: {str(e)}', 'danger')
-    
+
     return render_template('pcl/player_register.html',
                          team=team,
                          registration=registration,
                          shirt_sizes=SHIRT_SIZES,
+                         additional_photos_list=additional_photos_list,
                          t=t,
                          current_lang=lang,
                          edit_mode=True)

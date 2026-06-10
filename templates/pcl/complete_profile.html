@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ t.complete_profile_title }} - {{ registration.team.country_flag }} {{ registration.team.country_name }}</title>
+    <title>{% if is_edit %}{{ t.edit_profile_title if t.edit_profile_title else 'Edit Profile' }}{% else %}{{ t.complete_profile_title }}{% endif %} - {{ registration.team.country_flag }} {{ registration.team.country_name }}</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -166,8 +166,12 @@
                     <div class="profile-header">
                         <div class="team-badge">{{ registration.team.country_flag }}</div>
                         <h2 class="mt-2">
-                            {{ t.hello if t.hello else 'Hallo' }} {{ registration.first_name }}! 👋
+                            {{ t.hello if t.hello else 'Hallo' }} {{ registration.first_name }}!
                         </h2>
+                        <p class="mb-2 fw-semibold">
+                            <i class="bi {% if is_edit %}bi-pencil-square{% else %}bi-person-check{% endif %}"></i>
+                            {% if is_edit %}{{ t.edit_profile_title if t.edit_profile_title else 'Edit Profile' }}{% else %}{{ t.complete_profile_title }}{% endif %}
+                        </p>
                         <p class="mb-1">{{ registration.team.country_name }} {{ registration.team.age_category }}</p>
                         <p class="mb-0 opacity-75">{{ registration.team.tournament.name }}</p>
                     </div>
@@ -219,8 +223,13 @@
                         
                         <div class="text-center mb-4">
                             {% if registration.photo_filename %}
-                            <img src="{{ registration.photo_filename }}" 
-                                 class="photo-preview mb-3" id="photoPreview" alt="Profile">
+                            <img src="{{ registration.photo_filename }}"
+                                 class="photo-preview mb-2" id="photoPreview" alt="Profile">
+                            <small class="text-muted d-block mb-3">
+                                <i class="bi bi-info-circle"></i>
+                                {{ t.current_photo if t.current_photo else 'Current photo' }} -
+                                {{ t.leave_empty_to_keep if t.leave_empty_to_keep else 'Leave empty to keep' }}
+                            </small>
                             {% else %}
                             <div class="photo-placeholder mx-auto mb-3" id="photoPlaceholder">
                                 <i class="bi bi-person-circle text-muted" style="font-size: 4rem;"></i>
@@ -281,7 +290,7 @@
                             <input type="hidden" name="photos_to_delete" id="photosToDelete" value="">
                             
                             <small class="text-muted d-block mt-2">
-                                📷 <span id="photoCount">{{ additional_photos_list|length if additional_photos_list else 0 }}</span>/5 {{ t.photos if t.photos else 'Fotos' }}
+                                <i class="bi bi-camera"></i> <span id="photoCount">{{ additional_photos_list|length if additional_photos_list else 0 }}</span>/5 {{ t.photos if t.photos else 'Fotos' }}
                             </small>
                         </div>
 

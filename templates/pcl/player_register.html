@@ -118,22 +118,26 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.first_name }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="first_name" required>
+                                <input type="text" class="form-control" name="first_name" required
+                                       value="{{ registration.first_name if registration else '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.last_name }} <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="last_name" required>
+                                <input type="text" class="form-control" name="last_name" required
+                                       value="{{ registration.last_name if registration else '' }}">
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.email }} <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" name="email" required>
+                                <input type="email" class="form-control" name="email" required
+                                       value="{{ registration.email if registration else '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.phone }}</label>
-                                <input type="tel" class="form-control" name="phone" placeholder="+49...">
+                                <input type="tel" class="form-control" name="phone" placeholder="+49..."
+                                       value="{{ registration.phone if registration else '' }}">
                             </div>
                         </div>
 
@@ -142,14 +146,15 @@
                                 <label class="form-label">{{ t.gender }} <span class="text-danger">*</span></label>
                                 <select class="form-select" name="gender" required>
                                     <option value="">-- {{ t.select if t.select else 'Select' }} --</option>
-                                    <option value="male">{{ t.male }}</option>
-                                    <option value="female">{{ t.female }}</option>
+                                    <option value="male" {% if registration and registration.gender == 'male' %}selected{% endif %}>{{ t.male }}</option>
+                                    <option value="female" {% if registration and registration.gender == 'female' %}selected{% endif %}>{{ t.female }}</option>
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.birth_year }}</label>
-                                <input type="number" class="form-control" name="birth_year" 
-                                       min="1940" max="2010" placeholder="1985">
+                                <input type="number" class="form-control" name="birth_year"
+                                       min="1940" max="2010" placeholder="1985"
+                                       value="{{ registration.birth_year if registration and registration.birth_year else '' }}">
                             </div>
                         </div>
 
@@ -196,17 +201,31 @@
                         <div class="mb-4">
                             <label class="form-label">{{ t.photo }} <span class="text-danger">*</span></label>
                             <div class="d-flex align-items-center gap-3 mb-2">
+                                {% if registration and registration.photo_filename %}
+                                <img src="{{ registration.photo_filename }}" class="profile-photo-preview" id="photoPreview" alt="Profile">
+                                <div class="profile-photo-placeholder d-none" id="photoPlaceholder">
+                                    <i class="bi bi-person-circle text-muted" style="font-size: 3rem;"></i>
+                                </div>
+                                {% else %}
                                 <div class="profile-photo-placeholder" id="photoPlaceholder">
                                     <i class="bi bi-person-circle text-muted" style="font-size: 3rem;"></i>
                                 </div>
                                 <img src="#" class="profile-photo-preview d-none" id="photoPreview" alt="Preview">
+                                {% endif %}
                                 <div>
                                     <label for="photo" class="btn btn-outline-success">
                                         <i class="bi bi-upload"></i> {{ t.upload_photo if t.upload_photo else 'Foto wÃ¤hlen' }}
                                     </label>
-                                    <input type="file" id="photo" name="photo" accept="image/*" 
-                                           class="d-none" required onchange="previewProfilePhoto(this)">
+                                    <input type="file" id="photo" name="photo" accept="image/*"
+                                           class="d-none" {% if not registration or not registration.photo_filename %}required{% endif %} onchange="previewProfilePhoto(this)">
                                     <br>
+                                    {% if registration and registration.photo_filename %}
+                                    <small class="text-muted d-block">
+                                        <i class="bi bi-info-circle"></i>
+                                        {{ t.current_photo if t.current_photo else 'Current photo' }} -
+                                        {{ t.leave_empty_to_keep if t.leave_empty_to_keep else 'Leave empty to keep' }}
+                                    </small>
+                                    {% endif %}
                                     <small class="text-muted">JPG, PNG ({{ t.auto_compressed if t.auto_compressed else 'wird automatisch komprimiert' }})</small>
                                 </div>
                             </div>
@@ -224,28 +243,43 @@
                             </p>
                             
                             <div class="additional-photos-grid" id="additionalPhotosGrid">
+                                <!-- Existing photos -->
+                                {% if additional_photos_list %}
+                                    {% for photo_url in additional_photos_list %}
+                                    <div class="additional-photo-item" data-photo-url="{{ photo_url }}">
+                                        <img src="{{ photo_url }}" alt="Social Media Photo">
+                                        <button type="button" class="delete-btn" onclick="markExistingPhotoForDeletion(this, '{{ photo_url }}')">
+                                            <i class="bi bi-x"></i>
+                                        </button>
+                                    </div>
+                                    {% endfor %}
+                                {% endif %}
+
                                 <!-- Add photo button -->
-                                <label class="add-photo-btn" id="addPhotoBtn">
+                                <label class="add-photo-btn" id="addPhotoBtn" {% if additional_photos_list and additional_photos_list|length >= 5 %}style="display:none"{% endif %}>
                                     <i class="bi bi-plus-circle"></i>
                                     <span>{{ t.add_photo if t.add_photo else 'HinzufÃ¼gen' }}</span>
-                                    <input type="file" name="additional_photos" accept="image/*" multiple 
+                                    <input type="file" name="additional_photos" accept="image/*" multiple
                                            class="d-none" id="additionalPhotosInput" onchange="handleAdditionalPhotos(this)">
                                 </label>
                             </div>
-                            
+
+                            <!-- Hidden input for existing photos to delete -->
+                            <input type="hidden" name="photos_to_delete" id="photosToDelete" value="">
+
                             <small class="text-muted d-block mt-2">
-                                <span id="photoCount">0</span>/5 {{ t.photos if t.photos else 'Fotos' }}
+                                <span id="photoCount">{{ additional_photos_list|length if additional_photos_list else 0 }}</span>/5 {{ t.photos if t.photos else 'Fotos' }}
                             </small>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">{{ t.bio }} <span class="text-danger">*</span></label>
                             <textarea class="form-control" name="bio" rows="4" id="bio"
-                                      placeholder="{{ t.bio_placeholder if t.bio_placeholder else 'ErzÃ¤hl uns etwas Ã¼ber dich...' }}" 
-                                      required minlength="50" maxlength="500"></textarea>
+                                      placeholder="{{ t.bio_placeholder if t.bio_placeholder else 'ErzÃ¤hl uns etwas Ã¼ber dich...' }}"
+                                      required minlength="50" maxlength="500">{{ registration.bio if registration and registration.bio else '' }}</textarea>
                             <div class="d-flex justify-content-between">
                                 <small class="form-text text-muted">{{ t.bio_help if t.bio_help else '50-500 Zeichen' }}</small>
-                                <small class="text-muted"><span id="bioCount">0</span>/500</small>
+                                <small class="text-muted"><span id="bioCount">{{ (registration.bio|length) if registration and registration.bio else 0 }}</span>/500</small>
                             </div>
                         </div>
 
@@ -259,14 +293,16 @@
                                 <label class="form-label"><i class="bi bi-instagram text-danger"></i> Instagram</label>
                                 <div class="input-group">
                                     <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control" name="instagram" placeholder="username">
+                                    <input type="text" class="form-control" name="instagram" placeholder="username"
+                                           value="{{ registration.instagram if registration else '' }}">
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-tiktok"></i> TikTok</label>
                                 <div class="input-group">
                                     <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control" name="tiktok" placeholder="username">
+                                    <input type="text" class="form-control" name="tiktok" placeholder="username"
+                                           value="{{ registration.tiktok if registration else '' }}">
                                 </div>
                             </div>
                         </div>
@@ -274,13 +310,15 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-youtube text-danger"></i> YouTube</label>
-                                <input type="url" class="form-control" name="youtube" placeholder="https://youtube.com/@channel">
+                                <input type="url" class="form-control" name="youtube" placeholder="https://youtube.com/@channel"
+                                       value="{{ registration.youtube if registration else '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label"><i class="bi bi-twitter-x"></i> X (Twitter)</label>
                                 <div class="input-group">
                                     <span class="input-group-text">@</span>
-                                    <input type="text" class="form-control" name="twitter" placeholder="username">
+                                    <input type="text" class="form-control" name="twitter" placeholder="username"
+                                           value="{{ registration.twitter if registration else '' }}">
                                 </div>
                             </div>
                         </div>
@@ -293,11 +331,13 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.video_url if t.video_url else 'Video URL' }}</label>
-                                <input type="url" class="form-control" name="video_url" placeholder="https://youtube.com/...">
+                                <input type="url" class="form-control" name="video_url" placeholder="https://youtube.com/..."
+                                       value="{{ registration.video_url if registration else '' }}">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">{{ t.dupr_rating if t.dupr_rating else 'DUPR Rating' }}</label>
-                                <input type="text" class="form-control" name="dupr_rating" placeholder="4.25">
+                                <input type="text" class="form-control" name="dupr_rating" placeholder="4.25"
+                                       value="{{ registration.dupr_rating if registration else '' }}">
                             </div>
                         </div>
 
@@ -306,7 +346,7 @@
                         <!-- Privacy -->
                         <div class="mb-4">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="privacy_accept" required>
+                                <input class="form-check-input" type="checkbox" id="privacy_accept" {% if registration %}checked{% else %}required{% endif %}>
                                 <label class="form-check-label" for="privacy_accept">
                                     {{ t.privacy_accept }} <span class="text-danger">*</span>
                                 </label>
@@ -466,6 +506,17 @@ function removeAdditionalPhoto(btn) {
         additionalFiles[fileIndex] = null;
     }
 
+    item.remove();
+    updatePhotoCount();
+}
+
+// Mark an already-saved photo for deletion on submit
+let photosToDelete = [];
+function markExistingPhotoForDeletion(btn, photoUrl) {
+    const item = btn.closest('.additional-photo-item');
+    photosToDelete.push(photoUrl);
+    const hidden = document.getElementById('photosToDelete');
+    if (hidden) hidden.value = photosToDelete.join('|||');
     item.remove();
     updatePhotoCount();
 }
