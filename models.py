@@ -1002,6 +1002,70 @@ class PCLMatchResult(db.Model):
 
 
 # ============================================================================
+# PLAYER POOL (public interest registration across all WPC/PCL tournaments)
+# ============================================================================
+
+class PoolPlayer(db.Model):
+    """A player who registered interest in the public pool (not tied to a team)."""
+    __tablename__ = 'pool_player'
+
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    phone = db.Column(db.String(30), nullable=True)
+
+    country_name = db.Column(db.String(100), nullable=True, index=True)
+    age_category = db.Column(db.String(10), nullable=True, index=True)  # +19 / +50
+    gender = db.Column(db.String(10), nullable=True)
+    birth_year = db.Column(db.Integer, nullable=True)
+    dupr_rating = db.Column(db.String(10), nullable=True)
+
+    photo_url = db.Column(db.String(500), nullable=True)
+    bio = db.Column(db.Text, nullable=True)
+    preferred_language = db.Column(db.String(10), default='EN')
+
+    consent_gdpr = db.Column(db.Boolean, default=False)
+    consent_marketing = db.Column(db.Boolean, default=False)
+
+    # new / contacted / interested / joined_team / declined / wpc_customer
+    status = db.Column(db.String(30), default='new', index=True)
+    admin_notes = db.Column(db.Text, nullable=True)
+    source = db.Column(db.String(120), nullable=True)  # e.g. "pool", "WPC Bali"
+    last_contacted_at = db.Column(db.DateTime, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<PoolPlayer {self.first_name} {self.last_name}>'
+
+    def get_age(self):
+        """Approximate age from birth_year, or None."""
+        if not self.birth_year:
+            return None
+        return datetime.utcnow().year - self.birth_year
+
+    def is_complete(self):
+        """True if the core profile fields are present."""
+        return bool(self.first_name and self.last_name and self.email
+                    and self.country_name and self.age_category and self.gender)
+
+    def get_display_name(self):
+        return f"{self.first_name} {self.last_name}".strip()
+
+    def get_initials(self):
+        a = (self.first_name or ' ')[0]
+        b = (self.last_name or ' ')[0]
+        return (a + b).upper().strip() or '?'
+
+    @property
+    def dashboard_url(self):
+        """Admin-facing detail URL (relative); captain-facing link can reuse later."""
+        return f"/admin/pool/{self.id}"
+
+
+# ============================================================================
 # CONSTANTS
 # ============================================================================
 

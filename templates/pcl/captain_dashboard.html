@@ -320,6 +320,51 @@
     </div>
     {% endif %}
 
+    <!-- Country Pool players (collapsible, default collapsed; only if matches exist) -->
+    {% if pool_players %}
+    <div class="mb-4">
+        <div class="card">
+            <button class="card-header bg-light fw-bold d-flex justify-content-between align-items-center w-100 text-start"
+                    style="border: 0;" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#poolSection"
+                    aria-expanded="false" aria-controls="poolSection">
+                <span><i class="bi bi-people"></i> {{ t.captain_pool_section }} {{ team.country_name }} ({{ pool_players|length }})</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="collapse" id="poolSection">
+                <div class="list-group list-group-flush">
+                    {% for row in pool_players %}
+                    {% set pp = row.p %}
+                    <div class="list-group-item d-flex align-items-center gap-3">
+                        {% if pp.photo_url %}
+                        <img src="{{ pp.photo_url }}" alt="" style="width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 auto;">
+                        {% else %}
+                        <div style="width:42px;height:42px;border-radius:50%;background:#e9ecef;display:flex;align-items:center;justify-content:center;font-weight:700;color:#6c757d;flex:0 0 auto;">{{ pp.get_initials() }}</div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">
+                                {{ pp.first_name }} {{ pp.last_name }}
+                                <span class="badge bg-{{ row.status_color }}">{{ row.status_label }}</span>
+                            </div>
+                            <div class="small text-muted">DUPR: {{ pp.dupr_rating if pp.dupr_rating else '-' }}</div>
+                        </div>
+                        <div class="d-flex flex-column gap-1">
+                            {% if pp.phone %}
+                            <a href="https://wa.me/{{ pp.phone|replace('+','')|replace(' ','')|replace('-','') }}"
+                               target="_blank" class="btn btn-sm btn-success"><i class="bi bi-whatsapp"></i></a>
+                            {% endif %}
+                            <button class="btn btn-sm btn-outline-secondary" disabled title="Coming soon">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Players Lists -->
     <div class="row">
         <!-- Men -->

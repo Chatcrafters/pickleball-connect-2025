@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ player.first_name }} {{ player.last_name }} - {{ t.admin_section_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .pd-wrap { max-width: 640px; margin: 0 auto; }
+    .pd-photo { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+    .pd-photo-ph { width: 96px; height: 96px; border-radius: 50%; background: #e9ecef; display: flex;
+        align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 700; color: #6c757d; }
+    .pd-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f1f1; }
+    .pd-row .k { color: #6c757d; }
+    .pd-link { word-break: break-all; }
+</style>
+
+<div class="container pd-wrap">
+    <div class="py-3">
+        <a href="{{ url_for('pool.admin_list') }}" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> {{ t.admin_section_title }}</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <div class="text-center mb-3">
+        {% if player.photo_url %}
+        <img src="{{ player.photo_url }}" class="pd-photo" alt="">
+        {% else %}
+        <div class="pd-photo-ph mx-auto">{{ player.get_initials() }}</div>
+        {% endif %}
+        <h1 class="h4 mt-2 mb-0">{{ player.first_name }} {{ player.last_name }}</h1>
+        <div><span class="badge bg-{{ status_colors.get(player.status, 'secondary') }}">{{ t['status_' + player.status] if ('status_' + player.status) in t else player.status }}</span></div>
+    </div>
+
+    <!-- Contact buttons -->
+    <div class="row g-2 mb-3">
+        <div class="col-6">
+            {% if player.phone %}
+            <a href="https://wa.me/{{ player.phone|replace('+','')|replace(' ','')|replace('-','') }}?text={{ wa_msg }}"
+               target="_blank" class="btn btn-success w-100"><i class="bi bi-whatsapp"></i> WhatsApp</a>
+            {% else %}
+            <button class="btn btn-success w-100" disabled><i class="bi bi-whatsapp"></i> WhatsApp</button>
+            {% endif %}
+        </div>
+        <div class="col-6">
+            <a href="mailto:{{ player.email }}" class="btn btn-outline-secondary w-100"><i class="bi bi-envelope"></i> Email</a>
+        </div>
+    </div>
+
+    <!-- Profile -->
+    <div class="card mb-3"><div class="card-body">
+        <div class="pd-row"><span class="k">{{ t.email }}</span><span>{{ player.email }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.phone }}</span><span>{{ player.phone or '-' }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.country }}</span><span>{{ player.country_name or '-' }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.age_category }}</span><span>{{ player.age_category or '-' }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.gender }}</span><span>{{ t.male if player.gender == 'male' else (t.female if player.gender == 'female' else '-') }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.birth_year }}</span><span>{{ player.birth_year or '-' }}{% if player.get_age() %} ({{ player.get_age() }}){% endif %}</span></div>
+        <div class="pd-row"><span class="k">{{ t.dupr }}</span><span>{{ player.dupr_rating or '-' }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.language }}</span><span>{{ player.preferred_language }}</span></div>
+        <div class="pd-row"><span class="k">Marketing opt-in</span><span>{{ 'Yes' if player.consent_marketing else 'No' }}</span></div>
+        <div class="pd-row"><span class="k">Last contacted</span><span>{{ player.last_contacted_at.strftime('%d.%m.%Y %H:%M') if player.last_contacted_at else '-' }}</span></div>
+        {% if player.bio %}<div class="mt-2"><span class="k">{{ t.bio }}:</span><div>{{ player.bio }}</div></div>{% endif %}
+    </div></div>
+
+    <!-- Status -->
+    <div class="card mb-3"><div class="card-body">
+        <form method="POST" action="{{ url_for('pool.admin_update_status', player_id=player.id) }}" class="d-flex gap-2">
+            <select class="form-select" name="status">
+                {% for s in statuses %}<option value="{{ s }}" {% if player.status == s %}selected{% endif %}>{{ t['status_' + s] }}</option>{% endfor %}
+            </select>
+            <button class="btn btn-primary"><i class="bi bi-check2"></i> {{ t.save }}</button>
+        </form>
+    </div></div>
+
+    <!-- Notes -->
+    <div class="card mb-3"><div class="card-body">
+        <form method="POST" action="{{ url_for('pool.admin_update_notes', player_id=player.id) }}">
+            <label class="form-label fw-bold"><i class="bi bi-journal-text"></i> Admin notes</label>
+            <textarea class="form-control mb-2" name="admin_notes" rows="3">{{ player.admin_notes or '' }}</textarea>
+            <button class="btn btn-outline-primary w-100"><i class="bi bi-save"></i> {{ t.save }}</button>
+        </form>
+    </div></div>
+
+    <!-- Edit link + convert -->
+    <div class="card mb-3"><div class="card-body">
+        <label class="form-label fw-bold"><i class="bi bi-link-45deg"></i> Player edit link</label>
+        <div class="alert alert-light border small pd-link mb-2">{{ edit_link }}</div>
+        <button class="btn btn-outline-secondary w-100 mb-2" disabled><i class="bi bi-arrow-left-right"></i> Convert to PCL Player (coming soon)</button>
+    </div></div>
+
+    <!-- Delete -->
+    <form method="POST" action="{{ url_for('pool.admin_delete', player_id=player.id) }}"
+          onsubmit="return confirm('Delete {{ player.first_name }} {{ player.last_name }}?');" class="d-grid mb-4">
+        <button class="btn btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
+    </form>
+</div>
+{% endblock %}

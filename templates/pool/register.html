@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}{{ t.hero_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .pool-wrap { max-width: 640px; margin: 0 auto; padding-bottom: 96px; }
+    .pool-hero { background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%); color: #fff;
+        border-radius: 14px; padding: 22px; margin-bottom: 18px; }
+    .pool-hero h1 { font-size: 1.5rem; font-weight: 800; }
+    .pool-values { list-style: none; padding: 0; margin: 12px 0 0; }
+    .pool-values li { padding: 4px 0; }
+    .pool-wrap .form-control, .pool-wrap .form-select { min-height: 46px; }
+    .pool-wrap label.form-label { font-weight: 600; }
+    .pool-sticky { position: sticky; bottom: 0; background: linear-gradient(to top, #fff 75%, rgba(255,255,255,0));
+        padding: 12px 0; }
+    .pool-sticky .btn { min-height: 50px; font-weight: 700; }
+    .req { color: #dc3545; }
+</style>
+
+{% set ep = edit_player if edit_player is defined else None %}
+{% macro val(field) %}{% if ep %}{{ ep[field] if ep[field] is not none else '' }}{% else %}{{ form_data.get(field, '') }}{% endif %}{% endmacro %}
+
+<div class="container pool-wrap">
+    {% if not ep %}
+    <div class="text-end mb-2">
+        <div class="btn-group btn-group-sm">
+            {% for lg in ['EN','DE','ES','FR'] %}
+            <a href="?lang={{ lg }}" class="btn {% if current_lang == lg %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ lg }}</a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="pool-hero">
+        <h1><i class="bi bi-people"></i> {{ t.hero_title }}</h1>
+        <p class="mb-0 opacity-75">{{ t.hero_sub }}</p>
+        <ul class="pool-values">
+            <li><i class="bi bi-whatsapp"></i> {{ t.value_1 }}</li>
+            <li><i class="bi bi-globe"></i> {{ t.value_2 }}</li>
+            <li><i class="bi bi-person-vcard"></i> {{ t.value_3 }}</li>
+            <li><i class="bi bi-stars"></i> {{ t.value_4 }}</li>
+        </ul>
+    </div>
+    {% else %}
+    <h1 class="h4 my-3"><i class="bi bi-pencil-square"></i> {{ t.edit_profile }}</h1>
+    {% endif %}
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data"
+          action="{% if ep %}{{ url_for('pool.edit_profile', player_id=ep.id, edit_token=edit_token, lang=current_lang) }}{% else %}{{ url_for('pool.register', lang=current_lang) }}{% endif %}">
+        <input type="hidden" name="preferred_language" value="{{ current_lang }}">
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ t.first_name }} <span class="req">*</span></label>
+                <input type="text" class="form-control" name="first_name" required value="{{ val('first_name') }}">
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ t.last_name }} <span class="req">*</span></label>
+                <input type="text" class="form-control" name="last_name" required value="{{ val('last_name') }}">
+            </div>
+        </div>
+
+        {% if not ep %}
+        <div class="mb-3">
+            <label class="form-label">{{ t.email }} <span class="req">*</span></label>
+            <input type="email" class="form-control" name="email" required value="{{ form_data.get('email','') }}">
+        </div>
+        {% else %}
+        <div class="mb-3">
+            <label class="form-label">{{ t.email }}</label>
+            <input type="email" class="form-control" value="{{ ep.email }}" disabled>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label class="form-label">{{ t.phone }} <span class="req">*</span></label>
+            <input type="tel" class="form-control" name="phone" required value="{{ val('phone') }}" placeholder="+34 600 123 456">
+            <small class="text-muted">{{ t.phone_help }}</small>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ t.country }}</label>
+                <select class="form-select" name="country_name">
+                    <option value="">{{ t.select }}...</option>
+                    {% for ct in countries %}
+                    <option value="{{ ct }}" {% if val('country_name')|trim == ct %}selected{% endif %}>{{ ct }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ t.birth_year }} <span class="text-muted small">({{ t.optional }})</span></label>
+                <input type="number" class="form-control" name="birth_year" min="1930" max="2015"
+                       value="{% if ep %}{{ ep.birth_year or '' }}{% else %}{{ form_data.get('birth_year','') }}{% endif %}">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label d-block">{{ t.age_category }}</label>
+                {% set ac = val('age_category')|trim %}
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="age_category" id="ac19" value="+19" {% if ac == '+19' or not ac %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="ac19">+19 Open</label>
+                    <input type="radio" class="btn-check" name="age_category" id="ac50" value="+50" {% if ac == '+50' %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="ac50">+50 Senior</label>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label d-block">{{ t.gender }}</label>
+                {% set gd = val('gender')|trim %}
+                <div class="btn-group w-100" role="group">
+                    <input type="radio" class="btn-check" name="gender" id="gm" value="male" {% if gd == 'male' %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="gm">{{ t.male }}</label>
+                    <input type="radio" class="btn-check" name="gender" id="gf" value="female" {% if gd == 'female' %}checked{% endif %}>
+                    <label class="btn btn-outline-primary" for="gf">{{ t.female }}</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">{{ t.dupr }} <span class="text-muted small">({{ t.optional }})</span></label>
+            <input type="text" class="form-control" name="dupr_rating" value="{{ val('dupr_rating') }}" placeholder="4.25">
+            <small class="text-muted">{{ t.dupr_help }}</small>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">{{ t.photo }} <span class="text-muted small">({{ t.optional }})</span></label>
+            {% if ep and ep.photo_url %}
+            <div class="mb-2"><img src="{{ ep.photo_url }}" alt="" style="height:90px;border-radius:10px;object-fit:cover;"></div>
+            {% endif %}
+            <input type="file" class="form-control" name="photo" accept="image/*">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">{{ t.bio }} <span class="text-muted small">({{ t.optional }})</span></label>
+            <textarea class="form-control" name="bio" rows="3">{% if ep %}{{ ep.bio or '' }}{% else %}{{ form_data.get('bio','') }}{% endif %}</textarea>
+        </div>
+
+        {% if not ep %}
+        <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="consent_gdpr" id="cg" required>
+            <label class="form-check-label" for="cg">{{ t.consent_gdpr }} <span class="req">*</span></label>
+        </div>
+        {% endif %}
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="consent_marketing" id="cm"
+                   {% if ep and ep.consent_marketing %}checked{% elif not ep %}checked{% endif %}>
+            <label class="form-check-label" for="cm">{{ t.consent_marketing }}</label>
+        </div>
+
+        <div class="pool-sticky d-grid">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-check-circle"></i> {% if ep %}{{ t.save }}{% else %}{{ t.submit }}{% endif %}
+            </button>
+        </div>
+        <p class="text-muted small mt-2"><i class="bi bi-shield-check"></i> {{ t.data_note }}</p>
+    </form>
+</div>
+{% endblock %}

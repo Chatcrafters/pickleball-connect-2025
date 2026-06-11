@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ t.success_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .ps-wrap { max-width: 560px; margin: 0 auto; }
+    .ps-card { border: 1px solid #e6e6e6; border-radius: 14px; padding: 24px; text-align: center; margin-top: 24px; }
+    .ps-icon { font-size: 2.6rem; color: #198754; }
+    .ps-steps { text-align: left; margin-top: 16px; }
+    .ps-steps li { padding: 6px 0; }
+    .ps-link { word-break: break-all; }
+</style>
+
+<div class="container ps-wrap">
+    {% if invalid is defined and invalid %}
+    <div class="ps-card">
+        <i class="bi bi-x-octagon text-danger" style="font-size:2.6rem;"></i>
+        <h1 class="h5 mt-2">Invalid or expired link</h1>
+        <p class="text-muted">This edit link is not valid. Please register again or contact us.</p>
+        <a href="{{ url_for('pool.register') }}" class="btn btn-primary"><i class="bi bi-people"></i> {{ t.hero_title }}</a>
+    </div>
+    {% else %}
+    <div class="ps-card">
+        <i class="bi bi-check-circle-fill ps-icon"></i>
+        {% if already %}
+        <h1 class="h5 mt-2">{{ t.already_in_pool }}</h1>
+        {% else %}
+        <h1 class="h5 mt-2">{{ t.success_title }}, {{ player.first_name }}!</h1>
+        {% endif %}
+
+        {% if not already %}
+        <div class="ps-steps">
+            <h6 class="fw-bold mt-2">{{ t.success_next }}:</h6>
+            <ul class="ps-steps">
+                <li><i class="bi bi-globe text-primary"></i>
+                    {{ t.success_n1 }}{% if player.country_name %} ({{ player.country_name }}){% endif %}</li>
+                <li><i class="bi bi-bell text-primary"></i> {{ t.success_n2 }}</li>
+                <li><i class="bi bi-pencil-square text-primary"></i> {{ t.success_n3 }}</li>
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if edit_link %}
+        <div class="alert alert-light border small text-start mt-2">
+            <div class="fw-bold mb-1"><i class="bi bi-link-45deg"></i> {{ t.edit_profile }}:</div>
+            <a href="{{ edit_link }}" class="ps-link">{{ edit_link }}</a>
+        </div>
+        <a href="{{ edit_link }}" class="btn btn-outline-primary w-100 mb-2">
+            <i class="bi bi-pencil-square"></i> {{ t.edit_profile }}
+        </a>
+        {% endif %}
+
+        <a href="/" class="btn btn-link">
+            <i class="bi bi-house"></i> {{ t.back_home }}
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

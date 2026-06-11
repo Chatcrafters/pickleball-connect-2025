@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}{{ t.admin_section_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .pl-wrap { max-width: 1000px; margin: 0 auto; }
+    .pl-avatar { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: 0 0 auto; }
+    .pl-avatar-ph { width: 42px; height: 42px; border-radius: 50%; background: #e9ecef; display: flex;
+        align-items: center; justify-content: center; font-weight: 700; color: #6c757d; flex: 0 0 auto; }
+    .pl-card { border: 1px solid #e6e6e6; border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+</style>
+
+<div class="container pl-wrap">
+    <div class="d-flex justify-content-between align-items-center py-3">
+        <h1 class="h4 mb-0"><i class="bi bi-people"></i> {{ t.admin_section_title }}</h1>
+        <a href="{{ url_for('pool.register') }}" target="_blank" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-box-arrow-up-right"></i> Public form
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Stats -->
+    <div class="row g-2 mb-3">
+        <div class="col-3"><div class="card text-center py-2"><div class="h4 mb-0">{{ stats.total }}</div><small class="text-muted">Total</small></div></div>
+        <div class="col-3"><div class="card text-center py-2"><div class="h4 mb-0">{{ stats.new }}</div><small class="text-muted">New</small></div></div>
+        <div class="col-3"><div class="card text-center py-2"><div class="h4 mb-0">{{ stats.contacted }}</div><small class="text-muted">Contacted</small></div></div>
+        <div class="col-3"><div class="card text-center py-2"><div class="h4 mb-0">{{ stats.joined }}</div><small class="text-muted">Joined</small></div></div>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" class="row g-2 mb-3">
+        <div class="col-6 col-md-3">
+            <select class="form-select form-select-sm" name="country" onchange="this.form.submit()">
+                <option value="">All countries</option>
+                {% for c in countries %}<option value="{{ c }}" {% if filters.country == c %}selected{% endif %}>{{ c }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <select class="form-select form-select-sm" name="age_category" onchange="this.form.submit()">
+                <option value="">All ages</option>
+                <option value="+19" {% if filters.age_category == '+19' %}selected{% endif %}>+19</option>
+                <option value="+50" {% if filters.age_category == '+50' %}selected{% endif %}>+50</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-2">
+            <select class="form-select form-select-sm" name="gender" onchange="this.form.submit()">
+                <option value="">All genders</option>
+                <option value="male" {% if filters.gender == 'male' %}selected{% endif %}>{{ t.male }}</option>
+                <option value="female" {% if filters.gender == 'female' %}selected{% endif %}>{{ t.female }}</option>
+            </select>
+        </div>
+        <div class="col-6 col-md-3">
+            <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+                <option value="">All statuses</option>
+                {% for s in statuses %}<option value="{{ s }}" {% if filters.status == s %}selected{% endif %}>{{ t['status_' + s] }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-12 col-md-2">
+            <input type="search" class="form-control form-control-sm" name="q" value="{{ filters.q }}" placeholder="Search name...">
+        </div>
+    </form>
+
+    {% if not players %}
+    <div class="alert alert-light border text-center text-muted py-4">
+        <i class="bi bi-people" style="font-size:1.6rem;"></i>
+        <div class="mt-2">No pool players yet. Share the registration link: {{ url_for('pool.register', _external=True) }}</div>
+    </div>
+    {% endif %}
+
+    {% for p in players %}
+    <div class="pl-card">
+        <div class="d-flex align-items-center gap-3">
+            {% if p.photo_url %}
+            <img src="{{ p.photo_url }}" class="pl-avatar" alt="">
+            {% else %}
+            <div class="pl-avatar-ph">{{ p.get_initials() }}</div>
+            {% endif %}
+            <div class="flex-grow-1">
+                <div class="fw-bold">
+                    {{ p.first_name }} {{ p.last_name }}
+                    {% if p.country_name %}<span class="text-muted small">{{ p.country_name }}</span>{% endif %}
+                    {% if p.age_category %}<span class="badge bg-light text-dark">{{ p.age_category }}</span>{% endif %}
+                </div>
+                <div class="small text-muted">
+                    DUPR: {{ p.dupr_rating if p.dupr_rating else '-' }}
+                    &middot; <span class="badge bg-{{ status_colors.get(p.status, 'secondary') }}">{{ t['status_' + p.status] if ('status_' + p.status) in t else p.status }}</span>
+                    &middot; {{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '-' }}
+                </div>
+            </div>
+            <div class="d-flex flex-column gap-1">
+                <a href="{{ url_for('pool.admin_detail', player_id=p.id) }}" class="btn btn-sm btn-primary"><i class="bi bi-eye"></i></a>
+                <form method="POST" action="{{ url_for('pool.admin_delete', player_id=p.id) }}"
+                      onsubmit="return confirm('Delete {{ p.first_name }} {{ p.last_name }}?');">
+                    <button class="btn btn-sm btn-outline-danger w-100"><i class="bi bi-trash"></i></button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
