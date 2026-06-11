@@ -35,6 +35,24 @@ def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
 
 
+def validate_dupr(value):
+    """Normalize and validate a DUPR value.
+
+    Accepts comma or dot decimals and up to 3 decimal places; valid range 1.0-8.0.
+    Returns (normalized_str, ok). Empty/invalid -> (None, False).
+    """
+    v = (value or '').strip().replace(',', '.')
+    if not v:
+        return None, False
+    try:
+        f = float(v)
+    except ValueError:
+        return None, False
+    if not (1.0 <= f <= 8.0):
+        return None, False
+    return str(round(f, 3)), True
+
+
 # ---- Translations (ASCII-only for ES/FR) -----------------------------------
 POOL_TRANSLATIONS = {
     'EN': {
@@ -47,6 +65,9 @@ POOL_TRANSLATIONS = {
         'first_name': 'First name', 'last_name': 'Last name', 'email': 'Email',
         'phone': 'WhatsApp number', 'country': 'Country', 'age_category': 'Age category',
         'gender': 'Gender', 'birth_year': 'Birth year', 'birth_year_help': '4 digits, e.g. 1985', 'dupr': 'DUPR rating',
+        'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
+        'pool_dupr_help': "Both DUPR ratings are required. See dupr.com if you don't have your rating yet.",
+        'pool_dupr_invalid': 'DUPR must be a number between 1.0 and 8.0',
         'photo': 'Photo', 'bio': 'About me', 'language': 'Preferred language',
         'male': 'Male', 'female': 'Female', 'required': 'required', 'optional': 'optional',
         'select': 'Select', 'phone_help': 'With country code, e.g. +34 600 123 456',
@@ -77,6 +98,9 @@ POOL_TRANSLATIONS = {
         'first_name': 'Vorname', 'last_name': 'Nachname', 'email': 'E-Mail',
         'phone': 'WhatsApp-Nummer', 'country': 'Land', 'age_category': 'Alterskategorie',
         'gender': 'Geschlecht', 'birth_year': 'Geburtsjahr', 'birth_year_help': '4 Ziffern, z.B. 1985', 'dupr': 'DUPR-Wertung',
+        'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
+        'pool_dupr_help': 'Beide DUPR-Werte sind erforderlich. Siehe dupr.com falls du noch keinen Wert hast.',
+        'pool_dupr_invalid': 'DUPR muss eine Zahl zwischen 1.0 und 8.0 sein',
         'photo': 'Foto', 'bio': 'Ueber mich', 'language': 'Bevorzugte Sprache',
         'male': 'Maennlich', 'female': 'Weiblich', 'required': 'Pflicht', 'optional': 'optional',
         'select': 'Auswaehlen', 'phone_help': 'Mit Laendervorwahl, z.B. +49 170 1234567',
@@ -107,6 +131,9 @@ POOL_TRANSLATIONS = {
         'first_name': 'Nombre', 'last_name': 'Apellido', 'email': 'Email',
         'phone': 'Numero de WhatsApp', 'country': 'Pais', 'age_category': 'Categoria de edad',
         'gender': 'Genero', 'birth_year': 'Ano de nacimiento', 'birth_year_help': '4 digitos, p.ej. 1985', 'dupr': 'Rating DUPR',
+        'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
+        'pool_dupr_help': 'Ambos valores DUPR son obligatorios. Visita dupr.com si aun no tienes uno.',
+        'pool_dupr_invalid': 'DUPR debe ser un numero entre 1.0 y 8.0',
         'photo': 'Foto', 'bio': 'Sobre mi', 'language': 'Idioma preferido',
         'male': 'Hombre', 'female': 'Mujer', 'required': 'obligatorio', 'optional': 'opcional',
         'select': 'Seleccionar', 'phone_help': 'Con prefijo, p.ej. +34 600 123 456',
@@ -137,6 +164,9 @@ POOL_TRANSLATIONS = {
         'first_name': 'Prenom', 'last_name': 'Nom', 'email': 'Email',
         'phone': 'Numero WhatsApp', 'country': 'Pays', 'age_category': 'Categorie age',
         'gender': 'Genre', 'birth_year': 'Annee de naissance', 'birth_year_help': '4 chiffres, p.ex. 1985', 'dupr': 'Classement DUPR',
+        'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
+        'pool_dupr_help': "Les deux valeurs DUPR sont obligatoires. Voir dupr.com si vous n'avez pas encore de classement.",
+        'pool_dupr_invalid': 'DUPR doit etre un nombre entre 1.0 et 8.0',
         'photo': 'Photo', 'bio': 'A propos de moi', 'language': 'Langue preferee',
         'male': 'Homme', 'female': 'Femme', 'required': 'requis', 'optional': 'optionnel',
         'select': 'Choisir', 'phone_help': 'Avec indicatif, p.ex. +33 6 12 34 56 78',
@@ -220,6 +250,14 @@ def register():
             return render_template('pool/register_success.html', t=t, current_lang=lang,
                                    player=existing, edit_link=edit_url(existing), already=True)
 
+        # Both DUPR ratings are required and must be valid (1.0-8.0)
+        dupr_singles, ds_ok = validate_dupr(request.form.get('dupr_singles'))
+        dupr_doubles, dd_ok = validate_dupr(request.form.get('dupr_doubles'))
+        if not ds_ok or not dd_ok:
+            flash(t['pool_dupr_invalid'], 'danger')
+            return render_template('pool/register.html', t=t, current_lang=lang,
+                                   countries=POOL_COUNTRIES, form_data=request.form)
+
         photo_url = None
         if 'photo' in request.files:
             f = request.files['photo']
@@ -237,7 +275,8 @@ def register():
             age_category=request.form.get('age_category') or None,
             gender=request.form.get('gender') or None,
             birth_year=int(request.form['birth_year']) if request.form.get('birth_year') else None,
-            dupr_rating=(request.form.get('dupr_rating') or '').strip() or None,
+            dupr_singles=dupr_singles,
+            dupr_doubles=dupr_doubles,
             photo_url=photo_url,
             bio=(request.form.get('bio') or '').strip() or None,
             preferred_language=lang,
@@ -283,6 +322,13 @@ def edit_profile(player_id, edit_token):
     t = get_pool_t(lang)
 
     if request.method == 'POST':
+        # Both DUPR ratings are required and must be valid (1.0-8.0)
+        dupr_singles, ds_ok = validate_dupr(request.form.get('dupr_singles'))
+        dupr_doubles, dd_ok = validate_dupr(request.form.get('dupr_doubles'))
+        if not ds_ok or not dd_ok:
+            flash(t['pool_dupr_invalid'], 'danger')
+            return redirect(url_for('pool.edit_profile', player_id=player.id, edit_token=edit_token, lang=lang))
+
         player.first_name = (request.form.get('first_name') or '').strip() or player.first_name
         player.last_name = (request.form.get('last_name') or '').strip() or player.last_name
         player.phone = (request.form.get('phone') or '').strip() or player.phone
@@ -290,7 +336,8 @@ def edit_profile(player_id, edit_token):
         player.age_category = request.form.get('age_category') or player.age_category
         player.gender = request.form.get('gender') or player.gender
         player.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else player.birth_year
-        player.dupr_rating = (request.form.get('dupr_rating') or '').strip() or player.dupr_rating
+        player.dupr_singles = dupr_singles
+        player.dupr_doubles = dupr_doubles
         player.bio = (request.form.get('bio') or '').strip() or player.bio
         player.consent_marketing = bool(request.form.get('consent_marketing'))
         if 'photo' in request.files:

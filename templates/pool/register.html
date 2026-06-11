@@ -123,11 +123,21 @@
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">{{ t.dupr }} <span class="text-muted small">({{ t.optional }})</span></label>
-            <input type="text" class="form-control" name="dupr_rating" value="{{ val('dupr_rating') }}" placeholder="4.25">
-            <small class="text-muted">{{ t.dupr_help }}</small>
+        <div class="row">
+            <div class="col-12 col-sm-6 mb-2">
+                <label class="form-label">{{ t.pool_dupr_singles_label }} <span class="req">*</span></label>
+                <input type="number" class="form-control" name="dupr_singles" required
+                       step="0.001" min="1.000" max="8.000" placeholder="e.g. 4.250"
+                       value="{{ val('dupr_singles') }}">
+            </div>
+            <div class="col-12 col-sm-6 mb-2">
+                <label class="form-label">{{ t.pool_dupr_doubles_label }} <span class="req">*</span></label>
+                <input type="number" class="form-control" name="dupr_doubles" required
+                       step="0.001" min="1.000" max="8.000" placeholder="e.g. 4.250"
+                       value="{{ val('dupr_doubles') }}">
+            </div>
         </div>
+        <div class="mb-3"><small class="text-muted"><i class="bi bi-info-circle"></i> {{ t.pool_dupr_help }}</small></div>
 
         <div class="mb-3">
             <label class="form-label">{{ t.photo }} <span class="text-muted small">({{ t.optional }})</span></label>

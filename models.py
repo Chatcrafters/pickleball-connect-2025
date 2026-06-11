@@ -1019,7 +1019,9 @@ class PoolPlayer(db.Model):
     age_category = db.Column(db.String(10), nullable=True, index=True)  # +19 / +50
     gender = db.Column(db.String(10), nullable=True)
     birth_year = db.Column(db.Integer, nullable=True)
-    dupr_rating = db.Column(db.String(10), nullable=True)
+    # Nullable at the DB level (so the migration doesn't break); the form requires both.
+    dupr_singles = db.Column(db.String(10), nullable=True)
+    dupr_doubles = db.Column(db.String(10), nullable=True)
 
     photo_url = db.Column(db.String(500), nullable=True)
     bio = db.Column(db.Text, nullable=True)

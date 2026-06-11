@@ -56,7 +56,8 @@
         <div class="pd-row"><span class="k">{{ t.age_category }}</span><span>{{ player.age_category or '-' }}</span></div>
         <div class="pd-row"><span class="k">{{ t.gender }}</span><span>{{ t.male if player.gender == 'male' else (t.female if player.gender == 'female' else '-') }}</span></div>
         <div class="pd-row"><span class="k">{{ t.birth_year }}</span><span>{{ player.birth_year or '-' }}{% if player.get_age() %} ({{ player.get_age() }}){% endif %}</span></div>
-        <div class="pd-row"><span class="k">{{ t.dupr }}</span><span>{{ player.dupr_rating or '-' }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.pool_dupr_singles_label }}</span><span>{{ player.dupr_singles or '-' }}</span></div>
+        <div class="pd-row"><span class="k">{{ t.pool_dupr_doubles_label }}</span><span>{{ player.dupr_doubles or '-' }}</span></div>
         <div class="pd-row"><span class="k">{{ t.language }}</span><span>{{ player.preferred_language }}</span></div>
         <div class="pd-row"><span class="k">Marketing opt-in</span><span>{{ 'Yes' if player.consent_marketing else 'No' }}</span></div>
         <div class="pd-row"><span class="k">Last contacted</span><span>{{ player.last_contacted_at.strftime('%d.%m.%Y %H:%M') if player.last_contacted_at else '-' }}</span></div>

@@ -87,7 +87,7 @@
                     {% if p.age_category %}<span class="badge bg-light text-dark">{{ p.age_category }}</span>{% endif %}
                 </div>
                 <div class="small text-muted">
-                    DUPR: {{ p.dupr_rating if p.dupr_rating else '-' }}
+                    <span class="d-block d-sm-inline">DUPR S: {{ p.dupr_singles if p.dupr_singles else '-' }}</span><span class="d-none d-sm-inline"> / </span><span class="d-block d-sm-inline">D: {{ p.dupr_doubles if p.dupr_doubles else '-' }}</span>
                     &middot; <span class="badge bg-{{ status_colors.get(p.status, 'secondary') }}">{{ t['status_' + p.status] if ('status_' + p.status) in t else p.status }}</span>
                     &middot; {{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '-' }}
                 </div>

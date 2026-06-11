@@ -346,7 +346,7 @@
                                 {{ pp.first_name }} {{ pp.last_name }}
                                 <span class="badge bg-{{ row.status_color }}">{{ row.status_label }}</span>
                             </div>
-                            <div class="small text-muted">DUPR: {{ pp.dupr_rating if pp.dupr_rating else '-' }}</div>
+                            <div class="small text-muted">DUPR S: {{ pp.dupr_singles if pp.dupr_singles else '-' }} / D: {{ pp.dupr_doubles if pp.dupr_doubles else '-' }}</div>
                         </div>
                         <div class="d-flex flex-column gap-1">
                             {% if pp.phone %}
