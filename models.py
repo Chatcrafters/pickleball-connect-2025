@@ -863,18 +863,57 @@ class PCLLineup(db.Model):
         return self.submitted_at is not None
 
     def validate(self):
-        """Return a list of human-readable validation error strings (empty = valid)."""
+        """Return a list of validation error strings (empty list = valid).
+
+        Enforces the PCL lineup rules: correct gender per discipline, Mixed 2 must
+        differ from Mixed 1, four distinct heartbreaker players, and that every
+        selected player belongs to the submitting team.
+        """
         errors = []
-        values = []
-        for field, label in self.SLOT_FIELDS:
-            val = getattr(self, field)
-            if not val:
-                errors.append(f'Missing: {label}')
-            else:
-                values.append(val)
-        # A player may only appear in a single slot
-        if len(values) != len(set(values)):
-            errors.append('A player is assigned to more than one slot')
+
+        def reg(rid):
+            return PCLRegistration.query.get(rid) if rid else None
+
+        wd1, wd2 = reg(self.wd_player1_id), reg(self.wd_player2_id)
+        md1, md2 = reg(self.md_player1_id), reg(self.md_player2_id)
+        mx1m, mx1f = reg(self.mx1_male_id), reg(self.mx1_female_id)
+        mx2m, mx2f = reg(self.mx2_male_id), reg(self.mx2_female_id)
+        hb = [reg(self.hb_player1_id), reg(self.hb_player2_id),
+              reg(self.hb_player3_id), reg(self.hb_player4_id)]
+
+        # Women's Doubles: exactly 2 distinct female players
+        if not (wd1 and wd2 and wd1.id != wd2.id
+                and wd1.gender == 'female' and wd2.gender == 'female'):
+            errors.append("Women's Doubles requires exactly 2 female players")
+
+        # Men's Doubles: exactly 2 distinct male players
+        if not (md1 and md2 and md1.id != md2.id
+                and md1.gender == 'male' and md2.gender == 'male'):
+            errors.append("Men's Doubles requires exactly 2 male players")
+
+        # Mixed 1: 1 male + 1 female
+        if not (mx1m and mx1f and mx1m.gender == 'male' and mx1f.gender == 'female'):
+            errors.append("Mixed 1 requires 1 male and 1 female")
+
+        # Mixed 2: 1 male + 1 female
+        if not (mx2m and mx2f and mx2m.gender == 'male' and mx2f.gender == 'female'):
+            errors.append("Mixed 2 requires 1 male and 1 female")
+
+        # Mixed 2 must differ from Mixed 1 (at least one different player)
+        if mx1m and mx1f and mx2m and mx2f:
+            if mx1m.id == mx2m.id and mx1f.id == mx2f.id:
+                errors.append("Mixed 2 must differ from Mixed 1 (at least one different player)")
+
+        # Heartbreaker: exactly 4 different players
+        hb_ids = [p.id for p in hb if p]
+        if len(hb_ids) != 4 or len(set(hb_ids)) != 4:
+            errors.append("Heartbreaker requires 4 different players")
+
+        # All selected players must belong to the submitting team
+        everyone = [wd1, wd2, md1, md2, mx1m, mx1f, mx2m, mx2f] + hb
+        if any(p is not None and p.team_id != self.team_id for p in everyone):
+            errors.append("All players must belong to your team")
+
         return errors
 
 

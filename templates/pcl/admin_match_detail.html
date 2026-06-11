@@ -90,19 +90,31 @@
                 </div>
                 {% endif %}
 
-                {% if deadline_passed and lineup and lineup.is_submitted() %}
-                <a href="#" class="btn btn-sm btn-outline-primary mt-2 w-100">
-                    <i class="bi bi-eye"></i> View lineup
+                <!-- Admin can manage either team's lineup at any time -->
+                {% if lineup and lineup.is_submitted() %}
+                <a href="{{ url_for('pcl.admin_match_lineup', match_id=match.id, team_id=team.id, lang=current_lang) }}"
+                   class="btn btn-sm btn-outline-primary mt-2 w-100">
+                    <i class="bi bi-pencil-square"></i> {{ t.admin_edit_lineup }}
                 </a>
                 {% else %}
-                <button class="btn btn-sm btn-outline-secondary mt-2 w-100" disabled>
-                    <i class="bi bi-eye-slash"></i> View lineup
-                </button>
-                <small class="text-muted d-block mt-1">Available after deadline</small>
+                <a href="{{ url_for('pcl.admin_match_lineup', match_id=match.id, team_id=team.id, lang=current_lang) }}"
+                   class="btn btn-sm btn-warning mt-2 w-100">
+                    <i class="bi bi-plus-circle"></i> {{ t.admin_submit_for_team }} {{ team.country_name }}
+                </a>
                 {% endif %}
+                <small class="text-muted d-block mt-1">
+                    <i class="bi bi-shield-check"></i> {{ t.admin_override_mode }}
+                </small>
             </div>
         </div>
         {% endfor %}
+    </div>
+
+    <div class="text-center mt-2">
+        <a href="{{ url_for('pcl.admin_match_reveal', match_id=match.id, lang=current_lang) }}"
+           class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-eye"></i> {{ t.lineup_reveal_title }}
+        </a>
     </div>
 
     <!-- Score section (read-only in Phase 1) -->

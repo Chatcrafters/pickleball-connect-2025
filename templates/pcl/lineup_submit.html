@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.lineup_submit_title }} - {{ team.country_name }}{% endblock %}
+
+{% macro pcard(p) %}
+<div class="player-card" data-id="{{ p.id }}" data-gender="{{ p.gender }}" role="button" tabindex="0">
+    <div class="pc-photo">
+        {% if p.photo_filename %}
+        <img src="{{ p.photo_filename }}" alt="">
+        {% else %}
+        <i class="bi bi-person"></i>
+        {% endif %}
+    </div>
+    <div class="pc-name">{{ p.first_name }}{% if p.last_name %} {{ p.last_name[:1] }}.{% endif %}</div>
+    <span class="pc-badge"></span>
+</div>
+{% endmacro %}
+
+{% block content %}
+<style>
+    .lu-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 110px; }
+    .lu-header {
+        position: sticky; top: 0; z-index: 1020;
+        background: #fff; border-bottom: 1px solid #e0e0e0;
+        padding: 10px 12px; margin: 0 -12px 12px;
+    }
+    .lu-teams { font-weight: 700; font-size: 1rem; }
+    .lu-editing { font-size: .85rem; color: #0d6efd; font-weight: 600; }
+    .countdown { font-weight: 700; }
+    .countdown.urgent { color: #dc3545; }
+    .lu-section { margin-bottom: 22px; }
+    .lu-section h5 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .player-grid {
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 8px;
+    }
+    @media (min-width: 576px) { .player-grid { grid-template-columns: repeat(3, 1fr); } }
+    .player-card {
+        border: 2px solid #e0e0e0; border-radius: 12px; padding: 8px;
+        min-height: 100px; text-align: center; cursor: pointer; position: relative;
+        background: #fff; display: flex; flex-direction: column; align-items: center;
+        justify-content: center; gap: 4px; -webkit-tap-highlight-color: transparent;
+    }
+    .player-card.selected { border-color: #0d6efd; background: #e7f1ff; }
+    .pc-photo {
+        width: 56px; height: 56px; border-radius: 50%; overflow: hidden;
+        background: #f1f3f5; display: flex; align-items: center; justify-content: center;
+    }
+    .pc-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .pc-photo i { font-size: 1.6rem; color: #adb5bd; }
+    .pc-name { font-size: .82rem; line-height: 1.1; font-weight: 600; }
+    .pc-badge {
+        position: absolute; top: 4px; right: 6px; min-width: 22px; height: 22px;
+        border-radius: 50%; background: #0d6efd; color: #fff; font-size: .75rem;
+        display: none; align-items: center; justify-content: center; padding: 0 4px;
+    }
+    .player-card.selected .pc-badge { display: flex; }
+    .sub-label { font-size: .8rem; font-weight: 600; color: #6c757d; margin-top: 10px; }
+    .lu-submit {
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030;
+        background: linear-gradient(to top, #fff 75%, rgba(255,255,255,0));
+        padding: 12px; max-width: 600px; margin: 0 auto;
+    }
+    .lu-submit .btn { min-height: 50px; font-weight: 700; }
+</style>
+
+<div class="container lu-wrap">
+    <!-- Sticky header -->
+    <div class="lu-header">
+        <div class="d-flex justify-content-between align-items-start">
+            <a href="{{ back_url }}" class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            {% if is_admin_mode %}
+            <span class="badge bg-dark"><i class="bi bi-shield-check"></i> {{ t.admin_override_mode }}</span>
+            {% endif %}
+        </div>
+        <div class="lu-teams mt-1">
+            {{ match.team_home.country_flag }} {{ match.team_home.country_name }} {{ match.team_home.age_category }}
+            <span class="text-muted">vs</span>
+            {{ match.team_away.country_flag }} {{ match.team_away.country_name }} {{ match.team_away.age_category }}
+        </div>
+        <div class="lu-editing"><i class="bi bi-pencil"></i> Editing: {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</div>
+        <div class="small text-muted">
+            <i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
+            {% if match.lineup_deadline %}
+            &middot; <span id="countdown" class="countdown" data-deadline="{{ match.lineup_deadline.isoformat() }}"></span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% if existing and existing.is_submitted() %}
+    <div class="alert alert-success py-2">
+        <i class="bi bi-check-circle-fill"></i> {{ t.lineup_already_submitted }}
+        &middot; {{ existing.submitted_at.strftime('%d.%m. %H:%M') }}
+        {% if not deadline_passed %}<span class="d-block small">Editable until deadline.</span>{% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Opponent status (captain only, before deadline) -->
+    {% if not is_admin_mode and not deadline_passed %}
+    <div class="alert {% if opp_submitted %}alert-info{% else %}alert-light border{% endif %} py-2 small">
+        {% if opp_submitted %}
+        <i class="bi bi-eye-slash"></i> {{ t.lineup_opponent_submitted }}
+        {% else %}
+        <i class="bi bi-hourglass"></i> {{ t.lineup_opponent_pending }}
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if not players %}
+    <div class="alert alert-warning"><i class="bi bi-people"></i> This team has no players yet.</div>
+    {% else %}
+
+    {% if males|length < 2 or females|length < 2 %}
+    <div class="alert alert-warning py-2 small">
+        <i class="bi bi-exclamation-triangle"></i> Team incomplete - a valid lineup needs at least 2 men and 2 women.
+    </div>
+    {% endif %}
+
+    <form id="lineupForm" method="POST"
+          action="{% if is_admin_mode %}{{ url_for('pcl.admin_match_lineup', match_id=match.id, team_id=team.id, lang=current_lang) }}{% else %}{{ url_for('pcl.captain_lineup', token=token, match_id=match.id, lang=current_lang) }}{% endif %}">
+
+        <!-- Hidden inputs -->
+        {% for f in ['wd_player1_id','wd_player2_id','md_player1_id','md_player2_id','mx1_male_id','mx1_female_id','mx2_male_id','mx2_female_id','hb_player1_id','hb_player2_id','hb_player3_id','hb_player4_id'] %}
+        <input type="hidden" name="{{ f }}" value="{{ selected[f] if selected[f] else '' }}">
+        {% endfor %}
+
+        <!-- Section 1: Women's Doubles -->
+        <div class="lu-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-gender-female"></i> {{ t.lineup_section_wd }}</h5>
+                <span class="badge bg-light text-dark" data-count="wd">0/2</span>
+            </div>
+            <div class="player-grid" data-inputs="wd_player1_id,wd_player2_id" data-max="2" data-ordered="false" data-count="wd">
+                {% for p in females %}{{ pcard(p) }}{% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 2: Men's Doubles -->
+        <div class="lu-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-gender-male"></i> {{ t.lineup_section_md }}</h5>
+                <span class="badge bg-light text-dark" data-count="md">0/2</span>
+            </div>
+            <div class="player-grid" data-inputs="md_player1_id,md_player2_id" data-max="2" data-ordered="false" data-count="md">
+                {% for p in males %}{{ pcard(p) }}{% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 3: Mixed 1 -->
+        <div class="lu-section">
+            <h5><i class="bi bi-people"></i> {{ t.lineup_section_mx1 }}</h5>
+            <div class="sub-label">{{ t.lineup_select_male }}</div>
+            <div class="player-grid" data-inputs="mx1_male_id" data-max="1">
+                {% for p in males %}{{ pcard(p) }}{% endfor %}
+            </div>
+            <div class="sub-label">{{ t.lineup_select_female }}</div>
+            <div class="player-grid" data-inputs="mx1_female_id" data-max="1">
+                {% for p in females %}{{ pcard(p) }}{% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 4: Mixed 2 -->
+        <div class="lu-section">
+            <h5><i class="bi bi-people"></i> {{ t.lineup_section_mx2 }}</h5>
+            <div id="mx2warn" class="alert alert-warning py-1 px-2 small" style="display:none;">
+                <i class="bi bi-exclamation-triangle"></i> {{ t.lineup_mixed2_different_warning }}
+            </div>
+            <div class="sub-label">{{ t.lineup_select_male }}</div>
+            <div class="player-grid" data-inputs="mx2_male_id" data-max="1">
+                {% for p in males %}{{ pcard(p) }}{% endfor %}
+            </div>
+            <div class="sub-label">{{ t.lineup_select_female }}</div>
+            <div class="player-grid" data-inputs="mx2_female_id" data-max="1">
+                {% for p in females %}{{ pcard(p) }}{% endfor %}
+            </div>
+        </div>
+
+        <!-- Section 5: Heartbreaker -->
+        <div class="lu-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5><i class="bi bi-arrow-down-up"></i> {{ t.lineup_section_hb }}</h5>
+                <span class="badge bg-light text-dark" data-count="hb">0/4</span>
+            </div>
+            <div class="small text-muted">{{ t.lineup_heartbreaker_help }}</div>
+            <div class="player-grid" data-inputs="hb_player1_id,hb_player2_id,hb_player3_id,hb_player4_id" data-max="4" data-ordered="true" data-count="hb">
+                {% for p in players %}{{ pcard(p) }}{% endfor %}
+            </div>
+        </div>
+    </form>
+    {% endif %}
+</div>
+
+{% if players %}
+<div class="lu-submit">
+    <div class="d-grid">
+        <button type="submit" form="lineupForm" id="submitBtn" class="btn btn-success" disabled>
+            <i class="bi bi-check-circle"></i>
+            {% if existing and existing.is_submitted() %}{{ t.lineup_update_button }}{% else %}{{ t.lineup_submit_button }}{% endif %}
+        </button>
+    </div>
+    <div id="missingHint" class="small text-muted text-center mt-1"></div>
+</div>
+{% endif %}
+
+<script>
+(function() {
+    var form = document.getElementById('lineupForm');
+    if (!form) return;
+
+    function inputByName(n) { return form.querySelector('input[name="' + n + '"]'); }
+
+    var grids = Array.prototype.slice.call(document.querySelectorAll('.player-grid'));
+
+    grids.forEach(function(grid) {
+        var names = grid.dataset.inputs.split(',');
+        var max = parseInt(grid.dataset.max, 10);
+        var ordered = grid.dataset.ordered === 'true';
+
+        // initial selection from hidden inputs (in order)
+        var selected = [];
+        names.forEach(function(n) {
+            var v = inputByName(n).value;
+            if (v) selected.push(v);
+        });
+
+        function writeInputs() {
+            names.forEach(function(n, i) {
+                inputByName(n).value = selected[i] || '';
+            });
+        }
+        function paint() {
+            grid.querySelectorAll('.player-card').forEach(function(card) {
+                var id = card.dataset.id;
+                var pos = selected.indexOf(id);
+                if (pos >= 0) {
+                    card.classList.add('selected');
+                    card.querySelector('.pc-badge').textContent = ordered ? (pos + 1) : '';
+                } else {
+                    card.classList.remove('selected');
+                    card.querySelector('.pc-badge').textContent = '';
+                }
+            });
+            var badge = document.querySelector('span[data-count="' + grid.dataset.count + '"]');
+            if (badge) badge.textContent = selected.length + '/' + max;
+        }
+        function toggle(id) {
+            var pos = selected.indexOf(id);
+            if (pos >= 0) {
+                selected.splice(pos, 1);
+            } else if (max === 1) {
+                selected = [id];
+            } else if (selected.length < max) {
+                selected.push(id);
+            }
+            writeInputs(); paint(); validateAll();
+        }
+
+        grid.querySelectorAll('.player-card').forEach(function(card) {
+            card.addEventListener('click', function() { toggle(card.dataset.id); });
+            card.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(card.dataset.id); }
+            });
+        });
+        paint();
+    });
+
+    var submitBtn = document.getElementById('submitBtn');
+    var hint = document.getElementById('missingHint');
+    var mx2warn = document.getElementById('mx2warn');
+
+    function val(n) { return inputByName(n).value; }
+
+    function validateAll() {
+        var missing = [];
+        if (!(val('wd_player1_id') && val('wd_player2_id'))) missing.push("{{ t.lineup_section_wd }}");
+        if (!(val('md_player1_id') && val('md_player2_id'))) missing.push("{{ t.lineup_section_md }}");
+        if (!(val('mx1_male_id') && val('mx1_female_id'))) missing.push("{{ t.lineup_section_mx1 }}");
+        if (!(val('mx2_male_id') && val('mx2_female_id'))) missing.push("{{ t.lineup_section_mx2 }}");
+        var hb = ['hb_player1_id','hb_player2_id','hb_player3_id','hb_player4_id'].map(val).filter(Boolean);
+        if (hb.length !== 4) missing.push("{{ t.lineup_section_hb }}");
+
+        // Mixed 2 must differ from Mixed 1
+        var sameMixed = false;
+        if (val('mx1_male_id') && val('mx1_female_id') && val('mx2_male_id') && val('mx2_female_id')) {
+            sameMixed = (val('mx1_male_id') === val('mx2_male_id') && val('mx1_female_id') === val('mx2_female_id'));
+        }
+        mx2warn.style.display = sameMixed ? 'block' : 'none';
+
+        var ok = (missing.length === 0) && !sameMixed;
+        submitBtn.disabled = !ok;
+        if (ok) {
+            hint.textContent = '';
+        } else if (sameMixed) {
+            hint.textContent = "{{ t.lineup_mixed2_different_warning }}";
+        } else {
+            hint.textContent = 'Missing: ' + missing.join(', ');
+        }
+    }
+    validateAll();
+
+    // Live deadline countdown
+    var cd = document.getElementById('countdown');
+    if (cd && cd.dataset.deadline) {
+        var deadline = new Date(cd.dataset.deadline);
+        function tick() {
+            var diff = deadline.getTime() - Date.now();
+            if (diff <= 0) {
+                cd.textContent = "{{ t.lineup_deadline_passed }}";
+                cd.classList.add('urgent');
+                return;
+            }
+            var mins = Math.floor(diff / 60000);
+            var h = Math.floor(mins / 60), m = mins % 60;
+            cd.textContent = "{{ t.lineup_deadline_in }} " + (h > 0 ? h + 'h ' : '') + m + 'm';
+            cd.classList.toggle('urgent', mins < 30);
+        }
+        tick();
+        setInterval(tick, 60000);
+    }
+})();
+</script>
+{% endblock %}

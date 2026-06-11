@@ -159,6 +159,85 @@
         </div>
     </div>
 
+    <!-- Matches (Phase 2) -->
+    {% if upcoming_matches %}
+    {% if deadline_soon %}
+    <div class="alert alert-danger d-flex align-items-center">
+        <i class="bi bi-alarm-fill me-2"></i>
+        <div>A lineup deadline is less than 24 hours away. Please submit your lineup.</div>
+    </div>
+    {% endif %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-calendar-event"></i> {{ t.upcoming_matches_heading }}</h5>
+        </div>
+        <div class="list-group list-group-flush">
+            {% for v in upcoming_matches %}
+            {% set m = v.match %}
+            <div class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="fw-bold">
+                        <i class="bi bi-shield"></i> {{ v.opponent.country_flag }} {{ v.opponent.country_name }} {{ v.opponent.age_category }}
+                    </div>
+                    <div class="text-muted small">
+                        <i class="bi bi-clock"></i> {{ m.format_date(current_lang) if m.match_date else '-' }}
+                        {% if m.court %}&middot; {{ t.match_court }} {{ m.court }}{% endif %}
+                    </div>
+                </div>
+                <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    {% if v.deadline_passed %}
+                    <span class="text-success small"><i class="bi bi-lock-fill"></i> Lineups locked - tap to view</span>
+                    <a href="{{ url_for('pcl.captain_lineup_reveal', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                       class="btn btn-sm btn-success"><i class="bi bi-eye"></i> View Lineups</a>
+                    {% elif not v.own_submitted %}
+                    <span class="text-warning small">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        Submit lineup{% if m.lineup_deadline %} by {{ m.lineup_deadline.strftime('%d.%m. %H:%M') }}{% endif %}
+                    </span>
+                    <a href="{{ url_for('pcl.captain_lineup', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                       class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i> {{ t.lineup_submit_button }}</a>
+                    {% elif not v.opp_submitted %}
+                    <span class="text-primary small"><i class="bi bi-check-circle"></i> Submitted - waiting for opponent</span>
+                    <a href="{{ url_for('pcl.captain_lineup', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                       class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> {{ t.lineup_update_button }}</a>
+                    {% else %}
+                    <span class="text-success small"><i class="bi bi-check-all"></i> Both submitted - reveal at deadline</span>
+                    <a href="{{ url_for('pcl.captain_lineup', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                       class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> {{ t.lineup_update_button }}</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if past_matches %}
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h5 class="mb-0"><i class="bi bi-clock-history"></i> {{ t.past_matches_heading }}</h5>
+        </div>
+        <div class="list-group list-group-flush">
+            {% for v in past_matches %}
+            {% set m = v.match %}
+            <div class="list-group-item d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="fw-bold">{{ v.opponent.country_flag }} {{ v.opponent.country_name }}</div>
+                    <div class="text-muted small"><i class="bi bi-clock"></i> {{ m.format_date(current_lang) if m.match_date else '-' }}</div>
+                </div>
+                <div class="text-end">
+                    {% if m.home_score is not none and m.away_score is not none %}
+                    <span class="badge bg-secondary fs-6">{{ m.home_score }} : {{ m.away_score }}</span>
+                    {% endif %}
+                    <a href="{{ url_for('pcl.captain_lineup_reveal', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                       class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Players Lists -->
     <div class="row">
         <!-- Men -->

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.lineup_reveal_title }} - {{ match.team_home.country_name }} vs {{ match.team_away.country_name }}{% endblock %}
+
+{% macro mini(reg) %}
+{% if reg %}
+<div class="rv-player">
+    <div class="rv-photo">
+        {% if reg.photo_filename %}<img src="{{ reg.photo_filename }}" alt="">{% else %}<i class="bi bi-person"></i>{% endif %}
+    </div>
+    <span>{{ reg.first_name }}{% if reg.last_name %} {{ reg.last_name }}{% endif %}</span>
+</div>
+{% else %}
+<div class="rv-player text-muted"><div class="rv-photo"><i class="bi bi-dash"></i></div><span>-</span></div>
+{% endif %}
+{% endmacro %}
+
+{% macro team_lineup(lineup) %}
+{% if lineup and lineup.is_submitted() %}
+    <div class="rv-block"><div class="rv-h">{{ t.lineup_section_wd }}</div>{{ mini(lineup.wd1) }}{{ mini(lineup.wd2) }}</div>
+    <div class="rv-block"><div class="rv-h">{{ t.lineup_section_md }}</div>{{ mini(lineup.md1) }}{{ mini(lineup.md2) }}</div>
+    <div class="rv-block"><div class="rv-h">{{ t.lineup_section_mx1 }}</div>{{ mini(lineup.mx1m) }}{{ mini(lineup.mx1f) }}</div>
+    <div class="rv-block"><div class="rv-h">{{ t.lineup_section_mx2 }}</div>{{ mini(lineup.mx2m) }}{{ mini(lineup.mx2f) }}</div>
+    <div class="rv-block">
+        <div class="rv-h">{{ t.lineup_section_hb }}</div>
+        <div class="rv-hb"><span class="rv-pos">1</span>{{ mini(lineup.hb1) }}</div>
+        <div class="rv-hb"><span class="rv-pos">2</span>{{ mini(lineup.hb2) }}</div>
+        <div class="rv-hb"><span class="rv-pos">3</span>{{ mini(lineup.hb3) }}</div>
+        <div class="rv-hb"><span class="rv-pos">4</span>{{ mini(lineup.hb4) }}</div>
+    </div>
+{% else %}
+    <div class="alert alert-light border text-muted text-center py-3">
+        <i class="bi bi-exclamation-triangle"></i> Not submitted
+    </div>
+{% endif %}
+{% endmacro %}
+
+{% block content %}
+<style>
+    .rv-wrap { max-width: 920px; margin: 0 auto; }
+    .rv-col-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 8px; }
+    .rv-block { border: 1px solid #e6e6e6; border-radius: 10px; padding: 10px; margin-bottom: 10px; }
+    .rv-h { font-size: .8rem; font-weight: 700; text-transform: uppercase; color: #6c757d; margin-bottom: 6px; }
+    .rv-player { display: flex; align-items: center; gap: 8px; padding: 3px 0; font-weight: 600; font-size: .92rem; }
+    .rv-photo { width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: #f1f3f5;
+        display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    .rv-photo img { width: 100%; height: 100%; object-fit: cover; }
+    .rv-photo i { color: #adb5bd; }
+    .rv-hb { display: flex; align-items: center; gap: 6px; }
+    .rv-pos { width: 20px; height: 20px; border-radius: 50%; background: #0d6efd; color: #fff;
+        font-size: .72rem; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+    @media print {
+        .no-print { display: none !important; }
+        body { background: #fff; }
+        .rv-block { break-inside: avoid; }
+    }
+</style>
+
+<div class="container rv-wrap">
+    <div class="py-3 no-print">
+        <a href="{{ back_url }}" class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left"></i> Back
+        </a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h5 mb-0">
+            <i class="bi bi-eye"></i> {{ t.lineup_reveal_title }}
+        </h1>
+        <button class="btn btn-sm btn-outline-secondary no-print" onclick="window.print()">
+            <i class="bi bi-printer"></i>
+        </button>
+    </div>
+
+    <div class="text-muted mb-3">
+        {{ match.team_home.country_flag }} {{ match.team_home.country_name }} {{ match.team_home.age_category }}
+        vs {{ match.team_away.country_flag }} {{ match.team_away.country_name }} {{ match.team_away.age_category }}
+        <br><i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
+        {% if match.court %}&middot; <i class="bi bi-geo-alt"></i> {{ t.match_court }} {{ match.court }}{% endif %}
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-6">
+            <div class="rv-col-title">{{ match.team_home.country_flag }} {{ match.team_home.country_name }}</div>
+            {{ team_lineup(home_lineup) }}
+        </div>
+        <div class="col-12 col-md-6">
+            <div class="rv-col-title">{{ match.team_away.country_flag }} {{ match.team_away.country_name }}</div>
+            {{ team_lineup(away_lineup) }}
+        </div>
+    </div>
+</div>
+{% endblock %}

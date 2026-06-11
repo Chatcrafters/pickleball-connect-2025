@@ -62,6 +62,32 @@ TRANSLATIONS = {
         'match_lineup_deadline': 'Lineup deadline',
         'match_lineups_submitted': 'Lineups submitted',
         'match_delete_confirm': 'Really delete match?',
+        'lineup_submit_title': 'Submit Lineup',
+        'lineup_edit_title': 'Edit Lineup',
+        'lineup_section_wd': "Women's Doubles",
+        'lineup_section_md': "Men's Doubles",
+        'lineup_section_mx1': 'Mixed 1',
+        'lineup_section_mx2': 'Mixed 2',
+        'lineup_section_hb': 'Heartbreaker Order',
+        'lineup_select_male': 'Select male',
+        'lineup_select_female': 'Select female',
+        'lineup_position': 'Position',
+        'lineup_status_selected': 'selected',
+        'lineup_submit_button': 'Submit Lineup',
+        'lineup_update_button': 'Update Lineup',
+        'lineup_already_submitted': 'Lineup submitted',
+        'lineup_opponent_submitted': 'Opponent submitted',
+        'lineup_opponent_pending': 'Opponent not submitted yet',
+        'lineup_deadline_in': 'Deadline in',
+        'lineup_deadline_passed': 'Deadline passed',
+        'lineup_reveal_title': 'Lineups Revealed',
+        'lineup_heartbreaker_help': 'Select 4 different players in playing order. Position 1 plays first.',
+        'lineup_mixed2_different_warning': 'Mixed 2 must differ from Mixed 1.',
+        'upcoming_matches_heading': 'Upcoming Matches',
+        'past_matches_heading': 'Past Matches',
+        'admin_override_mode': 'Admin Override Mode',
+        'admin_edit_lineup': 'View/Edit Lineup',
+        'admin_submit_for_team': 'Submit Lineup for',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -169,6 +195,32 @@ TRANSLATIONS = {
         'match_lineup_deadline': 'Lineup-Deadline',
         'match_lineups_submitted': 'Aufstellungen eingereicht',
         'match_delete_confirm': 'Begegnung wirklich loeschen?',
+        'lineup_submit_title': 'Aufstellung einreichen',
+        'lineup_edit_title': 'Aufstellung bearbeiten',
+        'lineup_section_wd': 'Damen-Doppel',
+        'lineup_section_md': 'Herren-Doppel',
+        'lineup_section_mx1': 'Mixed 1',
+        'lineup_section_mx2': 'Mixed 2',
+        'lineup_section_hb': 'Heartbreaker-Reihenfolge',
+        'lineup_select_male': 'Mann waehlen',
+        'lineup_select_female': 'Frau waehlen',
+        'lineup_position': 'Position',
+        'lineup_status_selected': 'ausgewaehlt',
+        'lineup_submit_button': 'Aufstellung einreichen',
+        'lineup_update_button': 'Aufstellung aktualisieren',
+        'lineup_already_submitted': 'Aufstellung eingereicht',
+        'lineup_opponent_submitted': 'Gegner hat eingereicht',
+        'lineup_opponent_pending': 'Gegner noch nicht eingereicht',
+        'lineup_deadline_in': 'Deadline in',
+        'lineup_deadline_passed': 'Deadline abgelaufen',
+        'lineup_reveal_title': 'Aufstellungen sichtbar',
+        'lineup_heartbreaker_help': 'Waehle 4 verschiedene Spieler in Reihenfolge. Position 1 spielt zuerst.',
+        'lineup_mixed2_different_warning': 'Mixed 2 muss sich von Mixed 1 unterscheiden.',
+        'upcoming_matches_heading': 'Kommende Begegnungen',
+        'past_matches_heading': 'Vergangene Begegnungen',
+        'admin_override_mode': 'Admin-Override-Modus',
+        'admin_edit_lineup': 'Aufstellung ansehen/bearbeiten',
+        'admin_submit_for_team': 'Aufstellung einreichen fuer',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -276,6 +328,32 @@ TRANSLATIONS = {
         'match_lineup_deadline': 'Fecha limite alineacion',
         'match_lineups_submitted': 'Alineaciones enviadas',
         'match_delete_confirm': 'Borrar partido?',
+        'lineup_submit_title': 'Enviar alineacion',
+        'lineup_edit_title': 'Editar alineacion',
+        'lineup_section_wd': 'Dobles femenino',
+        'lineup_section_md': 'Dobles masculino',
+        'lineup_section_mx1': 'Mixto 1',
+        'lineup_section_mx2': 'Mixto 2',
+        'lineup_section_hb': 'Orden Heartbreaker',
+        'lineup_select_male': 'Elegir hombre',
+        'lineup_select_female': 'Elegir mujer',
+        'lineup_position': 'Posicion',
+        'lineup_status_selected': 'seleccionado',
+        'lineup_submit_button': 'Enviar alineacion',
+        'lineup_update_button': 'Actualizar alineacion',
+        'lineup_already_submitted': 'Alineacion enviada',
+        'lineup_opponent_submitted': 'Rival ha enviado',
+        'lineup_opponent_pending': 'Rival aun no ha enviado',
+        'lineup_deadline_in': 'Fecha limite en',
+        'lineup_deadline_passed': 'Fecha limite pasada',
+        'lineup_reveal_title': 'Alineaciones reveladas',
+        'lineup_heartbreaker_help': 'Elige 4 jugadores diferentes en orden. La posicion 1 juega primero.',
+        'lineup_mixed2_different_warning': 'Mixto 2 debe diferir de Mixto 1.',
+        'upcoming_matches_heading': 'Proximos partidos',
+        'past_matches_heading': 'Partidos pasados',
+        'admin_override_mode': 'Modo Admin Override',
+        'admin_edit_lineup': 'Ver/Editar alineacion',
+        'admin_submit_for_team': 'Enviar alineacion para',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
@@ -383,6 +461,32 @@ TRANSLATIONS = {
         'match_lineup_deadline': 'Date limite composition',
         'match_lineups_submitted': 'Compositions soumises',
         'match_delete_confirm': 'Supprimer le match?',
+        'lineup_submit_title': 'Envoyer la composition',
+        'lineup_edit_title': 'Modifier la composition',
+        'lineup_section_wd': 'Double dames',
+        'lineup_section_md': 'Double messieurs',
+        'lineup_section_mx1': 'Mixte 1',
+        'lineup_section_mx2': 'Mixte 2',
+        'lineup_section_hb': 'Ordre Heartbreaker',
+        'lineup_select_male': 'Choisir homme',
+        'lineup_select_female': 'Choisir femme',
+        'lineup_position': 'Position',
+        'lineup_status_selected': 'selectionne',
+        'lineup_submit_button': 'Envoyer la composition',
+        'lineup_update_button': 'Mettre a jour',
+        'lineup_already_submitted': 'Composition envoyee',
+        'lineup_opponent_submitted': 'Adversaire a envoye',
+        'lineup_opponent_pending': 'Adversaire pas encore envoye',
+        'lineup_deadline_in': 'Date limite dans',
+        'lineup_deadline_passed': 'Date limite passee',
+        'lineup_reveal_title': 'Compositions revelees',
+        'lineup_heartbreaker_help': 'Choisissez 4 joueurs differents dans l ordre. La position 1 joue en premier.',
+        'lineup_mixed2_different_warning': 'Mixte 2 doit differer de Mixte 1.',
+        'upcoming_matches_heading': 'Matchs a venir',
+        'past_matches_heading': 'Matchs passes',
+        'admin_override_mode': 'Mode Admin Override',
+        'admin_edit_lineup': 'Voir/Modifier la composition',
+        'admin_submit_for_team': 'Envoyer la composition pour',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carre recommande.',
@@ -1373,10 +1477,45 @@ Merci!"""
         'FR': f"Salut! Veuillez completer votre profil PCL pour {team.country_name} {team.age_category}: {registration_url}?lang=FR"
     }
     player_message_encoded = quote(player_messages.get(lang, player_messages['EN']))
-    
+
+    # --- Phase 2: matches for this team (upcoming + past) ---
+    team_matches = PCLMatch.query.filter(
+        db.or_(PCLMatch.team_home_id == team.id, PCLMatch.team_away_id == team.id)
+    ).all()
+
+    def _match_view(m):
+        is_home = m.team_home_id == team.id
+        opponent = m.team_away if is_home else m.team_home
+        own = m.lineups.filter_by(team_id=team.id).first()
+        opp_id = m.team_away_id if is_home else m.team_home_id
+        opp = m.lineups.filter_by(team_id=opp_id).first()
+        return {
+            'match': m,
+            'opponent': opponent,
+            'is_home': is_home,
+            'own_submitted': bool(own and own.is_submitted()),
+            'opp_submitted': bool(opp and opp.is_submitted()),
+            'deadline_passed': m.is_lineup_deadline_passed(),
+        }
+
+    upcoming_matches = [_match_view(m) for m in team_matches if m.status != 'completed']
+    upcoming_matches.sort(key=lambda v: (v['match'].match_date is None,
+                                         v['match'].match_date or datetime.max))
+    past_matches = [_match_view(m) for m in team_matches if m.status == 'completed']
+    past_matches.sort(key=lambda v: (v['match'].match_date or datetime.min), reverse=True)
+
+    deadline_soon = any(
+        v['match'].lineup_deadline and not v['deadline_passed'] and not v['own_submitted']
+        and (v['match'].lineup_deadline - datetime.now()).total_seconds() < 24 * 3600
+        for v in upcoming_matches
+    )
+
     return render_template('pcl/captain_dashboard.html',
                          team=team,
                          other_teams=other_teams,
+                         upcoming_matches=upcoming_matches,
+                         past_matches=past_matches,
+                         deadline_soon=deadline_soon,
                          stats=stats,
                          men=men,
                          women=women,
@@ -3128,4 +3267,181 @@ def checkin_stats_api(tournament_id):
 def terms():
     """Privacy Policy and Terms page"""
     return render_template('terms.html')
+
+
+# ============================================================================
+# PCL MATCH / LINEUP MODULE - PHASE 2 (Lineup Submission: Captain + Admin)
+# ============================================================================
+
+LINEUP_FIELDS = [
+    'wd_player1_id', 'wd_player2_id', 'md_player1_id', 'md_player2_id',
+    'mx1_male_id', 'mx1_female_id', 'mx2_male_id', 'mx2_female_id',
+    'hb_player1_id', 'hb_player2_id', 'hb_player3_id', 'hb_player4_id',
+]
+
+
+def _selectable_players(team, extra_ids=None):
+    """Selectable lineup players for a team: every playing member (non-playing
+    captains excluded), plus any extra ids already stored in a lineup so removed
+    players still render. Returns (all, males, females), each name-sorted."""
+    regs = team.registrations.all()
+    selectable = [r for r in regs if not (r.is_captain and not r.is_playing)]
+    have = {r.id for r in selectable}
+    for rid in (extra_ids or []):
+        if rid and rid not in have:
+            r = PCLRegistration.query.get(rid)
+            if r:
+                selectable.append(r)
+                have.add(rid)
+    keyfn = lambda r: ((r.first_name or '').lower(), (r.last_name or '').lower())
+    selectable.sort(key=keyfn)
+    males = sorted([r for r in selectable if r.gender == 'male'], key=keyfn)
+    females = sorted([r for r in selectable if r.gender == 'female'], key=keyfn)
+    return selectable, males, females
+
+
+def _lineup_page(match, team, is_admin_mode, lang, t, token=None, submitted_by=None):
+    """Shared GET/POST handler for the lineup form (captain and admin)."""
+    existing = match.lineups.filter_by(team_id=team.id).first()
+
+    if request.method == 'POST':
+        ids = {f: request.form.get(f, type=int) for f in LINEUP_FIELDS}
+        lineup = existing or PCLLineup(match_id=match.id, team_id=team.id)
+        lineup.team_id = team.id
+        for f in LINEUP_FIELDS:
+            setattr(lineup, f, ids[f])
+
+        with db.session.no_autoflush:
+            errors = lineup.validate()
+
+        if errors:
+            db.session.rollback()
+            for e in errors:
+                flash(e, 'danger')
+            selected = ids
+        else:
+            now = datetime.now()
+            if not lineup.submitted_at:
+                lineup.submitted_at = now
+            lineup.last_modified_at = now
+            # Captain submission stores the captain id; admin override leaves it
+            # NULL (with submitted_at set) to flag an admin-entered lineup.
+            lineup.submitted_by_captain_id = submitted_by
+            if existing is None:
+                db.session.add(lineup)
+            try:
+                db.session.commit()
+                flash(t['lineup_already_submitted'], 'success')
+                if is_admin_mode:
+                    return redirect(url_for('pcl.admin_match_detail', match_id=match.id, lang=lang))
+                return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error: {str(e)}', 'danger')
+                selected = ids
+    else:
+        if existing:
+            selected = {f: getattr(existing, f) for f in LINEUP_FIELDS}
+        else:
+            selected = {f: None for f in LINEUP_FIELDS}
+
+    extra = [v for v in selected.values() if v]
+    all_players, males, females = _selectable_players(team, extra_ids=extra)
+
+    is_home = match.team_home_id == team.id
+    opp_team = match.team_away if is_home else match.team_home
+    opp_id = match.team_away_id if is_home else match.team_home_id
+    opp_lineup = match.lineups.filter_by(team_id=opp_id).first()
+
+    if is_admin_mode:
+        back_url = url_for('pcl.admin_match_detail', match_id=match.id, lang=lang)
+    else:
+        back_url = url_for('pcl.captain_dashboard', token=token, lang=lang)
+
+    return render_template('pcl/lineup_submit.html',
+                         match=match, team=team, opp_team=opp_team,
+                         is_admin_mode=is_admin_mode,
+                         existing=existing, selected=selected,
+                         players=all_players, males=males, females=females,
+                         opp_submitted=bool(opp_lineup and opp_lineup.is_submitted()),
+                         deadline_passed=match.is_lineup_deadline_passed(),
+                         back_url=back_url, token=token,
+                         t=t, current_lang=lang)
+
+
+@pcl.route('/team/<token>/match/<int:match_id>/lineup', methods=['GET', 'POST'])
+def captain_lineup(token, match_id):
+    """Captain: submit/edit their team's lineup (editable until the deadline)."""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    match = PCLMatch.query.get_or_404(match_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+
+    if team.id not in (match.team_home_id, match.team_away_id):
+        flash('This match does not involve your team.', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+    if match.is_lineup_deadline_passed():
+        flash(t['lineup_deadline_passed'], 'warning')
+        return redirect(url_for('pcl.captain_lineup_reveal', token=token, match_id=match_id, lang=lang))
+
+    captain = team.registrations.filter_by(is_captain=True).first()
+    return _lineup_page(match, team, is_admin_mode=False, lang=lang, t=t,
+                        token=token, submitted_by=(captain.id if captain else None))
+
+
+@pcl.route('/team/<token>/match/<int:match_id>/reveal')
+def captain_lineup_reveal(token, match_id):
+    """Captain: view both lineups (only after the deadline has passed)."""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    match = PCLMatch.query.get_or_404(match_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+
+    if team.id not in (match.team_home_id, match.team_away_id):
+        flash('This match does not involve your team.', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+    if not match.is_lineup_deadline_passed():
+        flash('Lineups are revealed after the deadline.', 'info')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+    home_lineup = match.lineups.filter_by(team_id=match.team_home_id).first()
+    away_lineup = match.lineups.filter_by(team_id=match.team_away_id).first()
+    return render_template('pcl/lineup_reveal.html',
+                         match=match, home_lineup=home_lineup, away_lineup=away_lineup,
+                         is_admin_mode=False,
+                         back_url=url_for('pcl.captain_dashboard', token=token, lang=lang),
+                         t=t, current_lang=lang)
+
+
+@pcl.route('/admin/match/<int:match_id>/lineup/<int:team_id>', methods=['GET', 'POST'])
+def admin_match_lineup(match_id, team_id):
+    """Admin: submit/edit a lineup for either team, before or after the deadline."""
+    match = PCLMatch.query.get_or_404(match_id)
+    team = PCLTeam.query.get_or_404(team_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+
+    if team.id not in (match.team_home_id, match.team_away_id):
+        flash('That team is not part of this match.', 'danger')
+        return redirect(url_for('pcl.admin_match_detail', match_id=match.id, lang=lang))
+
+    return _lineup_page(match, team, is_admin_mode=True, lang=lang, t=t,
+                        token=None, submitted_by=None)
+
+
+@pcl.route('/admin/match/<int:match_id>/reveal')
+def admin_match_reveal(match_id):
+    """Admin: view both lineups at any time."""
+    match = PCLMatch.query.get_or_404(match_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+    home_lineup = match.lineups.filter_by(team_id=match.team_home_id).first()
+    away_lineup = match.lineups.filter_by(team_id=match.team_away_id).first()
+    return render_template('pcl/lineup_reveal.html',
+                         match=match, home_lineup=home_lineup, away_lineup=away_lineup,
+                         is_admin_mode=True,
+                         back_url=url_for('pcl.admin_match_detail', match_id=match.id, lang=lang),
+                         t=t, current_lang=lang)
 
