@@ -963,10 +963,13 @@ class PCLLineup(db.Model):
             if mx1m.id == mx2m.id and mx1f.id == mx2f.id:
                 errors.append("Mixed 2 must differ from Mixed 1 (at least one different player)")
 
-        # Heartbreaker: exactly 4 different players
+        # Heartbreaker: exactly 4 different players, 2 male + 2 female (order is free)
         hb_ids = [p.id for p in hb if p]
         if len(hb_ids) != 4 or len(set(hb_ids)) != 4:
             errors.append("Heartbreaker requires 4 different players")
+        elif sum(1 for p in hb if p.gender == 'male') != 2 \
+                or sum(1 for p in hb if p.gender == 'female') != 2:
+            errors.append("Heartbreaker requires exactly 2 male and 2 female players")
 
         # All selected players must belong to the submitting team
         everyone = [wd1, wd2, md1, md2, mx1m, mx1f, mx2m, mx2f] + hb
