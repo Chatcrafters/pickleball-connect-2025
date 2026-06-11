@@ -3623,3 +3623,57 @@ def captain_match_score(token, match_id):
 
     return _score_page(match, is_admin_mode=False, lang=lang, t=t, token=token)
 
+
+# ============================================================================
+# PCL MATCH / LINEUP MODULE - PHASE 4 (Admin WhatsApp message generator)
+# ============================================================================
+
+def _match_whatsapp_data(match):
+    """Build the data dict for one match used by the WhatsApp text templates.
+
+    Captain dashboard links use the current host so they work in any environment.
+    """
+    base = request.host_url.rstrip('/')
+    home, away = match.team_home, match.team_away
+    return {
+        'id': match.id,
+        'home_name': f"{home.country_name} {home.age_category}",
+        'away_name': f"{away.country_name} {away.age_category}",
+        'label': f"{home.country_flag} {home.country_name} {home.age_category} vs "
+                 f"{away.country_flag} {away.country_name} {away.age_category}",
+        'date': format_match_date(match.match_date, 'EN') if match.match_date else '',
+        'deadline': format_match_date(match.lineup_deadline, 'EN') if match.lineup_deadline else '',
+        'court': match.court or '',
+        'home_url': base + url_for('pcl.captain_dashboard', token=home.captain_token),
+        'away_url': base + url_for('pcl.captain_dashboard', token=away.captain_token),
+    }
+
+
+@pcl.route('/admin/tournament/<int:tournament_id>/whatsapp')
+def admin_whatsapp_tools(tournament_id):
+    """Admin: WhatsApp message generator for all matches in a tournament."""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    matches = PCLMatch.query.filter_by(tournament_id=tournament_id).all()
+    matches.sort(key=lambda m: (m.match_date is None, m.match_date or datetime.max))
+    match_data = [_match_whatsapp_data(m) for m in matches]
+    return render_template('pcl/admin_whatsapp_tools.html',
+                         tournament=tournament,
+                         match_data=match_data,
+                         preselect_id=None,
+                         back_url=url_for('pcl.admin_match_list', tournament_id=tournament.id))
+
+
+@pcl.route('/admin/match/<int:match_id>/whatsapp')
+def admin_match_whatsapp(match_id):
+    """Admin: WhatsApp generator focused on a single match (same page, preselected)."""
+    match = PCLMatch.query.get_or_404(match_id)
+    tournament = match.tournament
+    matches = PCLMatch.query.filter_by(tournament_id=tournament.id).all()
+    matches.sort(key=lambda m: (m.match_date is None, m.match_date or datetime.max))
+    match_data = [_match_whatsapp_data(m) for m in matches]
+    return render_template('pcl/admin_whatsapp_tools.html',
+                         tournament=tournament,
+                         match_data=match_data,
+                         preselect_id=match.id,
+                         back_url=url_for('pcl.admin_match_detail', match_id=match.id))
+

@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}WhatsApp Tools - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .wa-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 40px; }
+    .wa-preview {
+        width: 100%; min-height: 220px; font-family: ui-monospace, Menlo, Consolas, monospace;
+        font-size: .85rem; white-space: pre-wrap; border: 1px solid #ced4da; border-radius: 10px;
+        padding: 12px; background: #f8f9fa;
+    }
+    .wa-actions .btn { min-height: 46px; font-weight: 600; }
+    .wa-check { padding: 8px 0; border-bottom: 1px solid #f0f0f0; }
+    .nav-tabs .nav-link { font-weight: 600; }
+</style>
+
+<div class="container wa-wrap">
+    <div class="py-3">
+        <a href="{{ back_url }}" class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left"></i> {{ tournament.name }}
+        </a>
+        <h1 class="h4 mb-0 mt-1"><i class="bi bi-whatsapp text-success"></i> WhatsApp Tools</h1>
+        <p class="text-muted small mb-0">English messages, ready to copy or open in WhatsApp.</p>
+    </div>
+
+    {% if not match_data %}
+    <div class="alert alert-light border text-center text-muted py-4">
+        <i class="bi bi-calendar-x" style="font-size: 1.6rem;"></i>
+        <div class="mt-2">No matches yet - create a match first.</div>
+    </div>
+    {% else %}
+
+    <ul class="nav nav-tabs nav-fill mb-3" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-ann" type="button" role="tab">
+                <i class="bi bi-megaphone"></i> Announcement
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-rem" type="button" role="tab">
+                <i class="bi bi-bell"></i> Reminder
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-sum" type="button" role="tab">
+                <i class="bi bi-list-ul"></i> Round Summary
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- A. Match Announcement -->
+        <div class="tab-pane fade show active" id="tab-ann" role="tabpanel">
+            <label class="form-label fw-bold">Match</label>
+            <select class="form-select mb-3" id="annSelect">
+                {% for m in match_data %}
+                <option value="{{ m.id }}" {% if preselect_id == m.id %}selected{% endif %}>{{ m.label }}</option>
+                {% endfor %}
+            </select>
+            <textarea class="wa-preview" id="annPreview" readonly></textarea>
+            <div class="wa-actions row g-2 mt-2">
+                <div class="col-6"><button type="button" class="btn btn-outline-secondary w-100" data-copy="annPreview"><i class="bi bi-clipboard"></i> Copy</button></div>
+                <div class="col-6"><button type="button" class="btn btn-success w-100" data-wa="annPreview"><i class="bi bi-whatsapp"></i> Open WhatsApp</button></div>
+            </div>
+        </div>
+
+        <!-- B. Reminder -->
+        <div class="tab-pane fade" id="tab-rem" role="tabpanel">
+            <label class="form-label fw-bold">Match</label>
+            <select class="form-select mb-3" id="remSelect">
+                {% for m in match_data %}
+                <option value="{{ m.id }}" {% if preselect_id == m.id %}selected{% endif %}>{{ m.label }}</option>
+                {% endfor %}
+            </select>
+            <textarea class="wa-preview" id="remPreview" readonly></textarea>
+            <div class="wa-actions row g-2 mt-2">
+                <div class="col-6"><button type="button" class="btn btn-outline-secondary w-100" data-copy="remPreview"><i class="bi bi-clipboard"></i> Copy</button></div>
+                <div class="col-6"><button type="button" class="btn btn-success w-100" data-wa="remPreview"><i class="bi bi-whatsapp"></i> Open WhatsApp</button></div>
+            </div>
+        </div>
+
+        <!-- C. Round Summary -->
+        <div class="tab-pane fade" id="tab-sum" role="tabpanel">
+            <label class="form-label fw-bold">Select matches</label>
+            <div class="mb-3">
+                {% for m in match_data %}
+                <div class="wa-check form-check">
+                    <input class="form-check-input sum-check" type="checkbox" value="{{ m.id }}" id="sum{{ m.id }}"
+                           {% if preselect_id == m.id %}checked{% endif %}>
+                    <label class="form-check-label" for="sum{{ m.id }}">{{ m.label }}</label>
+                </div>
+                {% endfor %}
+            </div>
+            <textarea class="wa-preview" id="sumPreview" readonly></textarea>
+            <div class="wa-actions row g-2 mt-2">
+                <div class="col-6"><button type="button" class="btn btn-outline-secondary w-100" data-copy="sumPreview"><i class="bi bi-clipboard"></i> Copy</button></div>
+                <div class="col-6"><button type="button" class="btn btn-success w-100" data-wa="sumPreview"><i class="bi bi-whatsapp"></i> Open WhatsApp</button></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    var MATCHES = {{ match_data|tojson }};
+    if (!MATCHES.length) return;
+    var byId = {};
+    MATCHES.forEach(function(m) { byId[m.id] = m; });
+
+    function courtLine(m) { return m.court ? 'Court: ' + m.court + '\n' : ''; }
+
+    function buildAnnouncement(m) {
+        return 'PCL Match Announcement\n\n' +
+            m.home_name + ' vs ' + m.away_name + '\n' +
+            'Date: ' + (m.date || 'TBD') + '\n' +
+            courtLine(m) +
+            'Lineup deadline: ' + (m.deadline || 'TBD') + '\n\n' +
+            'Captains, please submit your lineup before the deadline:\n' +
+            m.home_name + ': ' + m.home_url + '\n' +
+            m.away_name + ': ' + m.away_url + '\n\n' +
+            'Good luck!\nSergio Ruiz Caro';
+    }
+
+    function buildReminder(m) {
+        return 'PCL Lineup Reminder\n\n' +
+            m.home_name + ' vs ' + m.away_name + '\n' +
+            courtLine(m) + '\n' +
+            'Friendly reminder: please submit your lineup if you have not done so yet.\n\n' +
+            m.home_name + ': ' + m.home_url + '\n' +
+            m.away_name + ': ' + m.away_url + '\n\n' +
+            'Thanks!\nSergio';
+    }
+
+    function buildSummary(list) {
+        if (!list.length) return 'Select one or more matches above.';
+        var lines = list.map(function(m) {
+            var s = m.home_name + ' vs ' + m.away_name;
+            if (m.date) s += ' - ' + m.date;
+            if (m.court) s += ' - Court ' + m.court;
+            return s;
+        });
+        // unique captain dashboards across selected matches
+        var seen = {}, links = [];
+        list.forEach(function(m) {
+            if (!seen[m.home_url]) { seen[m.home_url] = 1; links.push(m.home_name + ': ' + m.home_url); }
+            if (!seen[m.away_url]) { seen[m.away_url] = 1; links.push(m.away_name + ': ' + m.away_url); }
+        });
+        return 'PCL Round Overview\n\n' +
+            lines.join('\n') + '\n\n' +
+            'Captain dashboards:\n' + links.join('\n') + '\n\n' +
+            'Please submit your lineups before the deadlines. Thank you!\nSergio Ruiz Caro';
+    }
+
+    function setText(id, txt) { var el = document.getElementById(id); if (el) el.value = txt; }
+
+    function refreshAnn() { var m = byId[document.getElementById('annSelect').value]; if (m) setText('annPreview', buildAnnouncement(m)); }
+    function refreshRem() { var m = byId[document.getElementById('remSelect').value]; if (m) setText('remPreview', buildReminder(m)); }
+    function refreshSum() {
+        var sel = [];
+        document.querySelectorAll('.sum-check:checked').forEach(function(c) { if (byId[c.value]) sel.push(byId[c.value]); });
+        setText('sumPreview', buildSummary(sel));
+    }
+
+    document.getElementById('annSelect').addEventListener('change', refreshAnn);
+    document.getElementById('remSelect').addEventListener('change', refreshRem);
+    document.querySelectorAll('.sum-check').forEach(function(c) { c.addEventListener('change', refreshSum); });
+
+    // Copy + Open WhatsApp actions
+    document.querySelectorAll('[data-copy]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var ta = document.getElementById(btn.getAttribute('data-copy'));
+            if (!ta) return;
+            var done = function() {
+                var orig = btn.innerHTML;
+                btn.innerHTML = '<i class="bi bi-check2"></i> Copied';
+                setTimeout(function() { btn.innerHTML = orig; }, 1500);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(ta.value).then(done, function() { ta.select(); document.execCommand('copy'); done(); });
+            } else {
+                ta.select(); document.execCommand('copy'); done();
+            }
+        });
+    });
+    document.querySelectorAll('[data-wa]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var ta = document.getElementById(btn.getAttribute('data-wa'));
+            if (!ta) return;
+            window.open('https://wa.me/?text=' + encodeURIComponent(ta.value), '_blank');
+        });
+    });
+
+    refreshAnn(); refreshRem(); refreshSum();
+})();
+</script>
+{% endblock %}
