@@ -124,7 +124,14 @@
         <!-- Heartbreaker (only when 2:2 after 4 doubles) -->
         {% if hb_required %}
         <div class="sc-section hb-section">
+            {% if scores.hb.winner %}
+            {% set _hbt = match.team_home if scores.hb.winner == 'home' else match.team_away %}
+            <div class="sc-status done mb-2">
+                <i class="bi bi-check-circle-fill"></i> Heartbreaker - {{ _hbt.country_flag }} {{ _hbt.country_name }} {{ t.score_wins }}
+            </div>
+            {% else %}
             <div class="sc-status hb mb-2"><i class="bi bi-lightning-charge-fill"></i> 2:2 - {{ t.score_heartbreaker_required }}</div>
+            {% endif %}
             <h6><i class="bi bi-arrow-down-up"></i> {{ t.score_heartbreaker_section }}</h6>
             <div class="sc-lineup">
                 {% for i in range(1, 5) %}{{ pname(home_lineup|attr('hb' ~ i)) }}{% if not loop.last %}, {% endif %}{% endfor %}
