@@ -258,6 +258,68 @@
     </div>
     {% endif %}
 
+    <!-- Standings (own category expanded, other collapsed; reuses get_tournament_standings) -->
+    {% if standings %}
+    <div class="mb-4">
+        <h5 class="mb-2"><i class="bi bi-trophy"></i> {{ t.standings_heading }}</h5>
+        {% for cat, rows in standings.items() %}
+        {% set ci = loop.index %}
+        {% set is_own_cat = (cat == team.age_category) %}
+        {% set has_played = rows | selectattr('played') | list | length %}
+        <div class="card mb-2">
+            <button class="card-header bg-light fw-bold d-flex justify-content-between align-items-center w-100 text-start"
+                    style="border: 0;" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#capStand{{ ci }}"
+                    aria-expanded="{{ 'true' if is_own_cat else 'false' }}" aria-controls="capStand{{ ci }}">
+                <span><i class="bi bi-trophy"></i> {{ t.standings_heading }} - {{ cat }}</span>
+                <i class="bi bi-chevron-down"></i>
+            </button>
+            <div class="collapse{% if is_own_cat %} show{% endif %}" id="capStand{{ ci }}">
+                {% if not has_played %}
+                <div class="px-3 py-2 text-muted small">
+                    <i class="bi bi-info-circle"></i> {{ t.standings_no_matches_yet }}
+                </div>
+                {% endif %}
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr class="small text-muted">
+                                <th>{{ t.standings_position }}</th>
+                                <th>{{ t.standings_team }}</th>
+                                <th class="text-end d-none d-sm-table-cell">{{ t.standings_played }}</th>
+                                <th class="text-end d-none d-sm-table-cell">{{ t.standings_wins }}</th>
+                                <th class="text-end d-none d-sm-table-cell">{{ t.standings_losses }}</th>
+                                <th class="text-end">{{ t.standings_points }}</th>
+                                <th class="text-end">{{ t.standings_diff }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in rows %}
+                            {% set is_own = (s.team.id == team.id) %}
+                            <tr class="{% if is_own %}table-info{% elif loop.first and s.played %}table-warning{% endif %}">
+                                <td class="fw-bold">
+                                    {{ loop.index }}{% if loop.first and s.played and not is_own %} <span class="badge bg-warning text-dark">1st</span>{% endif %}
+                                </td>
+                                <td class="fw-bold">
+                                    {{ s.team.country_flag }} {{ s.team.country_name }}
+                                    {% if is_own %}<span class="badge bg-info text-dark">{{ t.your_team_indicator }}</span>{% endif %}
+                                </td>
+                                <td class="text-end d-none d-sm-table-cell">{{ s.played if s.played else '-' }}</td>
+                                <td class="text-end d-none d-sm-table-cell">{{ s.wins if s.played else '-' }}</td>
+                                <td class="text-end d-none d-sm-table-cell">{{ s.losses if s.played else '-' }}</td>
+                                <td class="text-end fw-bold">{{ s.points if s.played else '-' }}</td>
+                                <td class="text-end">{% if s.played %}{{ '+' if s.diff > 0 else '' }}{{ s.diff }}{% else %}-{% endif %}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Players Lists -->
     <div class="row">
         <!-- Men -->

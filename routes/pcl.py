@@ -112,6 +112,7 @@ TRANSLATIONS = {
         'standings_points': 'Pts',
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'No completed matches yet',
+        'your_team_indicator': 'Your team',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -269,6 +270,7 @@ TRANSLATIONS = {
         'standings_points': 'Pkt',
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'Noch keine beendeten Spiele',
+        'your_team_indicator': 'Dein Team',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -426,6 +428,7 @@ TRANSLATIONS = {
         'standings_points': 'Pts',
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'Sin partidos completados',
+        'your_team_indicator': 'Tu equipo',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
@@ -583,6 +586,7 @@ TRANSLATIONS = {
         'standings_points': 'Pts',
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'Aucun match termine',
+        'your_team_indicator': 'Votre equipe',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carre recommande.',
@@ -1606,12 +1610,16 @@ Merci!"""
         for v in upcoming_matches
     )
 
+    # Live tournament standings (reuses the same helper as the admin match list)
+    standings = get_tournament_standings(team.tournament_id)
+
     return render_template('pcl/captain_dashboard.html',
                          team=team,
                          other_teams=other_teams,
                          upcoming_matches=upcoming_matches,
                          past_matches=past_matches,
                          deadline_soon=deadline_soon,
+                         standings=standings,
                          stats=stats,
                          men=men,
                          women=women,
