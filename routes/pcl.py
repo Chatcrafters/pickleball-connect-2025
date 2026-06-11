@@ -3628,6 +3628,16 @@ def captain_match_score(token, match_id):
 # PCL MATCH / LINEUP MODULE - PHASE 4 (Admin WhatsApp message generator)
 # ============================================================================
 
+def _team_captain_name(team):
+    """Name of the team's captain, falling back to a generic label."""
+    cap = team.registrations.filter_by(is_captain=True).first()
+    if cap:
+        name = f"{cap.first_name or ''} {cap.last_name or ''}".strip()
+        if name:
+            return name
+    return f"{team.country_name} captain"
+
+
 def _match_whatsapp_data(match):
     """Build the data dict for one match used by the WhatsApp text templates.
 
@@ -3635,14 +3645,20 @@ def _match_whatsapp_data(match):
     """
     base = request.host_url.rstrip('/')
     home, away = match.team_home, match.team_away
+    home_team = f"{home.country_name} {home.age_category}"
+    away_team = f"{away.country_name} {away.age_category}"
     return {
         'id': match.id,
-        'home_name': f"{home.country_name} {home.age_category}",
-        'away_name': f"{away.country_name} {away.age_category}",
-        'label': f"{home.country_flag} {home.country_name} {home.age_category} vs "
-                 f"{away.country_flag} {away.country_name} {away.age_category}",
+        'home_flag': home.country_flag or '',
+        'away_flag': away.country_flag or '',
+        'home_team': home_team,
+        'away_team': away_team,
+        'home_captain': _team_captain_name(home),
+        'away_captain': _team_captain_name(away),
+        'label': f"{home.country_flag} {home_team} vs {away.country_flag} {away_team}",
+        # Match line uses weekday + date; deadline line is short (no weekday).
         'date': format_match_date(match.match_date, 'EN') if match.match_date else '',
-        'deadline': format_match_date(match.lineup_deadline, 'EN') if match.lineup_deadline else '',
+        'deadline': match.lineup_deadline.strftime('%d.%m. %H:%M') if match.lineup_deadline else '',
         'court': match.court or '',
         'home_url': base + url_for('pcl.captain_dashboard', token=home.captain_token),
         'away_url': base + url_for('pcl.captain_dashboard', token=away.captain_token),

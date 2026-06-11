@@ -109,48 +109,53 @@
     var byId = {};
     MATCHES.forEach(function(m) { byId[m.id] = m; });
 
-    function courtLine(m) { return m.court ? 'Court: ' + m.court + '\n' : ''; }
+    // Match date + optional court on one line: "Wed 01.07. 13:00 - Court 1"
+    function dateCourt(m) {
+        var s = m.date || 'TBD';
+        if (m.court) s += ' - Court ' + m.court;
+        return s;
+    }
 
     function buildAnnouncement(m) {
-        return 'PCL Match Announcement\n\n' +
-            m.home_name + ' vs ' + m.away_name + '\n' +
-            'Date: ' + (m.date || 'TBD') + '\n' +
-            courtLine(m) +
+        return '*' + m.home_flag + ' ' + m.home_team + '* vs *' + m.away_flag + ' ' + m.away_team + '*\n\n' +
+            dateCourt(m) + '\n' +
             'Lineup deadline: ' + (m.deadline || 'TBD') + '\n\n' +
-            'Captains, please submit your lineup before the deadline:\n' +
-            m.home_name + ': ' + m.home_url + '\n' +
-            m.away_name + ': ' + m.away_url + '\n\n' +
-            'Good luck!\nSergio Ruiz Caro';
+            m.home_captain + '\n' + m.home_url + '\n\n' +
+            m.away_captain + '\n' + m.away_url + '\n\n' +
+            'Open your dashboard, find this match under "Upcoming Matches", tap Submit Lineup. ' +
+            'If your lineup is not submitted by the deadline, the match counts as a forfeit.\n\n' +
+            'After the deadline both teams can see each other\'s lineup. The Heartbreaker order ' +
+            'stays hidden until the match actually reaches 2:2 - that way it\'s still a surprise for the opponent.\n\n' +
+            'Sergio';
     }
 
     function buildReminder(m) {
-        return 'PCL Lineup Reminder\n\n' +
-            m.home_name + ' vs ' + m.away_name + '\n' +
-            courtLine(m) + '\n' +
-            'Friendly reminder: please submit your lineup if you have not done so yet.\n\n' +
-            m.home_name + ': ' + m.home_url + '\n' +
-            m.away_name + ': ' + m.away_url + '\n\n' +
-            'Thanks!\nSergio';
+        return 'Reminder for *' + m.home_team + '* vs *' + m.away_team + '*\n\n' +
+            dateCourt(m) + '\n' +
+            'Lineup deadline: ' + (m.deadline || 'TBD') + '\n\n' +
+            'If you haven\'t submitted yet, please do so before the deadline. No lineup = match counts as forfeit.\n\n' +
+            m.home_captain + '\n' + m.home_url + '\n\n' +
+            m.away_captain + '\n' + m.away_url + '\n\n' +
+            'Sergio';
     }
 
     function buildSummary(list) {
         if (!list.length) return 'Select one or more matches above.';
-        var lines = list.map(function(m) {
-            var s = m.home_name + ' vs ' + m.away_name;
-            if (m.date) s += ' - ' + m.date;
-            if (m.court) s += ' - Court ' + m.court;
-            return s;
+        var blocks = list.map(function(m, i) {
+            return 'Match ' + (i + 1) + ': *' + m.home_team + '* vs *' + m.away_team + '*\n' +
+                dateCourt(m) + '\n' +
+                'Lineup deadline: ' + (m.deadline || 'TBD') + '\n\n' +
+                m.home_captain + '\n' + m.home_url + '\n\n' +
+                m.away_captain + '\n' + m.away_url;
         });
-        // unique captain dashboards across selected matches
-        var seen = {}, links = [];
-        list.forEach(function(m) {
-            if (!seen[m.home_url]) { seen[m.home_url] = 1; links.push(m.home_name + ': ' + m.home_url); }
-            if (!seen[m.away_url]) { seen[m.away_url] = 1; links.push(m.away_name + ': ' + m.away_url); }
-        });
-        return 'PCL Round Overview\n\n' +
-            lines.join('\n') + '\n\n' +
-            'Captain dashboards:\n' + links.join('\n') + '\n\n' +
-            'Please submit your lineups before the deadlines. Thank you!\nSergio Ruiz Caro';
+        var closing = 'Each captain: open your dashboard, find your match under "Upcoming Matches", ' +
+            'tap Submit Lineup before the deadline. No lineup = forfeit.\n\n' +
+            'After the deadline both teams can see each other\'s lineup, except the Heartbreaker order ' +
+            'which stays hidden until the match reaches 2:2.\n\n' +
+            'Sergio Ruiz Caro';
+        return '*Match Schedule*\n\n' +
+            blocks.join('\n\n---\n\n') + '\n\n---\n\n' +
+            closing;
     }
 
     function setText(id, txt) { var el = document.getElementById(id); if (el) el.value = txt; }
