@@ -103,6 +103,15 @@ TRANSLATIONS = {
         'score_edit': 'Edit',
         'score_refresh_standing': 'Refresh standing',
         'score_winner': 'Winner',
+        'standings_heading': 'Standings',
+        'standings_position': 'Pos',
+        'standings_team': 'Team',
+        'standings_played': 'P',
+        'standings_wins': 'W',
+        'standings_losses': 'L',
+        'standings_points': 'Pts',
+        'standings_diff': 'Diff',
+        'standings_no_matches_yet': 'No completed matches yet',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -251,6 +260,15 @@ TRANSLATIONS = {
         'score_edit': 'Bearbeiten',
         'score_refresh_standing': 'Spielstand aktualisieren',
         'score_winner': 'Sieger',
+        'standings_heading': 'Tabelle',
+        'standings_position': 'Pos',
+        'standings_team': 'Team',
+        'standings_played': 'Sp.',
+        'standings_wins': 'S',
+        'standings_losses': 'N',
+        'standings_points': 'Pkt',
+        'standings_diff': 'Diff',
+        'standings_no_matches_yet': 'Noch keine beendeten Spiele',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -399,6 +417,15 @@ TRANSLATIONS = {
         'score_edit': 'Editar',
         'score_refresh_standing': 'Actualizar marcador',
         'score_winner': 'Ganador',
+        'standings_heading': 'Clasificacion',
+        'standings_position': 'Pos',
+        'standings_team': 'Equipo',
+        'standings_played': 'J',
+        'standings_wins': 'G',
+        'standings_losses': 'P',
+        'standings_points': 'Pts',
+        'standings_diff': 'Diff',
+        'standings_no_matches_yet': 'Sin partidos completados',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
@@ -547,6 +574,15 @@ TRANSLATIONS = {
         'score_edit': 'Modifier',
         'score_refresh_standing': 'Actualiser le score',
         'score_winner': 'Vainqueur',
+        'standings_heading': 'Classement',
+        'standings_position': 'Pos',
+        'standings_team': 'Equipe',
+        'standings_played': 'J',
+        'standings_wins': 'V',
+        'standings_losses': 'D',
+        'standings_points': 'Pts',
+        'standings_diff': 'Diff',
+        'standings_no_matches_yet': 'Aucun match termine',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carre recommande.',
@@ -2235,6 +2271,44 @@ def _parse_match_dt(value):
     return None
 
 
+def get_tournament_standings(tournament_id):
+    """Live standings grouped by age category, computed from completed matches.
+
+    1 point per win; sorted by points DESC, discipline differential DESC
+    (sum of this team's score minus opponent's across completed matches),
+    then country name ASC. Teams with no completed matches appear with 0 stats.
+    """
+    teams = PCLTeam.query.filter_by(tournament_id=tournament_id).all()
+    completed = PCLMatch.query.filter_by(tournament_id=tournament_id, status='completed').all()
+
+    stats = {team.id: {'team': team, 'played': 0, 'wins': 0, 'losses': 0, 'points': 0, 'diff': 0}
+             for team in teams}
+
+    for m in completed:
+        hs = m.home_score or 0
+        away = m.away_score or 0
+        for tid, is_home in ((m.team_home_id, True), (m.team_away_id, False)):
+            s = stats.get(tid)
+            if s is None:
+                continue
+            s['played'] += 1
+            s['diff'] += (hs - away) if is_home else (away - hs)
+            if m.winner_id == tid:
+                s['wins'] += 1
+                s['points'] += 1
+            else:
+                s['losses'] += 1
+
+    groups = {}
+    for team in teams:
+        groups.setdefault(team.age_category, []).append(stats[team.id])
+    for cat in groups:
+        groups[cat].sort(key=lambda s: (-s['points'], -s['diff'], (s['team'].country_name or '').lower()))
+
+    # Stable category order (e.g. +19 before +50); skip nothing - empty cats never created.
+    return {cat: groups[cat] for cat in sorted(groups)}
+
+
 @pcl.route('/admin/tournament/<int:tournament_id>/matches')
 def admin_match_list(tournament_id):
     """Admin: list all matches for a tournament, sorted by match date."""
@@ -2245,9 +2319,12 @@ def admin_match_list(tournament_id):
     matches = PCLMatch.query.filter_by(tournament_id=tournament_id).all()
     matches.sort(key=lambda m: (m.match_date is None, m.match_date or datetime.max))
 
+    standings = get_tournament_standings(tournament_id)
+
     return render_template('pcl/admin_match_list.html',
                          tournament=tournament,
                          matches=matches,
+                         standings=standings,
                          t=t,
                          current_lang=lang)
 
