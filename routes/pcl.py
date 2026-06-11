@@ -1945,7 +1945,8 @@ def admin_edit_registration(registration_id):
     
     return render_template('pcl/pcl_registration_edit.html',
                          registration=registration,
-                         team=team)
+                         team=team,
+                         t=get_translations(registration.preferred_language or 'EN'))
 
 
 # ============================================================================
