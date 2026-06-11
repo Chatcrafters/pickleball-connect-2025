@@ -77,6 +77,13 @@
         vs {{ match.team_away.country_flag }} {{ match.team_away.country_name }} {{ match.team_away.age_category }}
         <br><i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
         {% if match.court %}&middot; <i class="bi bi-geo-alt"></i> {{ t.match_court }} {{ match.court }}{% endif %}
+        {% if match.lineup_deadline %}
+        <br><i class="bi bi-hourglass-bottom"></i> {{ t.match_lineup_deadline }}:
+        <span class="deadline-display">
+            <span class="deadline-abs">{{ match.lineup_deadline.strftime('%d.%m. %H:%M') }}{% if current_lang == 'DE' %} Uhr{% endif %}</span>
+            <span class="deadline-countdown" data-deadline="{{ match.lineup_deadline.isoformat() }}" data-past="true"></span>
+        </span>
+        {% endif %}
     </div>
 
     <div class="row g-3">
@@ -90,4 +97,6 @@
         </div>
     </div>
 </div>
+
+{% include 'pcl/_deadline_countdown.html' %}
 {% endblock %}

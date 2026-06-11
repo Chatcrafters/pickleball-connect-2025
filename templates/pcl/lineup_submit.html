@@ -26,8 +26,6 @@
     }
     .lu-teams { font-weight: 700; font-size: 1rem; }
     .lu-editing { font-size: .85rem; color: #0d6efd; font-weight: 600; }
-    .countdown { font-weight: 700; }
-    .countdown.urgent { color: #dc3545; }
     .lu-section { margin-bottom: 22px; }
     .lu-section h5 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
     .player-grid {
@@ -82,10 +80,16 @@
         <div class="lu-editing"><i class="bi bi-pencil"></i> Editing: {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}</div>
         <div class="small text-muted">
             <i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
-            {% if match.lineup_deadline %}
-            &middot; <span id="countdown" class="countdown" data-deadline="{{ match.lineup_deadline.isoformat() }}"></span>
-            {% endif %}
         </div>
+        {% if match.lineup_deadline %}
+        <div class="small text-muted">
+            <i class="bi bi-hourglass-split"></i> {{ t.match_lineup_deadline }}:
+            <span class="deadline-display">
+                <span class="deadline-abs">{{ match.lineup_deadline.strftime('%d.%m. %H:%M') }}{% if current_lang == 'DE' %} Uhr{% endif %}</span>
+                <span class="deadline-countdown" data-deadline="{{ match.lineup_deadline.isoformat() }}"></span>
+            </span>
+        </div>
+        {% endif %}
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -306,26 +310,8 @@
         }
     }
     validateAll();
-
-    // Live deadline countdown
-    var cd = document.getElementById('countdown');
-    if (cd && cd.dataset.deadline) {
-        var deadline = new Date(cd.dataset.deadline);
-        function tick() {
-            var diff = deadline.getTime() - Date.now();
-            if (diff <= 0) {
-                cd.textContent = "{{ t.lineup_deadline_passed }}";
-                cd.classList.add('urgent');
-                return;
-            }
-            var mins = Math.floor(diff / 60000);
-            var h = Math.floor(mins / 60), m = mins % 60;
-            cd.textContent = "{{ t.lineup_deadline_in }} " + (h > 0 ? h + 'h ' : '') + m + 'm';
-            cd.classList.toggle('urgent', mins < 30);
-        }
-        tick();
-        setInterval(tick, 60000);
-    }
 })();
 </script>
+
+{% include 'pcl/_deadline_countdown.html' %}
 {% endblock %}

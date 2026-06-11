@@ -184,6 +184,15 @@
                         {% if m.court %}&middot; {{ t.match_court }} {{ m.court }}{% endif %}
                     </div>
                 </div>
+                {% if m.lineup_deadline %}
+                <div class="text-muted small mt-1">
+                    <i class="bi bi-hourglass-split"></i> {{ t.match_lineup_deadline }}:
+                    <span class="deadline-display">
+                        <span class="deadline-abs">{{ m.lineup_deadline.strftime('%d.%m. %H:%M') }}{% if current_lang == 'DE' %} Uhr{% endif %}</span>
+                        <span class="deadline-countdown" data-deadline="{{ m.lineup_deadline.isoformat() }}"></span>
+                    </span>
+                </div>
+                {% endif %}
                 <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     {% if v.deadline_passed %}
                     <span class="text-success small"><i class="bi bi-lock-fill"></i> Lineups locked - tap to view</span>
@@ -192,7 +201,7 @@
                     {% elif not v.own_submitted %}
                     <span class="text-warning small">
                         <i class="bi bi-exclamation-triangle-fill"></i>
-                        Submit lineup{% if m.lineup_deadline %} by {{ m.lineup_deadline.strftime('%d.%m. %H:%M') }}{% endif %}
+                        Submit lineup
                     </span>
                     <a href="{{ url_for('pcl.captain_lineup', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
                        class="btn btn-sm btn-warning"><i class="bi bi-pencil-square"></i> {{ t.lineup_submit_button }}</a>
@@ -559,4 +568,6 @@ function showMessageCopyFeedback() {
     }, 2000);
 }
 </script>
+
+{% include 'pcl/_deadline_countdown.html' %}
 {% endblock %}

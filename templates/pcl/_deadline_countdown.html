@@ -1,0 +1,73 @@
+<style>
+    .deadline-countdown { font-size: 0.85em; color: #6c757d; }
+    .deadline-countdown.dl-warning { color: #fd7e14; font-weight: 500; }
+    .deadline-countdown.dl-danger { color: #dc3545; font-weight: 500; }
+    .deadline-display.deadline-passed .deadline-abs { text-decoration: line-through; }
+</style>
+<script>
+(function() {
+    // Reusable live deadline countdown. Finds every .deadline-countdown[data-deadline]
+    // and refreshes it once a minute. Deadlines are wall-clock (naive) datetimes, so
+    // data-deadline is emitted WITHOUT a 'Z' and parsed in the viewer's local time.
+    var I18N = {
+        DE: { pre: 'in', ago: 'vor', d: 'Tagen', h: 'Std.', m: 'Min.', passed: 'abgelaufen', deadline: 'Deadline abgelaufen' },
+        EN: { pre: 'in', ago: 'ago', d: 'd', h: 'h', m: 'm', passed: 'passed', deadline: 'Deadline passed' },
+        ES: { pre: 'en', ago: 'hace', d: 'd', h: 'h', m: 'm', passed: 'pasada', deadline: 'Plazo vencido' },
+        FR: { pre: 'dans', ago: 'il y a', d: 'j', h: 'h', m: 'm', passed: 'passe', deadline: 'Date limite depassee' }
+    };
+    var L = ("{{ current_lang|default('EN') }}" || 'EN').toUpperCase();
+    if (!I18N[L]) {
+        var hl = (document.documentElement.getAttribute('lang') || 'en').slice(0, 2).toUpperCase();
+        L = I18N[hl] ? hl : 'EN';
+    }
+    var T = I18N[L];
+
+    function unit(n, u) { return n + (u.length > 1 ? ' ' : '') + u; }
+    function fmtDuration(ms) {
+        var tot = Math.floor(Math.abs(ms) / 60000);
+        var days = Math.floor(tot / 1440);
+        var hrs = Math.floor((tot % 1440) / 60);
+        var mins = tot % 60;
+        if (days > 0) return unit(days, T.d) + ' ' + unit(hrs, T.h);
+        if (hrs > 0) return unit(hrs, T.h) + ' ' + unit(mins, T.m);
+        return unit(mins, T.m);
+    }
+    function updateOne(el) {
+        var iso = el.getAttribute('data-deadline');
+        if (!iso) return;
+        var ts = new Date(iso).getTime();
+        if (isNaN(ts)) { el.textContent = ''; return; }
+        var diff = ts - Date.now();
+        var pastMode = el.getAttribute('data-past') === 'true';
+        var display = el.closest ? el.closest('.deadline-display') : null;
+
+        el.classList.remove('dl-warning', 'dl-danger');
+        if (display) display.classList.remove('deadline-passed');
+
+        if (diff <= 0) {
+            el.classList.add('dl-danger');
+            if (pastMode) {
+                var d = fmtDuration(diff);
+                el.textContent = (L === 'EN')
+                    ? '(' + T.passed + ' ' + d + ' ' + T.ago + ')'
+                    : '(' + T.passed + ' ' + T.ago + ' ' + d + ')';
+            } else {
+                el.textContent = T.deadline;
+                if (display) display.classList.add('deadline-passed');
+            }
+            return;
+        }
+
+        el.textContent = '(' + T.pre + ' ' + fmtDuration(diff) + ')';
+        var mins = diff / 60000;
+        if (mins < 5) el.classList.add('dl-danger');
+        else if (mins < 30) el.classList.add('dl-warning');
+    }
+    function updateAll() {
+        var els = document.querySelectorAll('.deadline-countdown[data-deadline]');
+        for (var i = 0; i < els.length; i++) updateOne(els[i]);
+    }
+    updateAll();
+    setInterval(updateAll, 60000);
+})();
+</script>
