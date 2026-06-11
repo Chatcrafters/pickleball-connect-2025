@@ -768,6 +768,9 @@ SHIRT_EXPORT_TRANSLATIONS = {
         'title': 'PCL SHIRT BESTELLUNG - {tournament_name}',
         'summary_header': 'ZUSAMMENFASSUNG NACH GRÖSSEN',
         'gender_total_header': 'GESAMTBESTELLUNG NACH GESCHLECHT',
+        'product_info_header': 'PRODUKT INFO',
+        'men_product': 'Herren-Shirt',
+        'women_product': 'Damen-Shirt',
         'size': 'Größe',
         'count': 'Anzahl',
         'total': 'GESAMT',
@@ -796,6 +799,9 @@ SHIRT_EXPORT_TRANSLATIONS = {
         'title': 'PEDIDO DE CAMISETAS PCL - {tournament_name}',
         'summary_header': 'RESUMEN POR TALLAS',
         'gender_total_header': 'PEDIDO TOTAL POR GÉNERO',
+        'product_info_header': 'INFORMACIÓN DEL PRODUCTO',
+        'men_product': 'Camiseta Hombre',
+        'women_product': 'Camiseta Mujer',
         'size': 'Talla',
         'count': 'Cantidad',
         'total': 'TOTAL',
@@ -823,11 +829,55 @@ SHIRT_EXPORT_TRANSLATIONS = {
 }
 
 
+@pcl.route('/admin/tournament/<int:tournament_id>/shirt-products', methods=['POST'])
+def update_shirt_products(tournament_id):
+    """Admin: upload men's/women's shirt product image + name for a tournament."""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+
+    # Men's product image
+    if 'men_shirt_file' in request.files:
+        f = request.files['men_shirt_file']
+        if f and f.filename:
+            result = upload_photo_to_supabase(f, folder='tournaments')
+            if result['success']:
+                tournament.men_shirt_image = result['url']
+            else:
+                flash(f"Men's shirt image upload failed: {result['error']}", 'warning')
+
+    # Women's product image
+    if 'women_shirt_file' in request.files:
+        f = request.files['women_shirt_file']
+        if f and f.filename:
+            result = upload_photo_to_supabase(f, folder='tournaments')
+            if result['success']:
+                tournament.women_shirt_image = result['url']
+            else:
+                flash(f"Women's shirt image upload failed: {result['error']}", 'warning')
+
+    # Product names (empty input clears the field)
+    if 'men_shirt_name' in request.form:
+        tournament.men_shirt_name = request.form.get('men_shirt_name', '').strip() or None
+    if 'women_shirt_name' in request.form:
+        tournament.women_shirt_name = request.form.get('women_shirt_name', '').strip() or None
+
+    try:
+        db.session.commit()
+        flash('Shirt products updated.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+
+    return redirect(url_for('pcl.admin_tournament_detail', tournament_id=tournament.id))
+
+
 @pcl.route('/admin/export-shirts/<int:tournament_id>')
 def export_shirt_list(tournament_id):
-    """Export shirt list as Excel, split by gender (DE/ES via ?lang=)"""
+    """Export shirt list as Excel, split by gender, with product info (DE/ES via ?lang=)"""
+    import tempfile
+    import requests as http_requests
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.drawing.image import Image as XLImage
 
     tournament = PCLTournament.query.get_or_404(tournament_id)
 
@@ -836,6 +886,29 @@ def export_shirt_list(tournament_id):
     if lang not in ['DE', 'ES']:
         lang = 'DE'
     t = SHIRT_EXPORT_TRANSLATIONS[lang]
+
+    # Temp image files to embed; cleaned up after the workbook is saved.
+    temp_image_files = []
+
+    def embed_product_image(ws, anchor, url):
+        """Download a Supabase image and embed it at the given cell. Fail soft."""
+        if not url:
+            return
+        try:
+            resp = http_requests.get(url, timeout=5)
+            if resp.status_code != 200:
+                print(f"Shirt product image fetch failed ({resp.status_code}): {url}")
+                return
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix='.img')
+            tmp.write(resp.content)
+            tmp.close()
+            temp_image_files.append(tmp.name)
+            img = XLImage(tmp.name)
+            img.width = 120
+            img.height = 120
+            ws.add_image(img, anchor)
+        except Exception as e:
+            print(f"Shirt product image embed failed for {url}: {e}")
 
     def gender_key(value):
         """Normalize the raw gender field to one of: male, female, unknown."""
@@ -904,13 +977,47 @@ def export_shirt_list(tournament_id):
     ws1 = wb.active
     ws1.title = t['sheet_overview']
 
-    # Title
-    ws1['A1'] = t['title'].format(tournament_name=tournament.name)
-    ws1['A1'].font = Font(bold=True, size=16)
-    ws1.merge_cells('A1:D1')
+    # --- Optional product info block at the very top (rows 1-4) ---
+    has_products = bool(
+        tournament.men_shirt_name or tournament.men_shirt_image
+        or tournament.women_shirt_name or tournament.women_shirt_image
+    )
+    offset = 0
+    if has_products:
+        ws1.cell(row=1, column=1, value=t['product_info_header'])
+        ws1['A1'].font = Font(bold=True, size=12)
+        ws1['A1'].fill = size_header_fill
+        ws1.merge_cells('A1:D1')
 
-    ws1['A3'] = t['gender_total_header']
-    ws1['A3'].font = Font(bold=True, size=14)
+        # Men row 2
+        men_text = f"{t['men_product']}: {tournament.men_shirt_name or '-'}"
+        ws1.cell(row=2, column=2, value=men_text)
+        ws1['B2'].font = Font(bold=True)
+        ws1['B2'].alignment = Alignment(vertical='center')
+        ws1.merge_cells('B2:D2')
+        embed_product_image(ws1, 'A2', tournament.men_shirt_image)
+
+        # Women row 3
+        women_text = f"{t['women_product']}: {tournament.women_shirt_name or '-'}"
+        ws1.cell(row=3, column=2, value=women_text)
+        ws1['B3'].font = Font(bold=True)
+        ws1['B3'].alignment = Alignment(vertical='center')
+        ws1.merge_cells('B3:D3')
+        embed_product_image(ws1, 'A3', tournament.women_shirt_image)
+
+        ws1.row_dimensions[2].height = 95
+        ws1.row_dimensions[3].height = 95
+        offset = 4  # row 4 acts as a spacer; main content starts at row 5
+
+    # Title
+    title_row = offset + 1
+    ws1.cell(row=title_row, column=1, value=t['title'].format(tournament_name=tournament.name))
+    ws1.cell(row=title_row, column=1).font = Font(bold=True, size=16)
+    ws1.merge_cells(start_row=title_row, start_column=1, end_row=title_row, end_column=4)
+
+    header_row3 = offset + 3
+    ws1.cell(row=header_row3, column=1, value=t['gender_total_header'])
+    ws1.cell(row=header_row3, column=1).font = Font(bold=True, size=14)
 
     # Per-size gender counts
     size_gender_counts = {}
@@ -921,13 +1028,14 @@ def export_shirt_list(tournament_id):
         bucket[k] += 1
 
     # Header row: Size | Men | Women | Total
+    table_header_row = offset + 4
     for col, label in enumerate([t['size'], t['men'], t['women'], t['shirt_count_combined']], 1):
-        cell = ws1.cell(row=4, column=col, value=label)
+        cell = ws1.cell(row=table_header_row, column=col, value=label)
         cell.font = header_font
         cell.fill = header_fill
         cell.border = thin_border
 
-    row = 5
+    row = offset + 5
     total_men = total_women = total_all = 0
     for size in size_order:
         bucket = size_gender_counts.get(size)
@@ -1095,6 +1203,13 @@ def export_shirt_list(tournament_id):
     output = io.BytesIO()
     wb.save(output)
     output.seek(0)
+
+    # Clean up temp image files now that the workbook is written
+    for path in temp_image_files:
+        try:
+            os.remove(path)
+        except Exception:
+            pass
 
     return send_file(
         output,

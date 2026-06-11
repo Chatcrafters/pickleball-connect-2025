@@ -200,9 +200,15 @@ class PCLTournament(db.Model):
     
     # Status
     status = db.Column(db.String(20), default='open')
-    
+
+    # Shirt products (men's / women's SKU shown to the printer/Joma)
+    men_shirt_name = db.Column(db.String(200), nullable=True)
+    men_shirt_image = db.Column(db.String(500), nullable=True)
+    women_shirt_name = db.Column(db.String(200), nullable=True)
+    women_shirt_image = db.Column(db.String(500), nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    
+
     # Relationships
     teams = db.relationship('PCLTeam', back_populates='tournament', lazy='dynamic')
     

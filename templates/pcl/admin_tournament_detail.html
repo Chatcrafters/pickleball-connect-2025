@@ -41,6 +41,82 @@
         </div>
     </div>
 
+    <!-- Shirt Products (admin-only) -->
+    <div class="card mb-4">
+        <div class="card-header d-flex align-items-center">
+            <i class="bi bi-bag me-2"></i>
+            <strong>Shirt Products</strong>
+            <span class="text-muted ms-2 small">Shown to the printer (Joma) in the shirt export</span>
+        </div>
+        <div class="card-body">
+            <form method="POST"
+                  action="{{ url_for('pcl.update_shirt_products', tournament_id=tournament.id) }}"
+                  enctype="multipart/form-data">
+                <div class="row g-3">
+                    <!-- Men's Shirt -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="bi bi-gender-male"></i> Men's Shirt
+                            </div>
+                            <div class="card-body">
+                                {% if tournament.men_shirt_image %}
+                                <div class="mb-2 text-center">
+                                    <img src="{{ tournament.men_shirt_image }}" alt="Men's shirt"
+                                         class="img-thumbnail" style="max-height: 140px;">
+                                </div>
+                                {% endif %}
+                                <div class="mb-2">
+                                    <label class="form-label">Product name</label>
+                                    <input type="text" class="form-control" name="men_shirt_name"
+                                           value="{{ tournament.men_shirt_name or '' }}"
+                                           placeholder="e.g. Joma Combi T-Shirt Negro">
+                                </div>
+                                <div class="mb-1">
+                                    <label class="form-label">Product image</label>
+                                    <input type="file" class="form-control" name="men_shirt_file" accept="image/*">
+                                    <small class="text-muted">Leave empty to keep the current image.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Women's Shirt -->
+                    <div class="col-md-6">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <i class="bi bi-gender-female"></i> Women's Shirt
+                            </div>
+                            <div class="card-body">
+                                {% if tournament.women_shirt_image %}
+                                <div class="mb-2 text-center">
+                                    <img src="{{ tournament.women_shirt_image }}" alt="Women's shirt"
+                                         class="img-thumbnail" style="max-height: 140px;">
+                                </div>
+                                {% endif %}
+                                <div class="mb-2">
+                                    <label class="form-label">Product name</label>
+                                    <input type="text" class="form-control" name="women_shirt_name"
+                                           value="{{ tournament.women_shirt_name or '' }}"
+                                           placeholder="e.g. Joma Combi T-Shirt Coral">
+                                </div>
+                                <div class="mb-1">
+                                    <label class="form-label">Product image</label>
+                                    <input type="file" class="form-control" name="women_shirt_file" accept="image/*">
+                                    <small class="text-muted">Leave empty to keep the current image.</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Shirt Products
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Deadline Warning -->
     {% set days_left = (tournament.registration_deadline - now).days if now else 0 %}
     {% if days_left <= 10 and days_left > 0 %}
