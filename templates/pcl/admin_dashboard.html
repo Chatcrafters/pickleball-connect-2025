@@ -60,9 +60,14 @@
                     <a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=tournament.id) }}" class="btn btn-primary">
                         <i class="bi bi-eye"></i> Manage
                     </a>
-                    <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id) }}" class="btn btn-outline-secondary">
-                        <i class="bi bi-download"></i> Shirt List
-                    </a>
+                    <div class="btn-group" role="group" aria-label="Shirt export language">
+                        <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id, lang='DE') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-download"></i> Shirt List (DE)
+                        </a>
+                        <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id, lang='ES') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-download"></i> Shirt List (ES)
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>

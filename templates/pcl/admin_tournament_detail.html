@@ -30,9 +30,14 @@
             <a href="{{ url_for('pcl.add_team', tournament_id=tournament.id) }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Add Team
             </a>
-            <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id) }}" class="btn btn-outline-primary">
-                <i class="bi bi-download"></i> Export Shirts
-            </a>
+            <div class="btn-group" role="group" aria-label="Shirt export language">
+                <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id, lang='DE') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download"></i> Export Shirts (DE)
+                </a>
+                <a href="{{ url_for('pcl.export_shirt_list', tournament_id=tournament.id, lang='ES') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download"></i> Export Shirts (ES)
+                </a>
+            </div>
         </div>
     </div>
 
