@@ -94,8 +94,9 @@
             </div>
             <div class="col-md-6 mb-3">
                 <label class="form-label">{{ t.birth_year }} <span class="text-muted small">({{ t.optional }})</span></label>
-                <input type="number" class="form-control" name="birth_year" min="1930" max="2015"
+                <input type="number" class="form-control" name="birth_year" min="1930" max="2015" step="1" placeholder="e.g. 1985"
                        value="{% if ep %}{{ ep.birth_year or '' }}{% else %}{{ form_data.get('birth_year','') }}{% endif %}">
+                <small class="text-muted">{{ t.birth_year_help }}</small>
             </div>
         </div>
 
