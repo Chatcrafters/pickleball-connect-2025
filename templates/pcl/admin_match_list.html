@@ -30,6 +30,8 @@
         min-height: 52px;
     }
     .match-progress-badge { font-size: .8rem; }
+    .match-score-wrap { display: flex; align-items: center; flex-wrap: wrap; }
+    .match-score { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
 </style>
 
 {% set status_meta = {
@@ -135,6 +137,19 @@
             <span class="match-vs">vs</span>
             {{ match.team_away.country_flag }} {{ match.team_away.country_name }}
         </div>
+        {% if match.status in ['in_progress', 'completed'] %}
+        <div class="match-score-wrap mt-1">
+            <span class="match-score">{{ match.home_score if match.home_score is not none else 0 }} - {{ match.away_score if match.away_score is not none else 0 }}</span>
+            {% if match.status == 'completed' and match.winner_id %}
+            {% set wteam = match.team_home if match.winner_id == match.team_home_id else match.team_away %}
+            <span class="text-success fw-bold small ms-2">
+                <i class="bi bi-trophy-fill"></i> {{ wteam.country_flag }} {{ wteam.country_name }} {{ t.score_wins }}
+            </span>
+            {% else %}
+            <span class="text-muted small ms-2">{{ t.score_match_in_progress }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
         <div class="match-meta mt-1">
             <i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
             {% if match.court %}
