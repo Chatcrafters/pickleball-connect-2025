@@ -181,7 +181,60 @@
 
                         <!-- Shirt Info -->
                         <h5 class="mb-3"><i class="bi bi-tshirt"></i> {{ t.shirt_info }}</h5>
-                        
+
+                        <!-- Shirt product preview (driven by selected gender) -->
+                        <div id="shirt-products"
+                             data-men-image="{{ team.tournament.men_shirt_image or '' }}"
+                             data-men-name="{{ team.tournament.men_shirt_name or '' }}"
+                             data-women-image="{{ team.tournament.women_shirt_image or '' }}"
+                             data-women-name="{{ team.tournament.women_shirt_name or '' }}"
+                             data-helper="{{ t.shirt_product_preview_helper if t.shirt_product_preview_helper else 'This is the shirt you will receive. Choose your size below.' }}"></div>
+
+                        <div id="shirtPreviewCard" class="card shadow-sm border-success mb-3" style="display:none;">
+                            <div class="card-body text-center">
+                                <img id="shirtPreviewImg" src="" alt="Shirt"
+                                     class="img-fluid mb-2" style="object-fit: contain; max-height: 200px; max-width: 200px;">
+                                <div id="shirtPreviewName" class="fw-bold"></div>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle"></i>
+                                    <span id="shirtPreviewHelper"></span>
+                                </small>
+                            </div>
+                        </div>
+
+                        <script>
+                        (function() {
+                            var data = document.getElementById('shirt-products');
+                            if (!data) return;
+                            var genderSel = document.querySelector('select[name="gender"]');
+                            var card = document.getElementById('shirtPreviewCard');
+                            var img = document.getElementById('shirtPreviewImg');
+                            var nameEl = document.getElementById('shirtPreviewName');
+                            var helperEl = document.getElementById('shirtPreviewHelper');
+                            if (helperEl) helperEl.textContent = data.getAttribute('data-helper') || '';
+                            function update() {
+                                var g = genderSel ? genderSel.value : '';
+                                var imgUrl = '', name = '';
+                                if (g === 'male') {
+                                    imgUrl = data.getAttribute('data-men-image');
+                                    name = data.getAttribute('data-men-name');
+                                } else if (g === 'female') {
+                                    imgUrl = data.getAttribute('data-women-image');
+                                    name = data.getAttribute('data-women-name');
+                                }
+                                if (imgUrl) {
+                                    img.src = imgUrl;
+                                    nameEl.textContent = name || '';
+                                    card.style.display = '';
+                                } else {
+                                    card.style.display = 'none';
+                                }
+                            }
+                            if (genderSel) genderSel.addEventListener('change', update);
+                            update();
+                        })();
+                        </script>
+
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label"><i class="bi bi-tshirt"></i> {{ t.shirt_size }} <span class="text-danger">*</span></label>

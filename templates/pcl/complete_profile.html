@@ -301,7 +301,34 @@
                                 <span class="required-badge">{{ t.required if t.required else 'Pflicht' }}</span>
                             </h5>
                         </div>
-                        
+
+                        {% set _tour = registration.team.tournament %}
+                        {% if registration.gender == 'male' and _tour.men_shirt_image %}
+                        <div class="card shadow-sm border-success mb-3">
+                            <div class="card-body text-center">
+                                <img src="{{ _tour.men_shirt_image }}" alt="{{ _tour.men_shirt_name or 'Shirt' }}"
+                                     class="img-fluid mb-2" style="object-fit: contain; max-height: 200px; max-width: 200px;">
+                                {% if _tour.men_shirt_name %}<div class="fw-bold">{{ _tour.men_shirt_name }}</div>{% endif %}
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle"></i>
+                                    {{ t.shirt_product_preview_helper if t.shirt_product_preview_helper else 'This is the shirt you will receive. Choose your size below.' }}
+                                </small>
+                            </div>
+                        </div>
+                        {% elif registration.gender == 'female' and _tour.women_shirt_image %}
+                        <div class="card shadow-sm border-success mb-3">
+                            <div class="card-body text-center">
+                                <img src="{{ _tour.women_shirt_image }}" alt="{{ _tour.women_shirt_name or 'Shirt' }}"
+                                     class="img-fluid mb-2" style="object-fit: contain; max-height: 200px; max-width: 200px;">
+                                {% if _tour.women_shirt_name %}<div class="fw-bold">{{ _tour.women_shirt_name }}</div>{% endif %}
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bi bi-info-circle"></i>
+                                    {{ t.shirt_product_preview_helper if t.shirt_product_preview_helper else 'This is the shirt you will receive. Choose your size below.' }}
+                                </small>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div class="row mb-3">
                             <div class="col-md-4 mb-3">
                                 <label for="shirt_size" class="form-label"><i class="bi bi-tshirt"></i> {{ t.shirt_size if t.shirt_size else 'Shirt-Größe' }} *</label>
