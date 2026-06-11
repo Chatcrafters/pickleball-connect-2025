@@ -88,6 +88,18 @@ TRANSLATIONS = {
         'admin_override_mode': 'Admin Override Mode',
         'admin_edit_lineup': 'View/Edit Lineup',
         'admin_submit_for_team': 'Submit Lineup for',
+        'score_entry_title': 'Enter Score',
+        'score_match_in_progress': 'Match in progress',
+        'score_match_completed': 'Match completed',
+        'score_heartbreaker_required': 'Heartbreaker required',
+        'score_heartbreaker_section': 'Heartbreaker - 1 set to 21',
+        'score_wins': 'wins',
+        'score_home_team_score': 'Home score',
+        'score_away_team_score': 'Away score',
+        'score_save': 'Save',
+        'score_edit': 'Edit',
+        'score_refresh_standing': 'Refresh standing',
+        'score_winner': 'Winner',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -221,6 +233,18 @@ TRANSLATIONS = {
         'admin_override_mode': 'Admin-Override-Modus',
         'admin_edit_lineup': 'Aufstellung ansehen/bearbeiten',
         'admin_submit_for_team': 'Aufstellung einreichen fuer',
+        'score_entry_title': 'Ergebnis eingeben',
+        'score_match_in_progress': 'Spiel laeuft',
+        'score_match_completed': 'Spiel beendet',
+        'score_heartbreaker_required': 'Heartbreaker erforderlich',
+        'score_heartbreaker_section': 'Heartbreaker - 1 Satz bis 21',
+        'score_wins': 'gewinnt',
+        'score_home_team_score': 'Heim-Punktzahl',
+        'score_away_team_score': 'Auswaerts-Punktzahl',
+        'score_save': 'Speichern',
+        'score_edit': 'Bearbeiten',
+        'score_refresh_standing': 'Spielstand aktualisieren',
+        'score_winner': 'Sieger',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -354,6 +378,18 @@ TRANSLATIONS = {
         'admin_override_mode': 'Modo Admin Override',
         'admin_edit_lineup': 'Ver/Editar alineacion',
         'admin_submit_for_team': 'Enviar alineacion para',
+        'score_entry_title': 'Introducir resultado',
+        'score_match_in_progress': 'Partido en curso',
+        'score_match_completed': 'Partido finalizado',
+        'score_heartbreaker_required': 'Heartbreaker requerido',
+        'score_heartbreaker_section': 'Heartbreaker - 1 set a 21',
+        'score_wins': 'gana',
+        'score_home_team_score': 'Puntos local',
+        'score_away_team_score': 'Puntos visitante',
+        'score_save': 'Guardar',
+        'score_edit': 'Editar',
+        'score_refresh_standing': 'Actualizar marcador',
+        'score_winner': 'Ganador',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
@@ -487,6 +523,18 @@ TRANSLATIONS = {
         'admin_override_mode': 'Mode Admin Override',
         'admin_edit_lineup': 'Voir/Modifier la composition',
         'admin_submit_for_team': 'Envoyer la composition pour',
+        'score_entry_title': 'Saisir le resultat',
+        'score_match_in_progress': 'Match en cours',
+        'score_match_completed': 'Match termine',
+        'score_heartbreaker_required': 'Heartbreaker requis',
+        'score_heartbreaker_section': 'Heartbreaker - 1 set a 21',
+        'score_wins': 'gagne',
+        'score_home_team_score': 'Points domicile',
+        'score_away_team_score': 'Points exterieur',
+        'score_save': 'Enregistrer',
+        'score_edit': 'Modifier',
+        'score_refresh_standing': 'Actualiser le score',
+        'score_winner': 'Vainqueur',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carre recommande.',
@@ -3444,4 +3492,134 @@ def admin_match_reveal(match_id):
                          is_admin_mode=True,
                          back_url=url_for('pcl.admin_match_detail', match_id=match.id, lang=lang),
                          t=t, current_lang=lang)
+
+
+# ============================================================================
+# PCL MATCH / LINEUP MODULE - PHASE 3 (Score Entry + auto Heartbreaker)
+# ============================================================================
+
+SCORE_TYPES = ['wd', 'md', 'mx1', 'mx2', 'hb']
+
+
+def _upsert_result(match, mtype, home, away):
+    """Insert/update one PCLMatchResult row and set its winner ('home'/'away'/None)."""
+    r = PCLMatchResult.query.filter_by(match_id=match.id, match_type=mtype).first()
+    if r is None:
+        r = PCLMatchResult(match_id=match.id, match_type=mtype)
+        db.session.add(r)
+    r.home_score = home
+    r.away_score = away
+    if home is not None and away is not None and home > away:
+        r.winner = 'home'
+    elif home is not None and away is not None and away > home:
+        r.winner = 'away'
+    else:
+        r.winner = None
+    r.recorded_at = datetime.now()
+    return r
+
+
+def _recalculate_match(match):
+    """Recompute match standing, winner and status from the stored results."""
+    final_h, final_a = match.get_final_standing()
+    match.home_score = final_h
+    match.away_score = final_a
+    winner = match.get_winner()
+    if winner == 'home':
+        match.winner_id = match.team_home_id
+        match.status = 'completed'
+    elif winner == 'away':
+        match.winner_id = match.team_away_id
+        match.status = 'completed'
+    else:
+        match.winner_id = None
+        # Any decided result (or a pending heartbreaker) means the match is live.
+        if match.get_doubles_count_scored() > 0 or match.is_heartbreaker_required():
+            match.status = 'in_progress'
+        elif match.status not in ('pending', 'lineups_locked'):
+            match.status = 'in_progress'
+
+
+def _score_page(match, is_admin_mode, lang, t, token=None):
+    """Shared GET/POST handler for the score-entry form (captain + admin)."""
+    if request.method == 'POST':
+        for ty in SCORE_TYPES:
+            home_raw = request.form.get(ty + '_home')
+            away_raw = request.form.get(ty + '_away')
+            # Only touch a row when at least one side was provided for it.
+            if (home_raw is None or home_raw == '') and (away_raw is None or away_raw == ''):
+                continue
+            home = request.form.get(ty + '_home', type=int)
+            away = request.form.get(ty + '_away', type=int)
+            _upsert_result(match, ty, home, away)
+
+        _recalculate_match(match)
+        try:
+            db.session.commit()
+            flash(t['score_save'], 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+
+        if is_admin_mode:
+            return redirect(url_for('pcl.admin_match_score', match_id=match.id, lang=lang))
+        return redirect(url_for('pcl.captain_match_score', token=token, match_id=match.id, lang=lang))
+
+    # GET
+    res = match.results_by_type()
+    scores = {}
+    for ty in SCORE_TYPES:
+        r = res.get(ty)
+        scores[ty] = {
+            'home': r.home_score if r and r.home_score is not None else '',
+            'away': r.away_score if r and r.away_score is not None else '',
+            'winner': r.winner if r else None,
+        }
+
+    home_lineup = match.lineups.filter_by(team_id=match.team_home_id).first()
+    away_lineup = match.lineups.filter_by(team_id=match.team_away_id).first()
+    standing = match.get_final_standing()
+    winner = match.get_winner()
+
+    if is_admin_mode:
+        back_url = url_for('pcl.admin_match_detail', match_id=match.id, lang=lang)
+    else:
+        back_url = url_for('pcl.captain_dashboard', token=token, lang=lang)
+
+    return render_template('pcl/lineup_score.html',
+                         match=match, is_admin_mode=is_admin_mode,
+                         home_lineup=home_lineup, away_lineup=away_lineup,
+                         scores=scores, standing=standing,
+                         doubles_scored=match.get_doubles_count_scored(),
+                         hb_required=match.is_heartbreaker_required(),
+                         winner=winner, back_url=back_url, token=token,
+                         t=t, current_lang=lang)
+
+
+@pcl.route('/admin/match/<int:match_id>/score', methods=['GET', 'POST'])
+def admin_match_score(match_id):
+    """Admin: enter scores for a match (anytime)."""
+    match = PCLMatch.query.get_or_404(match_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+    return _score_page(match, is_admin_mode=True, lang=lang, t=t, token=None)
+
+
+@pcl.route('/team/<token>/match/<int:match_id>/score', methods=['GET', 'POST'])
+def captain_match_score(token, match_id):
+    """Captain: enter scores for their match (only after the lineup deadline)."""
+    team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
+    match = PCLMatch.query.get_or_404(match_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+
+    if team.id not in (match.team_home_id, match.team_away_id):
+        flash('This match does not involve your team.', 'danger')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+    if not match.is_lineup_deadline_passed():
+        flash('Scores can be entered after the lineup deadline.', 'info')
+        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
+
+    return _score_page(match, is_admin_mode=False, lang=lang, t=t, token=token)
 

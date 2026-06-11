@@ -797,6 +797,65 @@ class PCLMatch(db.Model):
         """How many of the two teams have submitted a lineup (0-2)."""
         return self.lineups.filter(PCLLineup.submitted_at.isnot(None)).count()
 
+    # ---- Phase 3: scoring helpers ----
+    DOUBLES_TYPES = ['wd', 'md', 'mx1', 'mx2']
+
+    @staticmethod
+    def _result_winner(r):
+        """Return 'home'/'away' for a decided result, else None (unscored or tie)."""
+        if r is None or r.home_score is None or r.away_score is None:
+            return None
+        if r.home_score > r.away_score:
+            return 'home'
+        if r.away_score > r.home_score:
+            return 'away'
+        return None
+
+    def results_by_type(self):
+        """Map of match_type -> PCLMatchResult for this match."""
+        return {r.match_type: r for r in self.results.all()}
+
+    def get_doubles_standing(self):
+        """(home_wins, away_wins) counting only decided doubles (wd/md/mx1/mx2)."""
+        res = self.results_by_type()
+        h = a = 0
+        for ty in self.DOUBLES_TYPES:
+            w = self._result_winner(res.get(ty))
+            if w == 'home':
+                h += 1
+            elif w == 'away':
+                a += 1
+        return (h, a)
+
+    def get_doubles_count_scored(self):
+        """Number of doubles (0-4) that have a decided winner (ties don't count)."""
+        res = self.results_by_type()
+        return sum(1 for ty in self.DOUBLES_TYPES if self._result_winner(res.get(ty)) is not None)
+
+    def is_heartbreaker_required(self):
+        """True when all 4 doubles are decided and the standing is exactly 2:2."""
+        return self.get_doubles_count_scored() == 4 and self.get_doubles_standing() == (2, 2)
+
+    def get_final_standing(self):
+        """(home, away) discipline wins, adding the Heartbreaker only when it breaks a 2:2."""
+        h, a = self.get_doubles_standing()
+        if self.is_heartbreaker_required():
+            w = self._result_winner(self.results_by_type().get('hb'))
+            if w == 'home':
+                h += 1
+            elif w == 'away':
+                a += 1
+        return (h, a)
+
+    def get_winner(self):
+        """'home'/'away' once a team has reached 3 discipline wins, else None."""
+        h, a = self.get_final_standing()
+        if h >= 3 and h > a:
+            return 'home'
+        if a >= 3 and a > h:
+            return 'away'
+        return None
+
 
 class PCLLineup(db.Model):
     """A team's lineup submission for a match (12 player slots)."""

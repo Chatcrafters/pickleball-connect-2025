@@ -195,9 +195,13 @@
                 {% endif %}
                 <div class="mt-2 d-flex justify-content-between align-items-center flex-wrap gap-2">
                     {% if v.deadline_passed %}
-                    <span class="text-success small"><i class="bi bi-lock-fill"></i> Lineups locked - tap to view</span>
-                    <a href="{{ url_for('pcl.captain_lineup_reveal', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
-                       class="btn btn-sm btn-success"><i class="bi bi-eye"></i> View Lineups</a>
+                    <span class="text-success small"><i class="bi bi-lock-fill"></i> Lineups locked</span>
+                    <span class="d-flex gap-2">
+                        <a href="{{ url_for('pcl.captain_lineup_reveal', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                           class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i> View Lineups</a>
+                        <a href="{{ url_for('pcl.captain_match_score', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                           class="btn btn-sm btn-warning"><i class="bi bi-123"></i> {{ t.score_entry_title }}</a>
+                    </span>
                     {% elif not v.own_submitted %}
                     <span class="text-warning small">
                         <i class="bi bi-exclamation-triangle-fill"></i>
@@ -233,6 +237,11 @@
                 <div>
                     <div class="fw-bold">{{ v.opponent.country_flag }} {{ v.opponent.country_name }}</div>
                     <div class="text-muted small"><i class="bi bi-clock"></i> {{ m.format_date(current_lang) if m.match_date else '-' }}</div>
+                    {% set _w = m.get_winner() %}
+                    {% if _w %}
+                    {% set _wt = m.team_home if _w == 'home' else m.team_away %}
+                    <div class="small text-success"><i class="bi bi-trophy-fill"></i> {{ _wt.country_name }} {{ t.score_wins }}</div>
+                    {% endif %}
                 </div>
                 <div class="text-end">
                     {% if m.home_score is not none and m.away_score is not none %}
@@ -240,6 +249,8 @@
                     {% endif %}
                     <a href="{{ url_for('pcl.captain_lineup_reveal', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
                        class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                    <a href="{{ url_for('pcl.captain_match_score', token=team.captain_token, match_id=m.id, lang=current_lang) }}"
+                       class="btn btn-sm btn-outline-warning"><i class="bi bi-123"></i></a>
                 </div>
             </div>
             {% endfor %}

@@ -144,6 +144,29 @@
             </table>
         </div>
         {% endif %}
+        {% set _w = match.get_winner() %}
+        {% if _w %}
+        {% set _wt = match.team_home if _w == 'home' else match.team_away %}
+        <div class="mt-2 fw-bold text-success">
+            <i class="bi bi-trophy-fill"></i> {{ t.score_winner }}: {{ _wt.country_flag }} {{ _wt.country_name }}
+            {% if match.is_heartbreaker_required() %}<span class="badge bg-danger">Heartbreaker</span>{% endif %}
+        </div>
+        {% elif match.is_heartbreaker_required() %}
+        <div class="mt-2 fw-bold text-danger">
+            <i class="bi bi-exclamation-triangle-fill"></i> {{ t.score_heartbreaker_required }}
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Score entry (admin can enter anytime once lineups are locked or scoring has started) -->
+    {% if match.status in ['lineups_locked', 'in_progress', 'completed'] %}
+    <div class="d-grid mt-3">
+        <a href="{{ url_for('pcl.admin_match_score', match_id=match.id, lang=current_lang) }}"
+           class="btn btn-warning">
+            <i class="bi bi-123"></i> {{ t.score_entry_title }}
+            <span class="badge bg-dark ms-1">{{ match.get_final_standing()[0] }} : {{ match.get_final_standing()[1] }}</span>
+        </a>
     </div>
     {% endif %}
 

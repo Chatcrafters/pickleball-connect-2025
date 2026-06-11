@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.score_entry_title }} - {{ match.team_home.country_name }} vs {{ match.team_away.country_name }}{% endblock %}
+
+{% macro pname(reg) %}{% if reg %}{{ reg.first_name }}{% if reg.last_name %} {{ reg.last_name }}{% endif %}{% else %}?{% endif %}{% endmacro %}
+
+{% block content %}
+<style>
+    .sc-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 120px; }
+    .sc-header { position: sticky; top: 0; z-index: 1020; background: #fff;
+        border-bottom: 1px solid #e0e0e0; padding: 10px 12px; margin: 0 -12px 14px; }
+    .sc-standing { font-size: 1.5rem; font-weight: 800; text-align: center; }
+    .sc-standing .num { font-size: 1.9rem; }
+    .sc-status { text-align: center; font-weight: 700; padding: 8px; border-radius: 10px; margin-bottom: 14px; }
+    .sc-status.live { background: #fff3cd; color: #664d03; }
+    .sc-status.done { background: #d1e7dd; color: #0f5132; }
+    .sc-status.hb { background: #f8d7da; color: #842029; }
+    .sc-section { border: 1px solid #e6e6e6; border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+    .sc-section.hb-section { border-color: #dc3545; }
+    .sc-section h6 { font-weight: 700; margin-bottom: 2px; }
+    .sc-lineup { font-size: .82rem; color: #6c757d; margin-bottom: 10px; }
+    .sc-inputs { display: flex; align-items: center; gap: 10px; justify-content: center; }
+    .sc-stepper { display: flex; align-items: center; gap: 6px; }
+    .sc-stepper button { width: 44px; height: 50px; border-radius: 10px; border: 1px solid #ced4da;
+        background: #f8f9fa; font-size: 1.3rem; line-height: 1; }
+    .sc-stepper input { width: 76px; height: 50px; text-align: center; font-size: 1.4rem; font-weight: 700;
+        border-radius: 10px; border: 1px solid #ced4da; }
+    .sc-vs { font-weight: 700; color: #adb5bd; }
+    .sc-win { color: #198754; font-weight: 600; font-size: .85rem; text-align: center; margin-top: 6px; }
+    .sc-bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030;
+        background: linear-gradient(to top, #fff 75%, rgba(255,255,255,0)); padding: 12px;
+        max-width: 600px; margin: 0 auto; }
+    .sc-bottom .btn { min-height: 50px; font-weight: 700; }
+</style>
+
+{% set sections = [
+    ('wd', t.lineup_section_wd, 'wd1', 'wd2'),
+    ('md', t.lineup_section_md, 'md1', 'md2'),
+    ('mx1', t.lineup_section_mx1, 'mx1m', 'mx1f'),
+    ('mx2', t.lineup_section_mx2, 'mx2m', 'mx2f')
+] %}
+
+<div class="container sc-wrap">
+    <!-- Sticky header -->
+    <div class="sc-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ back_url }}" class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i></a>
+            {% if is_admin_mode %}<span class="badge bg-dark"><i class="bi bi-shield-check"></i> Admin</span>{% endif %}
+        </div>
+        <div class="sc-standing mt-1">
+            {{ match.team_home.country_flag }} {{ match.team_home.country_name }}
+            <span class="num text-primary">{{ standing[0] }}</span>
+            <span class="text-muted">-</span>
+            <span class="num text-primary">{{ standing[1] }}</span>
+            {{ match.team_away.country_name }} {{ match.team_away.country_flag }}
+        </div>
+        <div class="small text-muted text-center">
+            <i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for category, message in messages %}
+        <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+        {% endfor %}{% endif %}
+    {% endwith %}
+
+    <!-- Status indicator -->
+    {% if winner %}
+    {% set wteam = match.team_home if winner == 'home' else match.team_away %}
+    <div class="sc-status done">
+        <i class="bi bi-trophy-fill"></i>
+        {{ t.score_match_completed }} - {{ wteam.country_flag }} {{ wteam.country_name }}
+        {{ t.score_wins }} {{ standing[0] if winner == 'home' else standing[1] }}:{{ standing[1] if winner == 'home' else standing[0] }}{% if hb_required %} (Heartbreaker){% endif %}
+    </div>
+    {% elif hb_required %}
+    <div class="sc-status hb">
+        <i class="bi bi-exclamation-triangle-fill"></i> 2:2 - {{ t.score_heartbreaker_required }}
+    </div>
+    {% else %}
+    <div class="sc-status live">
+        <i class="bi bi-hourglass-split"></i> {{ t.score_match_in_progress }}
+    </div>
+    {% endif %}
+
+    {% if not home_lineup or not away_lineup %}
+    <div class="alert alert-warning py-2 small">
+        <i class="bi bi-exclamation-triangle"></i> Lineup missing for one team - players shown as "?".
+    </div>
+    {% endif %}
+
+    <form method="POST"
+          action="{% if is_admin_mode %}{{ url_for('pcl.admin_match_score', match_id=match.id, lang=current_lang) }}{% else %}{{ url_for('pcl.captain_match_score', token=token, match_id=match.id, lang=current_lang) }}{% endif %}">
+
+        {% for ty, label, a1, a2 in sections %}
+        <div class="sc-section">
+            <div class="d-flex justify-content-between align-items-start">
+                <h6><i class="bi bi-flag"></i> {{ label }}</h6>
+                {% if scores[ty].winner %}<i class="bi bi-check-circle-fill text-success"></i>{% endif %}
+            </div>
+            <div class="sc-lineup">
+                {{ pname(home_lineup|attr(a1)) }} + {{ pname(home_lineup|attr(a2)) }}
+                <span class="sc-vs">vs</span>
+                {{ pname(away_lineup|attr(a1)) }} + {{ pname(away_lineup|attr(a2)) }}
+            </div>
+            <div class="sc-inputs">
+                <div class="sc-stepper">
+                    <button type="button" data-step="-1" data-target="{{ ty }}_home">-</button>
+                    <input type="number" inputmode="numeric" min="0" id="{{ ty }}_home" name="{{ ty }}_home"
+                           value="{{ scores[ty].home }}" aria-label="{{ t.score_home_team_score }}">
+                    <button type="button" data-step="1" data-target="{{ ty }}_home">+</button>
+                </div>
+                <span class="sc-vs">:</span>
+                <div class="sc-stepper">
+                    <button type="button" data-step="-1" data-target="{{ ty }}_away">-</button>
+                    <input type="number" inputmode="numeric" min="0" id="{{ ty }}_away" name="{{ ty }}_away"
+                           value="{{ scores[ty].away }}" aria-label="{{ t.score_away_team_score }}">
+                    <button type="button" data-step="1" data-target="{{ ty }}_away">+</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Heartbreaker (only when 2:2 after 4 doubles) -->
+        {% if hb_required %}
+        <div class="sc-section hb-section">
+            <div class="sc-status hb mb-2"><i class="bi bi-lightning-charge-fill"></i> 2:2 - {{ t.score_heartbreaker_required }}</div>
+            <h6><i class="bi bi-arrow-down-up"></i> {{ t.score_heartbreaker_section }}</h6>
+            <div class="sc-lineup">
+                {% for i in range(1, 5) %}{{ pname(home_lineup|attr('hb' ~ i)) }}{% if not loop.last %}, {% endif %}{% endfor %}
+                <span class="sc-vs">vs</span>
+                {% for i in range(1, 5) %}{{ pname(away_lineup|attr('hb' ~ i)) }}{% if not loop.last %}, {% endif %}{% endfor %}
+            </div>
+            <div class="sc-inputs">
+                <div class="sc-stepper">
+                    <button type="button" data-step="-1" data-target="hb_home">-</button>
+                    <input type="number" inputmode="numeric" min="0" id="hb_home" name="hb_home" value="{{ scores.hb.home }}">
+                    <button type="button" data-step="1" data-target="hb_home">+</button>
+                </div>
+                <span class="sc-vs">:</span>
+                <div class="sc-stepper">
+                    <button type="button" data-step="-1" data-target="hb_away">-</button>
+                    <input type="number" inputmode="numeric" min="0" id="hb_away" name="hb_away" value="{{ scores.hb.away }}">
+                    <button type="button" data-step="1" data-target="hb_away">+</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="sc-bottom">
+            <div class="d-grid">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-arrow-clockwise"></i> {{ t.score_save }} / {{ t.score_refresh_standing }}
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+(function() {
+    document.querySelectorAll('.sc-stepper button[data-step]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var input = document.getElementById(btn.getAttribute('data-target'));
+            if (!input) return;
+            var cur = parseInt(input.value, 10);
+            if (isNaN(cur)) cur = 0;
+            var next = cur + parseInt(btn.getAttribute('data-step'), 10);
+            if (next < 0) next = 0;
+            input.value = next;
+        });
+    });
+})();
+</script>
+{% endblock %}
