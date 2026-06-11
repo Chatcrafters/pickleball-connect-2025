@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+
+{% block title %}Matches - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .match-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 90px; }
+    .match-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        background: #fff;
+        position: relative;
+        transition: box-shadow .15s ease;
+    }
+    .match-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+    .match-teams { font-weight: 600; font-size: 1.05rem; line-height: 1.4; }
+    .match-meta { color: #6c757d; font-size: .9rem; }
+    .match-vs { color: #adb5bd; font-weight: 400; padding: 0 6px; }
+    .match-fab {
+        position: fixed;
+        right: 18px;
+        bottom: 18px;
+        z-index: 1030;
+        border-radius: 50px;
+        padding: 14px 22px;
+        font-weight: 600;
+        box-shadow: 0 6px 18px rgba(0,0,0,.25);
+        min-height: 52px;
+    }
+    .match-progress-badge { font-size: .8rem; }
+</style>
+
+{% set status_meta = {
+    'pending': ('warning', 'bi-hourglass-split', t.match_status_pending),
+    'lineups_locked': ('info', 'bi-lock-fill', t.match_status_lineups_locked),
+    'in_progress': ('success', 'bi-play-circle-fill', t.match_status_in_progress),
+    'completed': ('secondary', 'bi-check-circle-fill', t.match_status_completed)
+} %}
+
+<div class="container match-wrap">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between py-3">
+        <div>
+            <a href="{{ url_for('pcl.admin_tournament_detail', tournament_id=tournament.id) }}"
+               class="text-decoration-none text-muted small">
+                <i class="bi bi-arrow-left"></i> {{ tournament.name }}
+            </a>
+            <h1 class="h4 mb-0 mt-1"><i class="bi bi-calendar-event"></i> Matches</h1>
+        </div>
+    </div>
+
+    {% if not matches %}
+    <div class="alert alert-light border text-center text-muted py-4">
+        <i class="bi bi-calendar-x" style="font-size: 1.6rem;"></i>
+        <div class="mt-2">No matches yet.</div>
+    </div>
+    {% endif %}
+
+    {% for match in matches %}
+    {% set sm = status_meta.get(match.status, status_meta['pending']) %}
+    {% set submitted = match.lineups_submitted_count() %}
+    <div class="match-card">
+        <a href="{{ url_for('pcl.admin_match_detail', match_id=match.id, lang=current_lang) }}"
+           class="stretched-link text-decoration-none text-dark"></a>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-{{ sm[0] }}"><i class="bi {{ sm[1] }}"></i> {{ sm[2] }}</span>
+            <span class="badge bg-light text-dark match-progress-badge">
+                <i class="bi bi-people"></i> {{ submitted }}/2 {{ t.match_lineups_submitted }}
+            </span>
+        </div>
+        <div class="match-teams">
+            {{ match.team_home.country_flag }} {{ match.team_home.country_name }}
+            <span class="match-vs">vs</span>
+            {{ match.team_away.country_flag }} {{ match.team_away.country_name }}
+        </div>
+        <div class="match-meta mt-1">
+            <i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
+            {% if match.court %}
+            &nbsp;&middot;&nbsp; <i class="bi bi-geo-alt"></i> {{ t.match_court }} {{ match.court }}
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <a href="{{ url_for('pcl.admin_match_create', tournament_id=tournament.id, lang=current_lang) }}"
+       class="btn btn-primary match-fab">
+        <i class="bi bi-plus-lg"></i> {{ t.match_create_new }}
+    </a>
+</div>
+{% endblock %}

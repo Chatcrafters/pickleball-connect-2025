@@ -211,7 +211,9 @@ class PCLTournament(db.Model):
 
     # Relationships
     teams = db.relationship('PCLTeam', back_populates='tournament', lazy='dynamic')
-    
+    matches = db.relationship('PCLMatch', back_populates='tournament', lazy='dynamic',
+                              cascade='all, delete-orphan')
+
     def __repr__(self):
         return f'<PCLTournament {self.name}>'
     
@@ -263,7 +265,11 @@ class PCLTeam(db.Model):
     # Relationships
     tournament = db.relationship('PCLTournament', back_populates='teams')
     registrations = db.relationship('PCLRegistration', back_populates='team', lazy='dynamic')
-    
+    matches_home = db.relationship('PCLMatch', foreign_keys='PCLMatch.team_home_id',
+                                   back_populates='team_home', lazy='dynamic')
+    matches_away = db.relationship('PCLMatch', foreign_keys='PCLMatch.team_away_id',
+                                   back_populates='team_away', lazy='dynamic')
+
     def __repr__(self):
         return f'<PCLTeam {self.country_code} {self.age_category}>'
     
@@ -708,6 +714,188 @@ def get_boarding_pass_sponsors(event_id=None, pcl_tournament_id=None):
             'text': p.sponsor.boarding_pass_text or p.sponsor.name,
         })
     return result
+
+
+# ============================================================================
+# PCL MATCH / LINEUP MODELS (Phase 1 - Foundation)
+# ============================================================================
+
+class PCLMatch(db.Model):
+    """A team-vs-team match within a PCL tournament (lineup module)."""
+    __tablename__ = 'pcl_match'
+
+    id = db.Column(db.Integer, primary_key=True)
+    tournament_id = db.Column(db.Integer, db.ForeignKey('pcl_tournament.id'), nullable=False, index=True)
+    team_home_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False, index=True)
+    team_away_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False, index=True)
+
+    match_date = db.Column(db.DateTime, nullable=True)
+    lineup_deadline = db.Column(db.DateTime, nullable=True)
+    court = db.Column(db.String(100), nullable=True)
+    # pending / lineups_locked / in_progress / completed
+    status = db.Column(db.String(30), default='pending', index=True)
+
+    home_score = db.Column(db.Integer, nullable=True)
+    away_score = db.Column(db.Integer, nullable=True)
+    winner_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=True)
+
+    notes = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    tournament = db.relationship('PCLTournament', back_populates='matches')
+    team_home = db.relationship('PCLTeam', foreign_keys=[team_home_id], back_populates='matches_home')
+    team_away = db.relationship('PCLTeam', foreign_keys=[team_away_id], back_populates='matches_away')
+    winner = db.relationship('PCLTeam', foreign_keys=[winner_id])
+    lineups = db.relationship('PCLLineup', back_populates='match', lazy='dynamic',
+                              cascade='all, delete-orphan')
+    results = db.relationship('PCLMatchResult', back_populates='match', lazy='dynamic',
+                              cascade='all, delete-orphan')
+
+    # Weekday abbreviations per language (ASCII only)
+    WEEKDAYS = {
+        'DE': ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+        'EN': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        'ES': ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'],
+        'FR': ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+    }
+
+    STATUS_LABELS = {
+        'pending': {'DE': 'Ausstehend', 'EN': 'Pending', 'ES': 'Pendiente', 'FR': 'En attente'},
+        'lineups_locked': {'DE': 'Aufstellungen gesperrt', 'EN': 'Lineups locked',
+                           'ES': 'Alineaciones bloqueadas', 'FR': 'Compositions verrouillees'},
+        'in_progress': {'DE': 'Im Spiel', 'EN': 'In progress', 'ES': 'En curso', 'FR': 'En cours'},
+        'completed': {'DE': 'Beendet', 'EN': 'Completed', 'ES': 'Finalizado', 'FR': 'Termine'},
+    }
+
+    def __repr__(self):
+        return f'<PCLMatch {self.team_home_id} vs {self.team_away_id}>'
+
+    def format_date(self, lang='DE'):
+        """Return e.g. 'Mi 02.07. 10:00 Uhr' (DE) or 'Wed 02.07. 10:00' (other langs)."""
+        if not self.match_date:
+            return ''
+        lang = (lang or 'DE').upper()
+        days = self.WEEKDAYS.get(lang, self.WEEKDAYS['DE'])
+        weekday = days[self.match_date.weekday()]
+        base = self.match_date.strftime(f'{weekday} %d.%m. %H:%M')
+        return f'{base} Uhr' if lang == 'DE' else base
+
+    def is_lineup_deadline_passed(self):
+        """True if a lineup deadline is set and already in the past."""
+        if not self.lineup_deadline:
+            return False
+        return datetime.now() > self.lineup_deadline
+
+    def get_status_display(self, lang='EN'):
+        """Translated status label for the current status."""
+        lang = (lang or 'EN').upper()
+        entry = self.STATUS_LABELS.get(self.status or 'pending', self.STATUS_LABELS['pending'])
+        return entry.get(lang, entry['EN'])
+
+    def lineups_submitted_count(self):
+        """How many of the two teams have submitted a lineup (0-2)."""
+        return self.lineups.filter(PCLLineup.submitted_at.isnot(None)).count()
+
+
+class PCLLineup(db.Model):
+    """A team's lineup submission for a match (12 player slots)."""
+    __tablename__ = 'pcl_lineup'
+
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('pcl_match.id'), nullable=False, index=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('pcl_team.id'), nullable=False, index=True)
+
+    # Women's doubles
+    wd_player1_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    wd_player2_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    # Men's doubles
+    md_player1_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    md_player2_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    # Mixed 1
+    mx1_male_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    mx1_female_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    # Mixed 2
+    mx2_male_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    mx2_female_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    # Hotball 1-4
+    hb_player1_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    hb_player2_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    hb_player3_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+    hb_player4_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+
+    submitted_at = db.Column(db.DateTime, nullable=True)
+    last_modified_at = db.Column(db.DateTime, nullable=True)
+    submitted_by_captain_id = db.Column(db.Integer, db.ForeignKey('pcl_registration.id'), nullable=True)
+
+    # Relationships
+    match = db.relationship('PCLMatch', back_populates='lineups')
+    team = db.relationship('PCLTeam')
+
+    # 12 player-slot relationships (foreign_keys disambiguate the many FKs to pcl_registration)
+    wd1 = db.relationship('PCLRegistration', foreign_keys=[wd_player1_id])
+    wd2 = db.relationship('PCLRegistration', foreign_keys=[wd_player2_id])
+    md1 = db.relationship('PCLRegistration', foreign_keys=[md_player1_id])
+    md2 = db.relationship('PCLRegistration', foreign_keys=[md_player2_id])
+    mx1m = db.relationship('PCLRegistration', foreign_keys=[mx1_male_id])
+    mx1f = db.relationship('PCLRegistration', foreign_keys=[mx1_female_id])
+    mx2m = db.relationship('PCLRegistration', foreign_keys=[mx2_male_id])
+    mx2f = db.relationship('PCLRegistration', foreign_keys=[mx2_female_id])
+    hb1 = db.relationship('PCLRegistration', foreign_keys=[hb_player1_id])
+    hb2 = db.relationship('PCLRegistration', foreign_keys=[hb_player2_id])
+    hb3 = db.relationship('PCLRegistration', foreign_keys=[hb_player3_id])
+    hb4 = db.relationship('PCLRegistration', foreign_keys=[hb_player4_id])
+
+    SLOT_FIELDS = [
+        ('wd_player1_id', 'WD player 1'), ('wd_player2_id', 'WD player 2'),
+        ('md_player1_id', 'MD player 1'), ('md_player2_id', 'MD player 2'),
+        ('mx1_male_id', 'MX1 male'), ('mx1_female_id', 'MX1 female'),
+        ('mx2_male_id', 'MX2 male'), ('mx2_female_id', 'MX2 female'),
+        ('hb_player1_id', 'HB player 1'), ('hb_player2_id', 'HB player 2'),
+        ('hb_player3_id', 'HB player 3'), ('hb_player4_id', 'HB player 4'),
+    ]
+
+    def __repr__(self):
+        return f'<PCLLineup match={self.match_id} team={self.team_id}>'
+
+    def is_submitted(self):
+        """True once the lineup has been submitted."""
+        return self.submitted_at is not None
+
+    def validate(self):
+        """Return a list of human-readable validation error strings (empty = valid)."""
+        errors = []
+        values = []
+        for field, label in self.SLOT_FIELDS:
+            val = getattr(self, field)
+            if not val:
+                errors.append(f'Missing: {label}')
+            else:
+                values.append(val)
+        # A player may only appear in a single slot
+        if len(values) != len(set(values)):
+            errors.append('A player is assigned to more than one slot')
+        return errors
+
+
+class PCLMatchResult(db.Model):
+    """Result of a single discipline within a match (wd/md/mx1/mx2/hb1-4)."""
+    __tablename__ = 'pcl_match_result'
+
+    id = db.Column(db.Integer, primary_key=True)
+    match_id = db.Column(db.Integer, db.ForeignKey('pcl_match.id'), nullable=False, index=True)
+    match_type = db.Column(db.String(10), nullable=False)  # wd/md/mx1/mx2/hb1/hb2/hb3/hb4
+    home_score = db.Column(db.Integer, nullable=True)
+    away_score = db.Column(db.Integer, nullable=True)
+    winner = db.Column(db.String(10), nullable=True)  # home / away
+    notes = db.Column(db.Text, nullable=True)
+    recorded_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    # Relationships
+    match = db.relationship('PCLMatch', back_populates='results')
+
+    def __repr__(self):
+        return f'<PCLMatchResult {self.match_type} {self.home_score}-{self.away_score}>'
 
 
 # ============================================================================

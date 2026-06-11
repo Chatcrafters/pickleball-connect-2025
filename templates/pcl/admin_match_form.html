@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}{% if match %}Edit Match{% else %}{{ t.match_create_new }}{% endif %} - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .match-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 100px; }
+    .match-wrap .form-control,
+    .match-wrap .form-select { min-height: 48px; font-size: 1rem; }
+    .match-wrap label.form-label { font-weight: 600; }
+    .sticky-save {
+        position: sticky;
+        bottom: 0;
+        background: linear-gradient(to top, #fff 70%, rgba(255,255,255,0));
+        padding: 14px 0 10px;
+        z-index: 1020;
+    }
+    .sticky-save .btn { min-height: 50px; font-weight: 600; }
+</style>
+
+{% set sel_home = (form_data.get('team_home_id') if form_data else '') or (match.team_home_id if match else '') %}
+{% set sel_away = (form_data.get('team_away_id') if form_data else '') or (match.team_away_id if match else '') %}
+{% set val_date = form_data.get('match_date') if form_data and form_data.get('match_date')
+                  else (match.match_date.strftime('%Y-%m-%dT%H:%M') if match and match.match_date else '') %}
+{% set val_deadline = form_data.get('lineup_deadline') if form_data and form_data.get('lineup_deadline')
+                  else (match.lineup_deadline.strftime('%Y-%m-%dT%H:%M') if match and match.lineup_deadline else '') %}
+{% set val_court = form_data.get('court') if form_data and form_data.get('court') else (match.court if match else '') %}
+{% set val_notes = form_data.get('notes') if form_data and form_data.get('notes') else (match.notes if match else '') %}
+{% set cur_status = form_data.get('status') if form_data and form_data.get('status') else (match.status if match else 'pending') %}
+
+<div class="container match-wrap">
+    <div class="py-3">
+        <a href="{% if match %}{{ url_for('pcl.admin_match_detail', match_id=match.id, lang=current_lang) }}{% else %}{{ url_for('pcl.admin_match_list', tournament_id=tournament.id, lang=current_lang) }}{% endif %}"
+           class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left"></i> {{ tournament.name }}
+        </a>
+        <h1 class="h4 mb-0 mt-1">
+            <i class="bi bi-{% if match %}pencil{% else %}plus-circle{% endif %}"></i>
+            {% if match %}Edit Match{% else %}{{ t.match_create_new }}{% endif %}
+        </h1>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST"
+          action="{% if match %}{{ url_for('pcl.admin_match_edit', match_id=match.id, lang=current_lang) }}{% else %}{{ url_for('pcl.admin_match_create', tournament_id=tournament.id, lang=current_lang) }}{% endif %}">
+
+        <div class="mb-3">
+            <label for="team_home_id" class="form-label"><i class="bi bi-house"></i> {{ t.match_team_home }}</label>
+            <select class="form-select" id="team_home_id" name="team_home_id" required>
+                <option value="">--</option>
+                {% for team in teams %}
+                <option value="{{ team.id }}" {% if sel_home|string == team.id|string %}selected{% endif %}>
+                    {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="team_away_id" class="form-label"><i class="bi bi-airplane"></i> {{ t.match_team_away }}</label>
+            <select class="form-select" id="team_away_id" name="team_away_id" required>
+                <option value="">--</option>
+                {% for team in teams %}
+                <option value="{{ team.id }}" {% if sel_away|string == team.id|string %}selected{% endif %}>
+                    {{ team.country_flag }} {{ team.country_name }} {{ team.age_category }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="match_date" class="form-label"><i class="bi bi-calendar-event"></i> Date &amp; Time</label>
+            <input type="datetime-local" class="form-control" id="match_date" name="match_date"
+                   value="{{ val_date }}" required>
+        </div>
+
+        <div class="mb-3">
+            <label for="lineup_deadline" class="form-label"><i class="bi bi-hourglass-split"></i> {{ t.match_lineup_deadline }}</label>
+            <input type="datetime-local" class="form-control" id="lineup_deadline" name="lineup_deadline"
+                   value="{{ val_deadline }}">
+            <small class="text-muted">Defaults to 12 hours before the match.</small>
+        </div>
+
+        <div class="mb-3">
+            <label for="court" class="form-label"><i class="bi bi-geo-alt"></i> {{ t.match_court }}</label>
+            <input type="text" class="form-control" id="court" name="court"
+                   value="{{ val_court }}" placeholder="Court 1">
+        </div>
+
+        {% if match %}
+        <div class="mb-3">
+            <label for="status" class="form-label"><i class="bi bi-flag"></i> Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="pending" {% if cur_status == 'pending' %}selected{% endif %}>{{ t.match_status_pending }}</option>
+                <option value="lineups_locked" {% if cur_status == 'lineups_locked' %}selected{% endif %}>{{ t.match_status_lineups_locked }}</option>
+                <option value="in_progress" {% if cur_status == 'in_progress' %}selected{% endif %}>{{ t.match_status_in_progress }}</option>
+                <option value="completed" {% if cur_status == 'completed' %}selected{% endif %}>{{ t.match_status_completed }}</option>
+            </select>
+        </div>
+        {% endif %}
+
+        <div class="mb-3">
+            <label for="notes" class="form-label"><i class="bi bi-sticky"></i> Notes</label>
+            <textarea class="form-control" id="notes" name="notes" rows="3">{{ val_notes }}</textarea>
+        </div>
+
+        <div class="sticky-save d-grid">
+            <button type="submit" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Save Match
+            </button>
+        </div>
+    </form>
+
+    {% if match %}
+    <form method="POST" action="{{ url_for('pcl.admin_match_delete', match_id=match.id, lang=current_lang) }}"
+          onsubmit="return confirm('{{ t.match_delete_confirm }}');" class="d-grid mt-2">
+        <button type="submit" class="btn btn-outline-danger">
+            <i class="bi bi-trash"></i> Delete Match
+        </button>
+    </form>
+    {% endif %}
+</div>
+
+<script>
+(function() {
+    var dateInput = document.getElementById('match_date');
+    var deadlineInput = document.getElementById('lineup_deadline');
+    if (!dateInput || !deadlineInput) return;
+    dateInput.addEventListener('change', function() {
+        if (deadlineInput.value || !dateInput.value) return;
+        var d = new Date(dateInput.value);
+        if (isNaN(d.getTime())) return;
+        d.setHours(d.getHours() - 12);
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        deadlineInput.value = d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate())
+            + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    });
+})();
+</script>
+{% endblock %}

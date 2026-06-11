@@ -27,6 +27,9 @@
             <a href="{{ url_for('pcl.player_cards_tournament', tournament_id=tournament.id) }}" class="btn btn-purple" target="_blank" style="background: #6f42c1; color: white;">
     <i class="bi bi-person-badge"></i> Player Cards
 </a>
+            <a href="{{ url_for('pcl.admin_match_list', tournament_id=tournament.id) }}" class="btn btn-warning">
+                <i class="bi bi-calendar-event"></i> Matches
+            </a>
             <a href="{{ url_for('pcl.add_team', tournament_id=tournament.id) }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Add Team
             </a>

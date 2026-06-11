@@ -1,6 +1,6 @@
 ﻿from urllib.parse import quote
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
-from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS, get_whatsapp_sponsor_block
+from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS, get_whatsapp_sponsor_block, PCLMatch, PCLLineup, PCLMatchResult
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
@@ -51,6 +51,17 @@ TRANSLATIONS = {
         'shirt_total_price': 'Total',
         'shirt_payment_info': 'Each shirt costs 15 EUR. Shirts are ordered and printed by us according to official PCL specifications. Payment is settled through your team captain.',
         'shirt_product_preview_helper': "This is the shirt you'll receive. Choose your size below.",
+        'match_status_pending': 'Pending',
+        'match_status_lineups_locked': 'Lineups locked',
+        'match_status_in_progress': 'In progress',
+        'match_status_completed': 'Completed',
+        'match_create_new': 'New Match',
+        'match_team_home': 'Home',
+        'match_team_away': 'Away',
+        'match_court': 'Court',
+        'match_lineup_deadline': 'Lineup deadline',
+        'match_lineups_submitted': 'Lineups submitted',
+        'match_delete_confirm': 'Really delete match?',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -147,6 +158,17 @@ TRANSLATIONS = {
         'shirt_total_price': 'Gesamt',
         'shirt_payment_info': 'Jedes Shirt kostet 15 EUR. Die Shirts werden von uns gemÃ¤ÃŸ den offiziellen PCL-Vorgaben bestellt und bedruckt. Die Abrechnung erfolgt Ã¼ber den TeamkapitÃ¤n.',
         'shirt_product_preview_helper': "Das ist das Shirt, das du erhältst. Wähle unten deine Größe.",
+        'match_status_pending': 'Ausstehend',
+        'match_status_lineups_locked': 'Aufstellungen gesperrt',
+        'match_status_in_progress': 'Im Spiel',
+        'match_status_completed': 'Beendet',
+        'match_create_new': 'Neue Begegnung',
+        'match_team_home': 'Heim',
+        'match_team_away': 'Auswaerts',
+        'match_court': 'Court',
+        'match_lineup_deadline': 'Lineup-Deadline',
+        'match_lineups_submitted': 'Aufstellungen eingereicht',
+        'match_delete_confirm': 'Begegnung wirklich loeschen?',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -243,6 +265,17 @@ TRANSLATIONS = {
         'shirt_total_price': 'Total',
         'shirt_payment_info': 'Cada camiseta cuesta 15 EUR. Las camisetas son pedidas e impresas por nosotros segÃºn las especificaciones oficiales de la PCL. El pago se gestiona a travÃ©s del capitÃ¡n del equipo.',
         'shirt_product_preview_helper': "Esta es la camiseta que recibirás. Elige tu talla abajo.",
+        'match_status_pending': 'Pendiente',
+        'match_status_lineups_locked': 'Alineaciones bloqueadas',
+        'match_status_in_progress': 'En curso',
+        'match_status_completed': 'Finalizado',
+        'match_create_new': 'Nuevo partido',
+        'match_team_home': 'Local',
+        'match_team_away': 'Visitante',
+        'match_court': 'Court',
+        'match_lineup_deadline': 'Fecha limite alineacion',
+        'match_lineups_submitted': 'Alineaciones enviadas',
+        'match_delete_confirm': 'Borrar partido?',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
@@ -339,6 +372,17 @@ TRANSLATIONS = {
         'shirt_total_price': 'Total',
         'shirt_payment_info': 'Chaque maillot coÃ»te 15 EUR. Les maillots sont commandÃ©s et imprimÃ©s par nous selon les spÃ©cifications officielles de la PCL. Le paiement est gÃ©rÃ© par le capitaine de l\'Ã©quipe.',
         'shirt_product_preview_helper': "Voici le maillot que vous recevrez. Choisissez votre taille ci-dessous.",
+        'match_status_pending': 'En attente',
+        'match_status_lineups_locked': 'Compositions verrouillees',
+        'match_status_in_progress': 'En cours',
+        'match_status_completed': 'Termine',
+        'match_create_new': 'Nouveau match',
+        'match_team_home': 'Domicile',
+        'match_team_away': 'Exterieur',
+        'match_court': 'Court',
+        'match_lineup_deadline': 'Date limite composition',
+        'match_lineups_submitted': 'Compositions soumises',
+        'match_delete_confirm': 'Supprimer le match?',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carre recommande.',
@@ -1947,6 +1991,234 @@ def admin_edit_registration(registration_id):
                          registration=registration,
                          team=team,
                          t=get_translations(registration.preferred_language or 'EN'))
+
+
+# ============================================================================
+# PCL MATCH / LINEUP MODULE - PHASE 1 (Admin CRUD)
+# ============================================================================
+
+_MATCH_WEEKDAYS = {
+    'DE': ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+    'EN': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    'ES': ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'],
+    'FR': ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+}
+
+
+def format_match_date(dt, lang='DE'):
+    """Format a datetime as 'Mi 02.07. 10:00 Uhr' (DE) / 'Wed 02.07. 10:00' (other langs)."""
+    if not dt:
+        return ''
+    lang = (lang or 'DE').upper()
+    days = _MATCH_WEEKDAYS.get(lang, _MATCH_WEEKDAYS['DE'])
+    weekday = days[dt.weekday()]
+    base = dt.strftime(f'{weekday} %d.%m. %H:%M')
+    return f'{base} Uhr' if lang == 'DE' else base
+
+
+def _match_lang():
+    """Resolve the request language for match admin pages (default EN)."""
+    lang = request.args.get('lang', 'EN').upper()
+    if lang not in TRANSLATIONS:
+        lang = 'EN'
+    return lang
+
+
+def _parse_match_dt(value):
+    """Parse a datetime-local form value ('YYYY-MM-DDTHH:MM') into a datetime or None."""
+    if not value:
+        return None
+    for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%dT%H:%M:%S'):
+        try:
+            return datetime.strptime(value, fmt)
+        except ValueError:
+            continue
+    return None
+
+
+@pcl.route('/admin/tournament/<int:tournament_id>/matches')
+def admin_match_list(tournament_id):
+    """Admin: list all matches for a tournament, sorted by match date."""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+
+    matches = PCLMatch.query.filter_by(tournament_id=tournament_id).all()
+    matches.sort(key=lambda m: (m.match_date is None, m.match_date or datetime.max))
+
+    return render_template('pcl/admin_match_list.html',
+                         tournament=tournament,
+                         matches=matches,
+                         t=t,
+                         current_lang=lang)
+
+
+@pcl.route('/admin/match/create/<int:tournament_id>', methods=['GET', 'POST'])
+def admin_match_create(tournament_id):
+    """Admin: create a new match for a tournament."""
+    tournament = PCLTournament.query.get_or_404(tournament_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+    teams = tournament.teams.order_by(PCLTeam.country_name).all()
+
+    if request.method == 'POST':
+        team_home_id = request.form.get('team_home_id', type=int)
+        team_away_id = request.form.get('team_away_id', type=int)
+        match_date = _parse_match_dt(request.form.get('match_date'))
+        lineup_deadline = _parse_match_dt(request.form.get('lineup_deadline'))
+        court = (request.form.get('court') or '').strip() or None
+        notes = (request.form.get('notes') or '').strip() or None
+
+        errors = []
+        team_home = PCLTeam.query.get(team_home_id) if team_home_id else None
+        team_away = PCLTeam.query.get(team_away_id) if team_away_id else None
+
+        if not team_home or not team_away:
+            errors.append('Please choose both teams.')
+        elif team_home_id == team_away_id:
+            errors.append('Home and away team must be different.')
+        if team_home and team_home.tournament_id != tournament.id:
+            errors.append('Home team does not belong to this tournament.')
+        if team_away and team_away.tournament_id != tournament.id:
+            errors.append('Away team does not belong to this tournament.')
+        if not match_date:
+            errors.append('Please choose a valid match date and time.')
+        elif match_date <= datetime.now():
+            errors.append('Match date must be in the future.')
+        if match_date and lineup_deadline and lineup_deadline >= match_date:
+            errors.append('Lineup deadline must be before the match date.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'danger')
+            return render_template('pcl/admin_match_form.html',
+                                 tournament=tournament, teams=teams, match=None,
+                                 form_data=request.form, t=t, current_lang=lang)
+
+        match = PCLMatch(
+            tournament_id=tournament.id,
+            team_home_id=team_home_id,
+            team_away_id=team_away_id,
+            match_date=match_date,
+            lineup_deadline=lineup_deadline,
+            court=court,
+            notes=notes,
+            status='pending',
+        )
+        try:
+            db.session.add(match)
+            db.session.commit()
+            flash('Match created.', 'success')
+            return redirect(url_for('pcl.admin_match_detail', match_id=match.id, lang=lang))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+
+    return render_template('pcl/admin_match_form.html',
+                         tournament=tournament, teams=teams, match=None,
+                         form_data={}, t=t, current_lang=lang)
+
+
+@pcl.route('/admin/match/<int:match_id>')
+def admin_match_detail(match_id):
+    """Admin: detail view of a single match."""
+    match = PCLMatch.query.get_or_404(match_id)
+    lang = _match_lang()
+    t = get_translations(lang)
+
+    lineups = match.lineups.all()
+    home_lineup = next((l for l in lineups if l.team_id == match.team_home_id), None)
+    away_lineup = next((l for l in lineups if l.team_id == match.team_away_id), None)
+    results = match.results.all()
+
+    return render_template('pcl/admin_match_detail.html',
+                         tournament=match.tournament,
+                         match=match,
+                         home_lineup=home_lineup,
+                         away_lineup=away_lineup,
+                         results=results,
+                         t=t,
+                         current_lang=lang)
+
+
+@pcl.route('/admin/match/<int:match_id>/edit', methods=['GET', 'POST'])
+def admin_match_edit(match_id):
+    """Admin: edit an existing match."""
+    match = PCLMatch.query.get_or_404(match_id)
+    tournament = match.tournament
+    lang = _match_lang()
+    t = get_translations(lang)
+    teams = tournament.teams.order_by(PCLTeam.country_name).all()
+
+    if request.method == 'POST':
+        team_home_id = request.form.get('team_home_id', type=int)
+        team_away_id = request.form.get('team_away_id', type=int)
+        match_date = _parse_match_dt(request.form.get('match_date'))
+        lineup_deadline = _parse_match_dt(request.form.get('lineup_deadline'))
+        court = (request.form.get('court') or '').strip() or None
+        notes = (request.form.get('notes') or '').strip() or None
+        status = request.form.get('status') or match.status
+
+        errors = []
+        team_home = PCLTeam.query.get(team_home_id) if team_home_id else None
+        team_away = PCLTeam.query.get(team_away_id) if team_away_id else None
+
+        if not team_home or not team_away:
+            errors.append('Please choose both teams.')
+        elif team_home_id == team_away_id:
+            errors.append('Home and away team must be different.')
+        if team_home and team_home.tournament_id != tournament.id:
+            errors.append('Home team does not belong to this tournament.')
+        if team_away and team_away.tournament_id != tournament.id:
+            errors.append('Away team does not belong to this tournament.')
+        if not match_date:
+            errors.append('Please choose a valid match date and time.')
+        if match_date and lineup_deadline and lineup_deadline >= match_date:
+            errors.append('Lineup deadline must be before the match date.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'danger')
+            return render_template('pcl/admin_match_form.html',
+                                 tournament=tournament, teams=teams, match=match,
+                                 form_data=request.form, t=t, current_lang=lang)
+
+        match.team_home_id = team_home_id
+        match.team_away_id = team_away_id
+        match.match_date = match_date
+        match.lineup_deadline = lineup_deadline
+        match.court = court
+        match.notes = notes
+        if status in ('pending', 'lineups_locked', 'in_progress', 'completed'):
+            match.status = status
+
+        try:
+            db.session.commit()
+            flash('Match updated.', 'success')
+            return redirect(url_for('pcl.admin_match_detail', match_id=match.id, lang=lang))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error: {str(e)}', 'danger')
+
+    return render_template('pcl/admin_match_form.html',
+                         tournament=tournament, teams=teams, match=match,
+                         form_data={}, t=t, current_lang=lang)
+
+
+@pcl.route('/admin/match/<int:match_id>/delete', methods=['POST'])
+def admin_match_delete(match_id):
+    """Admin: delete a match (cascades to lineups + results)."""
+    match = PCLMatch.query.get_or_404(match_id)
+    tournament_id = match.tournament_id
+    lang = _match_lang()
+    try:
+        db.session.delete(match)
+        db.session.commit()
+        flash('Match deleted.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    return redirect(url_for('pcl.admin_match_list', tournament_id=tournament_id, lang=lang))
 
 
 # ============================================================================

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}{{ match.team_home.country_name }} vs {{ match.team_away.country_name }} - {{ tournament.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .match-wrap { max-width: 600px; margin: 0 auto; padding-bottom: 30px; }
+    .match-hero {
+        border: 1px solid #e0e0e0; border-radius: 12px;
+        padding: 18px; background: #fff; margin-bottom: 16px;
+    }
+    .match-hero .teams { font-size: 1.2rem; font-weight: 700; line-height: 1.4; }
+    .match-hero .vs { color: #adb5bd; font-weight: 400; }
+    .lineup-card {
+        border: 1px solid #e0e0e0; border-radius: 12px;
+        padding: 16px; background: #fff; height: 100%;
+    }
+    .lineup-card .team-name { font-weight: 600; margin-bottom: 8px; }
+    .score-box {
+        border: 1px solid #e0e0e0; border-radius: 12px;
+        padding: 16px; background: #fff; margin-top: 16px; text-align: center;
+    }
+    .score-big { font-size: 2rem; font-weight: 700; }
+    .action-btns .btn { min-height: 48px; font-weight: 600; }
+</style>
+
+{% set status_meta = {
+    'pending': ('warning', 'bi-hourglass-split', t.match_status_pending),
+    'lineups_locked': ('info', 'bi-lock-fill', t.match_status_lineups_locked),
+    'in_progress': ('success', 'bi-play-circle-fill', t.match_status_in_progress),
+    'completed': ('secondary', 'bi-check-circle-fill', t.match_status_completed)
+} %}
+{% set sm = status_meta.get(match.status, status_meta['pending']) %}
+{% set deadline_passed = match.is_lineup_deadline_passed() %}
+
+<div class="container match-wrap">
+    <div class="py-3">
+        <a href="{{ url_for('pcl.admin_match_list', tournament_id=tournament.id, lang=current_lang) }}"
+           class="text-decoration-none text-muted small">
+            <i class="bi bi-arrow-left"></i> Matches
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Hero -->
+    <div class="match-hero">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge bg-{{ sm[0] }} fs-6"><i class="bi {{ sm[1] }}"></i> {{ sm[2] }}</span>
+        </div>
+        <div class="teams">
+            {{ match.team_home.country_flag }} {{ match.team_home.country_name }} {{ match.team_home.age_category }}
+            <span class="vs">vs</span>
+            {{ match.team_away.country_flag }} {{ match.team_away.country_name }} {{ match.team_away.age_category }}
+        </div>
+        <div class="text-muted mt-2">
+            <i class="bi bi-clock"></i> {{ match.format_date(current_lang) if match.match_date else '-' }}
+            {% if match.court %}
+            <br><i class="bi bi-geo-alt"></i> {{ t.match_court }} {{ match.court }}
+            {% endif %}
+            {% if match.lineup_deadline %}
+            <br><i class="bi bi-hourglass-split"></i> {{ t.match_lineup_deadline }}: {{ match.lineup_deadline.strftime('%d.%m. %H:%M') }}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Lineup status cards -->
+    <div class="row g-3">
+        {% for side, lineup, team in [('home', home_lineup, match.team_home), ('away', away_lineup, match.team_away)] %}
+        <div class="col-12 col-sm-6">
+            <div class="lineup-card">
+                <div class="team-name">
+                    <span class="badge bg-light text-dark">{{ t.match_team_home if side == 'home' else t.match_team_away }}</span>
+                    {{ team.country_flag }} {{ team.country_name }}
+                </div>
+                {% if lineup and lineup.is_submitted() %}
+                <div class="text-success">
+                    <i class="bi bi-check-circle-fill"></i> {{ t.match_lineups_submitted }}
+                </div>
+                <small class="text-muted d-block">{{ lineup.submitted_at.strftime('%d.%m. %H:%M') }}</small>
+                {% else %}
+                <div class="text-warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Not submitted
+                </div>
+                {% endif %}
+
+                {% if deadline_passed and lineup and lineup.is_submitted() %}
+                <a href="#" class="btn btn-sm btn-outline-primary mt-2 w-100">
+                    <i class="bi bi-eye"></i> View lineup
+                </a>
+                {% else %}
+                <button class="btn btn-sm btn-outline-secondary mt-2 w-100" disabled>
+                    <i class="bi bi-eye-slash"></i> View lineup
+                </button>
+                <small class="text-muted d-block mt-1">Available after deadline</small>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Score section (read-only in Phase 1) -->
+    {% if match.status in ['in_progress', 'completed'] %}
+    <div class="score-box">
+        <div class="text-muted small mb-1"><i class="bi bi-trophy"></i> Score</div>
+        <div class="score-big">
+            {{ match.home_score if match.home_score is not none else 0 }}
+            <span class="text-muted">:</span>
+            {{ match.away_score if match.away_score is not none else 0 }}
+        </div>
+        {% if results %}
+        <div class="table-responsive mt-3">
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr><th class="text-start">Discipline</th><th>Home</th><th>Away</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in results %}
+                    <tr>
+                        <td class="text-start text-uppercase">{{ r.match_type }}</td>
+                        <td>{{ r.home_score if r.home_score is not none else '-' }}</td>
+                        <td>{{ r.away_score if r.away_score is not none else '-' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="action-btns row g-2 mt-3">
+        <div class="col-6">
+            <a href="{{ url_for('pcl.admin_match_edit', match_id=match.id, lang=current_lang) }}"
+               class="btn btn-primary w-100">
+                <i class="bi bi-pencil"></i> Edit
+            </a>
+        </div>
+        <div class="col-6">
+            <form method="POST" action="{{ url_for('pcl.admin_match_delete', match_id=match.id, lang=current_lang) }}"
+                  onsubmit="return confirm('{{ t.match_delete_confirm }}');">
+                <button type="submit" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
