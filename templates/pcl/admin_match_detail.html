@@ -117,6 +117,14 @@
         </a>
     </div>
 
+    <!-- Send to Captains: opens the WhatsApp tools with this match pre-selected (all statuses) -->
+    <div class="d-grid mt-3">
+        <a href="{{ url_for('pcl.admin_match_whatsapp', match_id=match.id) }}"
+           class="btn btn-success" style="min-height: 48px; font-weight: 600;">
+            <i class="bi bi-whatsapp"></i> Send to Captains
+        </a>
+    </div>
+
     <!-- Score section (read-only in Phase 1) -->
     {% if match.status in ['in_progress', 'completed'] %}
     <div class="score-box">
