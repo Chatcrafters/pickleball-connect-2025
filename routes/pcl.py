@@ -767,9 +767,15 @@ SHIRT_EXPORT_TRANSLATIONS = {
     'DE': {
         'title': 'PCL SHIRT BESTELLUNG - {tournament_name}',
         'summary_header': 'ZUSAMMENFASSUNG NACH GRÖSSEN',
+        'gender_total_header': 'GESAMTBESTELLUNG NACH GESCHLECHT',
         'size': 'Größe',
         'count': 'Anzahl',
         'total': 'GESAMT',
+        'men': 'Herren',
+        'women': 'Damen',
+        'gender': 'Geschlecht',
+        'no_gender': 'Ohne Geschlecht',
+        'shirt_count_combined': 'Gesamt',
         'missing_data_header': 'FEHLENDE DATEN ({count} Spieler)',
         'player': 'Spieler',
         'team': 'Team',
@@ -779,6 +785,8 @@ SHIRT_EXPORT_TRANSLATIONS = {
         'shirt_num': 'Shirt #',
         'size_section_header': 'GRÖSSE {size} ({count} Stück)',
         'size_section_header_singular': 'GRÖSSE {size} (1 Stück)',
+        'size_gender_section_header': 'GRÖSSE {size} - {gender} ({count} Stück)',
+        'size_gender_section_header_singular': 'GRÖSSE {size} - {gender} (1 Stück)',
         'sheet_overview': 'Bestellübersicht',
         'sheet_by_size': 'Nach Größe',
         'sheet_by_team': 'Nach Team',
@@ -787,9 +795,15 @@ SHIRT_EXPORT_TRANSLATIONS = {
     'ES': {
         'title': 'PEDIDO DE CAMISETAS PCL - {tournament_name}',
         'summary_header': 'RESUMEN POR TALLAS',
+        'gender_total_header': 'PEDIDO TOTAL POR GÉNERO',
         'size': 'Talla',
         'count': 'Cantidad',
         'total': 'TOTAL',
+        'men': 'Hombre',
+        'women': 'Mujer',
+        'gender': 'Género',
+        'no_gender': 'Sin género',
+        'shirt_count_combined': 'Total',
         'missing_data_header': 'DATOS FALTANTES ({count} jugadores)',
         'player': 'Jugador',
         'team': 'Equipo',
@@ -799,6 +813,8 @@ SHIRT_EXPORT_TRANSLATIONS = {
         'shirt_num': 'Camiseta #',
         'size_section_header': 'TALLA {size} ({count} unidades)',
         'size_section_header_singular': 'TALLA {size} (1 unidad)',
+        'size_gender_section_header': 'TALLA {size} - {gender} ({count} unidades)',
+        'size_gender_section_header_singular': 'TALLA {size} - {gender} (1 unidad)',
         'sheet_overview': 'Resumen Pedido',
         'sheet_by_size': 'Por Talla',
         'sheet_by_team': 'Por Equipo',
@@ -809,7 +825,7 @@ SHIRT_EXPORT_TRANSLATIONS = {
 
 @pcl.route('/admin/export-shirts/<int:tournament_id>')
 def export_shirt_list(tournament_id):
-    """Export shirt list as Excel with order summary (DE/ES via ?lang=)"""
+    """Export shirt list as Excel, split by gender (DE/ES via ?lang=)"""
     from openpyxl import Workbook
     from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
@@ -821,7 +837,25 @@ def export_shirt_list(tournament_id):
         lang = 'DE'
     t = SHIRT_EXPORT_TRANSLATIONS[lang]
 
-    # Collect all registrations
+    def gender_key(value):
+        """Normalize the raw gender field to one of: male, female, unknown."""
+        v = (value or '').strip().lower()
+        if v == 'male':
+            return 'male'
+        if v == 'female':
+            return 'female'
+        return 'unknown'
+
+    def gender_label(value):
+        """Human label for a gender in the chosen language."""
+        k = gender_key(value)
+        if k == 'male':
+            return t['men']
+        if k == 'female':
+            return t['women']
+        return t['no_gender']
+
+    # Collect all registrations (one entry per ordered shirt)
     all_regs = []
     incomplete = []
 
@@ -830,7 +864,8 @@ def export_shirt_list(tournament_id):
             base = {
                 'team': f"{team.country_flag} {team.country_name}",
                 'category': team.age_category,
-                'player': f"{reg.first_name} {reg.last_name}"
+                'player': f"{reg.first_name} {reg.last_name}",
+                'gender': reg.gender,
             }
             size1 = (reg.shirt_size or '').strip()
             size2 = (reg.shirt_size_2 or '').strip()
@@ -847,6 +882,9 @@ def export_shirt_list(tournament_id):
             if size3:
                 all_regs.append({**base, 'size': size3, 'shirt_no': 3})
 
+    # Shirts whose owner has an unknown gender (valid size, but no SKU side)
+    no_gender_regs = [r for r in all_regs if gender_key(r['gender']) == 'unknown']
+
     # Create workbook
     wb = Workbook()
 
@@ -860,7 +898,9 @@ def export_shirt_list(tournament_id):
     border = Side(style='thin', color='000000')
     thin_border = Border(left=border, right=border, top=border, bottom=border)
 
-    # === SHEET 1: Order overview ===
+    size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
+
+    # === SHEET 1: Order overview (by size and gender) ===
     ws1 = wb.active
     ws1.title = t['sheet_overview']
 
@@ -869,54 +909,65 @@ def export_shirt_list(tournament_id):
     ws1['A1'].font = Font(bold=True, size=16)
     ws1.merge_cells('A1:D1')
 
-    ws1['A3'] = t['summary_header']
+    ws1['A3'] = t['gender_total_header']
     ws1['A3'].font = Font(bold=True, size=14)
 
-    # Size counts
-    size_order = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL']
-    size_counts = {}
+    # Per-size gender counts
+    size_gender_counts = {}
     for reg in all_regs:
         size = reg['size'].upper()
-        size_counts[size] = size_counts.get(size, 0) + 1
+        k = gender_key(reg['gender'])
+        bucket = size_gender_counts.setdefault(size, {'male': 0, 'female': 0, 'unknown': 0})
+        bucket[k] += 1
 
-    ws1['A4'] = t['size']
-    ws1['B4'] = t['count']
-    ws1['A4'].font = header_font
-    ws1['B4'].font = header_font
-    ws1['A4'].fill = header_fill
-    ws1['B4'].fill = header_fill
-    ws1['A4'].border = thin_border
-    ws1['B4'].border = thin_border
+    # Header row: Size | Men | Women | Total
+    for col, label in enumerate([t['size'], t['men'], t['women'], t['shirt_count_combined']], 1):
+        cell = ws1.cell(row=4, column=col, value=label)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.border = thin_border
 
     row = 5
+    total_men = total_women = total_all = 0
     for size in size_order:
-        count = size_counts.get(size, 0)
-        if count > 0:
-            ws1[f'A{row}'] = size
-            ws1[f'B{row}'] = count
-            ws1[f'A{row}'].border = thin_border
-            ws1[f'B{row}'].border = thin_border
-            ws1[f'B{row}'].alignment = Alignment(horizontal='center')
-            row += 1
+        bucket = size_gender_counts.get(size)
+        if not bucket:
+            continue
+        men = bucket['male']
+        women = bucket['female']
+        line_total = men + women + bucket['unknown']
+        if line_total == 0:
+            continue
+        total_men += men
+        total_women += women
+        total_all += line_total
 
-    # Total
-    ws1[f'A{row}'] = t['total']
-    ws1[f'B{row}'] = len(all_regs)
-    ws1[f'A{row}'].font = Font(bold=True)
-    ws1[f'B{row}'].font = Font(bold=True)
-    ws1[f'A{row}'].border = thin_border
-    ws1[f'B{row}'].border = thin_border
+        ws1.cell(row=row, column=1, value=size).border = thin_border
+        for col, val in enumerate([men, women, line_total], 2):
+            cell = ws1.cell(row=row, column=col, value=val)
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='center')
+        row += 1
 
-    # Incomplete section
+    # Grand total row
+    ws1.cell(row=row, column=1, value=t['total']).font = Font(bold=True)
+    ws1.cell(row=row, column=1).border = thin_border
+    for col, val in enumerate([total_men, total_women, total_all], 2):
+        cell = ws1.cell(row=row, column=col, value=val)
+        cell.font = Font(bold=True)
+        cell.border = thin_border
+        cell.alignment = Alignment(horizontal='center')
+
+    # Incomplete section (missing shirt size) - now with gender column
     if incomplete:
         row += 3
-        ws1[f'A{row}'] = t['missing_data_header'].format(count=len(incomplete))
-        ws1[f'A{row}'].font = warning_font
-        ws1[f'A{row}'].fill = warning_fill
-        ws1.merge_cells(f'A{row}:D{row}')
+        ws1.cell(row=row, column=1, value=t['missing_data_header'].format(count=len(incomplete)))
+        ws1.cell(row=row, column=1).font = warning_font
+        ws1.cell(row=row, column=1).fill = warning_fill
+        ws1.merge_cells(f'A{row}:E{row}')
 
         row += 1
-        for col, header in enumerate([t['player'], t['team'], t['category'], t['missing']], 1):
+        for col, header in enumerate([t['player'], t['team'], t['category'], t['gender'], t['missing']], 1):
             cell = ws1.cell(row=row, column=col, value=header)
             cell.font = Font(bold=True)
             cell.border = thin_border
@@ -930,57 +981,94 @@ def export_shirt_list(tournament_id):
             ws1.cell(row=row, column=1, value=inc['player']).border = thin_border
             ws1.cell(row=row, column=2, value=inc['team']).border = thin_border
             ws1.cell(row=row, column=3, value=inc['category']).border = thin_border
-            ws1.cell(row=row, column=4, value=', '.join(missing)).border = thin_border
-            for col in range(1, 5):
+            ws1.cell(row=row, column=4, value=gender_label(inc['gender'])).border = thin_border
+            ws1.cell(row=row, column=5, value=', '.join(missing)).border = thin_border
+            for col in range(1, 6):
+                ws1.cell(row=row, column=col).fill = yellow_fill
+            row += 1
+
+    # Players with a valid shirt size but unknown gender (needs SKU assignment)
+    if no_gender_regs:
+        row += 2
+        ws1.cell(row=row, column=1, value=t['no_gender'])
+        ws1.cell(row=row, column=1).font = warning_font
+        ws1.cell(row=row, column=1).fill = warning_fill
+        ws1.merge_cells(f'A{row}:E{row}')
+
+        row += 1
+        for col, header in enumerate([t['player'], t['team'], t['category'], t['size'], t['shirt_num']], 1):
+            cell = ws1.cell(row=row, column=col, value=header)
+            cell.font = Font(bold=True)
+            cell.border = thin_border
+
+        row += 1
+        for ng in sorted(no_gender_regs, key=lambda x: (x['size'], x['team'], x['player'], x['shirt_no'])):
+            ws1.cell(row=row, column=1, value=ng['player']).border = thin_border
+            ws1.cell(row=row, column=2, value=ng['team']).border = thin_border
+            ws1.cell(row=row, column=3, value=ng['category']).border = thin_border
+            ws1.cell(row=row, column=4, value=ng['size']).border = thin_border
+            ws1.cell(row=row, column=5, value=ng['shirt_no']).border = thin_border
+            for col in range(1, 6):
                 ws1.cell(row=row, column=col).fill = yellow_fill
             row += 1
 
     ws1.column_dimensions['A'].width = 30
     ws1.column_dimensions['B'].width = 15
-    ws1.column_dimensions['C'].width = 12
-    ws1.column_dimensions['D'].width = 20
+    ws1.column_dimensions['C'].width = 15
+    ws1.column_dimensions['D'].width = 15
+    ws1.column_dimensions['E'].width = 20
 
-    # === SHEET 2: Sorted by size ===
+    # === SHEET 2: Sorted by size, split by gender ===
     ws2 = wb.create_sheet(t['sheet_by_size'])
     row = 1
+
+    gender_sections = [('male', t['men']), ('female', t['women']), ('unknown', t['no_gender'])]
 
     for size in size_order:
         size_regs = [r for r in all_regs if r['size'].upper() == size]
         if not size_regs:
             continue
 
-        if len(size_regs) == 1:
-            ws2[f'A{row}'] = t['size_section_header_singular'].format(size=size)
-        else:
-            ws2[f'A{row}'] = t['size_section_header'].format(size=size, count=len(size_regs))
-        ws2[f'A{row}'].font = Font(bold=True, size=12)
-        ws2[f'A{row}'].fill = size_header_fill
-        ws2.merge_cells(f'A{row}:D{row}')
-        row += 1
+        for gkey, glabel in gender_sections:
+            sub = [r for r in size_regs if gender_key(r['gender']) == gkey]
+            if not sub:
+                continue
 
-        for col, header in enumerate([t['player'], t['shirt_num'], t['team'], t['category_short']], 1):
-            cell = ws2.cell(row=row, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.border = thin_border
-        row += 1
-
-        for reg in sorted(size_regs, key=lambda x: (x['team'], x['player'], x['shirt_no'])):
-            ws2.cell(row=row, column=1, value=reg['player']).border = thin_border
-            ws2.cell(row=row, column=2, value=reg['shirt_no']).border = thin_border
-            ws2.cell(row=row, column=3, value=reg['team']).border = thin_border
-            ws2.cell(row=row, column=4, value=reg['category']).border = thin_border
+            if len(sub) == 1:
+                header_text = t['size_gender_section_header_singular'].format(
+                    size=size, gender=glabel.upper())
+            else:
+                header_text = t['size_gender_section_header'].format(
+                    size=size, gender=glabel.upper(), count=len(sub))
+            ws2[f'A{row}'] = header_text
+            ws2[f'A{row}'].font = Font(bold=True, size=12)
+            ws2[f'A{row}'].fill = size_header_fill
+            ws2.merge_cells(f'A{row}:D{row}')
             row += 1
-        row += 1
+
+            for col, header in enumerate([t['player'], t['shirt_num'], t['team'], t['category_short']], 1):
+                cell = ws2.cell(row=row, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.border = thin_border
+            row += 1
+
+            for reg in sorted(sub, key=lambda x: (x['team'], x['player'], x['shirt_no'])):
+                ws2.cell(row=row, column=1, value=reg['player']).border = thin_border
+                ws2.cell(row=row, column=2, value=reg['shirt_no']).border = thin_border
+                ws2.cell(row=row, column=3, value=reg['team']).border = thin_border
+                ws2.cell(row=row, column=4, value=reg['category']).border = thin_border
+                row += 1
+            row += 1
 
     ws2.column_dimensions['A'].width = 25
     ws2.column_dimensions['B'].width = 30
     ws2.column_dimensions['C'].width = 20
     ws2.column_dimensions['D'].width = 8
 
-    # === SHEET 3: Sorted by team ===
+    # === SHEET 3: Sorted by team (with gender column) ===
     ws3 = wb.create_sheet(t['sheet_by_team'])
 
-    headers = [t['team'], t['category'], t['player'], t['size'], t['shirt_num']]
+    headers = [t['team'], t['category'], t['player'], t['gender'], t['size'], t['shirt_num']]
     for col, h in enumerate(headers, 1):
         cell = ws3.cell(row=1, column=col, value=h)
         cell.font = header_font
@@ -992,14 +1080,16 @@ def export_shirt_list(tournament_id):
         ws3.cell(row=r, column=1, value=reg['team']).border = thin_border
         ws3.cell(row=r, column=2, value=reg['category']).border = thin_border
         ws3.cell(row=r, column=3, value=reg['player']).border = thin_border
-        ws3.cell(row=r, column=4, value=reg['size']).border = thin_border
-        ws3.cell(row=r, column=5, value=reg['shirt_no']).border = thin_border
+        ws3.cell(row=r, column=4, value=gender_label(reg['gender'])).border = thin_border
+        ws3.cell(row=r, column=5, value=reg['size']).border = thin_border
+        ws3.cell(row=r, column=6, value=reg['shirt_no']).border = thin_border
 
     ws3.column_dimensions['A'].width = 20
     ws3.column_dimensions['B'].width = 10
     ws3.column_dimensions['C'].width = 25
-    ws3.column_dimensions['D'].width = 10
-    ws3.column_dimensions['E'].width = 30
+    ws3.column_dimensions['D'].width = 12
+    ws3.column_dimensions['E'].width = 10
+    ws3.column_dimensions['F'].width = 30
 
     # Save to BytesIO
     output = io.BytesIO()
