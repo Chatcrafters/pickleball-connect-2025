@@ -3653,7 +3653,9 @@ def _team_captain_name(team):
 def _match_whatsapp_data(match):
     """Build the data dict for one match used by the WhatsApp text templates.
 
-    Captain dashboard links use the current host so they work in any environment.
+    Captain links point straight at this match's lineup submission form (saving a
+    tap) and use the current host so they work in any environment. After the
+    deadline the captain_lineup route redirects to the reveal page automatically.
     """
     base = request.host_url.rstrip('/')
     home, away = match.team_home, match.team_away
@@ -3672,8 +3674,8 @@ def _match_whatsapp_data(match):
         'date': format_match_date(match.match_date, 'EN') if match.match_date else '',
         'deadline': match.lineup_deadline.strftime('%d.%m. %H:%M') if match.lineup_deadline else '',
         'court': match.court or '',
-        'home_url': base + url_for('pcl.captain_dashboard', token=home.captain_token),
-        'away_url': base + url_for('pcl.captain_dashboard', token=away.captain_token),
+        'home_url': base + url_for('pcl.captain_lineup', token=home.captain_token, match_id=match.id),
+        'away_url': base + url_for('pcl.captain_lineup', token=away.captain_token, match_id=match.id),
     }
 
 
