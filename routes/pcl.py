@@ -71,6 +71,7 @@ TRANSLATIONS = {
         'success_title': 'Registration Complete!',
         'success_message': 'Thank you for registering for PCL.',
         'registration_whatsapp_sent': 'Registration successful! Check WhatsApp for your personal profile link.',
+        'captain_is_playing_label': 'Captain also plays in the team',
         'missing_fields': 'Please complete all required fields',
         'captain_dashboard': 'Captain Dashboard',
         'team_status': 'Team Status',
@@ -165,6 +166,7 @@ TRANSLATIONS = {
         'success_title': 'Registrierung erfolgreich!',
         'success_message': 'Danke fuer deine Registrierung zur PCL.',
         'registration_whatsapp_sent': 'Registrierung erfolgreich! Schau auf WhatsApp fuer deinen persoenlichen Profil-Link.',
+        'captain_is_playing_label': 'Captain spielt auch mit',
         'missing_fields': 'Bitte fuelle alle Pflichtfelder aus',
         'captain_dashboard': 'Kapitaen Dashboard',
         'team_status': 'Team-Status',
@@ -259,6 +261,7 @@ TRANSLATIONS = {
         'success_title': 'Registro completado!',
         'success_message': 'Gracias por registrarte en PCL.',
         'registration_whatsapp_sent': 'Registro exitoso! Revisa WhatsApp para tu enlace de perfil personal.',
+        'captain_is_playing_label': 'El capitan tambien juega',
         'missing_fields': 'Por favor completa todos los campos obligatorios',
         'captain_dashboard': 'Panel del CapitÃƒÂ¡n',
         'team_status': 'Estado del Equipo',
@@ -353,6 +356,7 @@ TRANSLATIONS = {
         'success_title': 'Inscription reussie!',
         'success_message': 'Merci pour votre inscription a PCL.',
         'registration_whatsapp_sent': 'Inscription reussie! Consultez WhatsApp pour votre lien de profil personnel.',
+        'captain_is_playing_label': 'Le capitaine joue aussi',
         'missing_fields': 'Veuillez remplir tous les champs obligatoires',
         'captain_dashboard': 'Tableau de bord Capitaine',
         'team_status': "Statut de l'equipe",
@@ -1554,10 +1558,13 @@ def edit_registration(registration_id):
         registration.phone = request.form.get('phone') or registration.phone
         registration.gender = request.form.get('gender') or registration.gender
         registration.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else registration.birth_year
-        # is_captain / is_playing have no control on this form -> preserve existing values
+        # is_captain has no control on this form -> preserve existing value
         if 'is_captain' in request.form:
             registration.is_captain = request.form.get('is_captain') == 'on'
-        if 'is_playing' in request.form:
+        # is_playing checkbox is only rendered for captains in edit mode. The hidden
+        # 'is_playing_present' marker tells us the checkbox was shown, so an unchecked
+        # box (which browsers omit from the POST) correctly sets is_playing = False.
+        if 'is_playing_present' in request.form:
             registration.is_playing = request.form.get('is_playing') == 'on'
         registration.shirt_size = request.form.get('shirt_size') or registration.shirt_size
         registration.shirt_size_2 = request.form.get('shirt_size_2') or registration.shirt_size_2

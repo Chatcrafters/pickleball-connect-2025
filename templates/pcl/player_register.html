@@ -158,6 +158,25 @@
                             </div>
                         </div>
 
+                        {% if registration and registration.is_captain %}
+                        <!-- Captain playing status (only editable for captains) -->
+                        <div class="mb-3">
+                            <!-- Marker so the route knows the checkbox was rendered, even when left unchecked -->
+                            <input type="hidden" name="is_playing_present" value="1">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_playing" name="is_playing"
+                                       {% if registration.is_playing %}checked{% endif %}>
+                                <label class="form-check-label" for="is_playing">
+                                    <i class="bi bi-person-arms-up"></i>
+                                    {{ t.captain_is_playing_label if t.captain_is_playing_label else 'Captain also plays in the team' }}
+                                </label>
+                            </div>
+                            <small class="form-text text-muted d-block">
+                                Check this if the captain is part of the playing roster (2M+2W). Uncheck if captain only manages the team.
+                            </small>
+                        </div>
+                        {% endif %}
+
                         <hr class="my-4">
 
                         <!-- Shirt Info -->
