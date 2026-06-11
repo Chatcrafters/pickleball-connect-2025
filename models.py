@@ -958,10 +958,12 @@ class PCLLineup(db.Model):
         if not (mx2m and mx2f and mx2m.gender == 'male' and mx2f.gender == 'female'):
             errors.append("Mixed 2 requires 1 male and 1 female")
 
-        # Mixed 2 must differ from Mixed 1 (at least one different player)
+        # Mixed 1 and Mixed 2 must use 4 completely different players (no shared player)
         if mx1m and mx1f and mx2m and mx2f:
-            if mx1m.id == mx2m.id and mx1f.id == mx2f.id:
-                errors.append("Mixed 2 must differ from Mixed 1 (at least one different player)")
+            mixed1_ids = {mx1m.id, mx1f.id}
+            mixed2_ids = {mx2m.id, mx2f.id}
+            if mixed1_ids & mixed2_ids:
+                errors.append("Mixed 2 cannot include any player from Mixed 1")
 
         # Heartbreaker: exactly 4 different players, 2 male + 2 female (order is free)
         hb_ids = [p.id for p in hb if p]
