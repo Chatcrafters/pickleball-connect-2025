@@ -102,22 +102,22 @@
 
         <div class="row">
             <div class="col-md-6 mb-3">
-                <label class="form-label d-block">{{ t.age_category }}</label>
+                <label class="form-label d-block">{{ t.age_category }} <span class="req">*</span></label>
                 {% set ac = val('age_category')|trim %}
                 <div class="btn-group w-100" role="group">
-                    <input type="radio" class="btn-check" name="age_category" id="ac19" value="+19" {% if ac == '+19' or not ac %}checked{% endif %}>
+                    <input type="radio" class="btn-check" name="age_category" id="ac19" value="+19" required {% if ac == '+19' %}checked{% endif %}>
                     <label class="btn btn-outline-primary" for="ac19">+19 Open</label>
-                    <input type="radio" class="btn-check" name="age_category" id="ac50" value="+50" {% if ac == '+50' %}checked{% endif %}>
+                    <input type="radio" class="btn-check" name="age_category" id="ac50" value="+50" required {% if ac == '+50' %}checked{% endif %}>
                     <label class="btn btn-outline-primary" for="ac50">+50 Senior</label>
                 </div>
             </div>
             <div class="col-md-6 mb-3">
-                <label class="form-label d-block">{{ t.gender }}</label>
+                <label class="form-label d-block">{{ t.gender }} <span class="req">*</span></label>
                 {% set gd = val('gender')|trim %}
                 <div class="btn-group w-100" role="group">
-                    <input type="radio" class="btn-check" name="gender" id="gm" value="male" {% if gd == 'male' %}checked{% endif %}>
+                    <input type="radio" class="btn-check" name="gender" id="gm" value="male" required {% if gd == 'male' %}checked{% endif %}>
                     <label class="btn btn-outline-primary" for="gm">{{ t.male }}</label>
-                    <input type="radio" class="btn-check" name="gender" id="gf" value="female" {% if gd == 'female' %}checked{% endif %}>
+                    <input type="radio" class="btn-check" name="gender" id="gf" value="female" required {% if gd == 'female' %}checked{% endif %}>
                     <label class="btn btn-outline-primary" for="gf">{{ t.female }}</label>
                 </div>
             </div>

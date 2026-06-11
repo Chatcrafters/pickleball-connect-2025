@@ -68,6 +68,8 @@ POOL_TRANSLATIONS = {
         'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
         'pool_dupr_help': "Both DUPR ratings are required. See dupr.com if you don't have your rating yet.",
         'pool_dupr_invalid': 'DUPR must be a number between 1.0 and 8.0',
+        'pool_gender_required': 'Please select your gender',
+        'pool_age_required': 'Please select an age category',
         'photo': 'Photo', 'bio': 'About me', 'language': 'Preferred language',
         'male': 'Male', 'female': 'Female', 'required': 'required', 'optional': 'optional',
         'select': 'Select', 'phone_help': 'With country code, e.g. +34 600 123 456',
@@ -101,6 +103,8 @@ POOL_TRANSLATIONS = {
         'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
         'pool_dupr_help': 'Beide DUPR-Werte sind erforderlich. Siehe dupr.com falls du noch keinen Wert hast.',
         'pool_dupr_invalid': 'DUPR muss eine Zahl zwischen 1.0 und 8.0 sein',
+        'pool_gender_required': 'Bitte waehle dein Geschlecht',
+        'pool_age_required': 'Bitte waehle eine Alterskategorie',
         'photo': 'Foto', 'bio': 'Ueber mich', 'language': 'Bevorzugte Sprache',
         'male': 'Maennlich', 'female': 'Weiblich', 'required': 'Pflicht', 'optional': 'optional',
         'select': 'Auswaehlen', 'phone_help': 'Mit Laendervorwahl, z.B. +49 170 1234567',
@@ -134,6 +138,8 @@ POOL_TRANSLATIONS = {
         'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
         'pool_dupr_help': 'Ambos valores DUPR son obligatorios. Visita dupr.com si aun no tienes uno.',
         'pool_dupr_invalid': 'DUPR debe ser un numero entre 1.0 y 8.0',
+        'pool_gender_required': 'Por favor selecciona tu genero',
+        'pool_age_required': 'Por favor selecciona una categoria de edad',
         'photo': 'Foto', 'bio': 'Sobre mi', 'language': 'Idioma preferido',
         'male': 'Hombre', 'female': 'Mujer', 'required': 'obligatorio', 'optional': 'opcional',
         'select': 'Seleccionar', 'phone_help': 'Con prefijo, p.ej. +34 600 123 456',
@@ -167,6 +173,8 @@ POOL_TRANSLATIONS = {
         'pool_dupr_singles_label': 'DUPR Singles', 'pool_dupr_doubles_label': 'DUPR Doubles',
         'pool_dupr_help': "Les deux valeurs DUPR sont obligatoires. Voir dupr.com si vous n'avez pas encore de classement.",
         'pool_dupr_invalid': 'DUPR doit etre un nombre entre 1.0 et 8.0',
+        'pool_gender_required': 'Veuillez selectionner votre genre',
+        'pool_age_required': 'Veuillez selectionner une categorie age',
         'photo': 'Photo', 'bio': 'A propos de moi', 'language': 'Langue preferee',
         'male': 'Homme', 'female': 'Femme', 'required': 'requis', 'optional': 'optionnel',
         'select': 'Choisir', 'phone_help': 'Avec indicatif, p.ex. +33 6 12 34 56 78',
@@ -244,6 +252,17 @@ def register():
             return render_template('pool/register.html', t=t, current_lang=lang,
                                    countries=POOL_COUNTRIES, form_data=request.form)
 
+        gender = request.form.get('gender')
+        age_category = request.form.get('age_category')
+        if gender not in ('male', 'female'):
+            flash(t['pool_gender_required'], 'danger')
+            return render_template('pool/register.html', t=t, current_lang=lang,
+                                   countries=POOL_COUNTRIES, form_data=request.form)
+        if age_category not in ('+19', '+50'):
+            flash(t['pool_age_required'], 'danger')
+            return render_template('pool/register.html', t=t, current_lang=lang,
+                                   countries=POOL_COUNTRIES, form_data=request.form)
+
         # Duplicate email -> show their edit link instead of creating a second row
         existing = PoolPlayer.query.filter_by(email=email).first()
         if existing:
@@ -272,8 +291,8 @@ def register():
             first_name=first, last_name=last, email=email,
             phone=(request.form.get('phone') or '').strip() or None,
             country_name=(request.form.get('country_name') or '').strip() or None,
-            age_category=request.form.get('age_category') or None,
-            gender=request.form.get('gender') or None,
+            age_category=age_category,
+            gender=gender,
             birth_year=int(request.form['birth_year']) if request.form.get('birth_year') else None,
             dupr_singles=dupr_singles,
             dupr_doubles=dupr_doubles,
@@ -329,12 +348,21 @@ def edit_profile(player_id, edit_token):
             flash(t['pool_dupr_invalid'], 'danger')
             return redirect(url_for('pool.edit_profile', player_id=player.id, edit_token=edit_token, lang=lang))
 
+        gender = request.form.get('gender')
+        age_category = request.form.get('age_category')
+        if gender not in ('male', 'female'):
+            flash(t['pool_gender_required'], 'danger')
+            return redirect(url_for('pool.edit_profile', player_id=player.id, edit_token=edit_token, lang=lang))
+        if age_category not in ('+19', '+50'):
+            flash(t['pool_age_required'], 'danger')
+            return redirect(url_for('pool.edit_profile', player_id=player.id, edit_token=edit_token, lang=lang))
+
         player.first_name = (request.form.get('first_name') or '').strip() or player.first_name
         player.last_name = (request.form.get('last_name') or '').strip() or player.last_name
         player.phone = (request.form.get('phone') or '').strip() or player.phone
         player.country_name = (request.form.get('country_name') or '').strip() or player.country_name
-        player.age_category = request.form.get('age_category') or player.age_category
-        player.gender = request.form.get('gender') or player.gender
+        player.age_category = age_category
+        player.gender = gender
         player.birth_year = int(request.form['birth_year']) if request.form.get('birth_year') else player.birth_year
         player.dupr_singles = dupr_singles
         player.dupr_doubles = dupr_doubles
