@@ -357,6 +357,7 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_mark_sent': 'Mark sent and next',
         'pool_invite_skip_wrong': 'Skip - wrong number',
         'pool_invite_skip_optout': 'Skip - opted out',
+        'pool_invite_skip_later': 'Skip for now (keep in queue)',
         'pool_invite_progress': 'Player {x} of {y}',
         'pool_invite_wave_complete': 'Wave complete - {sent} sent, {skipped} skipped',
         'pool_invite_no_marketing_warning': 'Player did not opt-in to marketing or WhatsApp. Compliance risk.',
@@ -369,6 +370,7 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_mark_sent': 'Gesendet markieren und weiter',
         'pool_invite_skip_wrong': 'Ueberspringen - falsche Nummer',
         'pool_invite_skip_optout': 'Ueberspringen - abgemeldet',
+        'pool_invite_skip_later': 'Vorerst ueberspringen',
         'pool_invite_progress': 'Spieler {x} von {y}',
         'pool_invite_wave_complete': 'Welle fertig - {sent} gesendet, {skipped} uebersprungen',
         'pool_invite_no_marketing_warning': 'Spieler hat kein Marketing- oder WhatsApp-Opt-in. Compliance-Risiko.',
@@ -381,6 +383,7 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_mark_sent': 'Marcar enviado y siguiente',
         'pool_invite_skip_wrong': 'Omitir - numero incorrecto',
         'pool_invite_skip_optout': 'Omitir - se dio de baja',
+        'pool_invite_skip_later': 'Saltar por ahora',
         'pool_invite_progress': 'Jugador {x} de {y}',
         'pool_invite_wave_complete': 'Ola completa - {sent} enviados, {skipped} omitidos',
         'pool_invite_no_marketing_warning': 'El jugador no acepto marketing ni WhatsApp. Riesgo de cumplimiento.',
@@ -393,6 +396,7 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_mark_sent': 'Marquer envoye et suivant',
         'pool_invite_skip_wrong': 'Passer - mauvais numero',
         'pool_invite_skip_optout': 'Passer - desabonne',
+        'pool_invite_skip_later': 'Passer pour l instant',
         'pool_invite_progress': 'Joueur {x} sur {y}',
         'pool_invite_wave_complete': 'Vague terminee - {sent} envoyes, {skipped} passes',
         'pool_invite_no_marketing_warning': 'Le joueur n a pas accepte le marketing ni WhatsApp. Risque de conformite.',
@@ -485,14 +489,21 @@ def _player_payload(player):
     }
 
 
-def _next_in_wave(country, only_checkedin, include_no_optin):
-    """Find the next un-invited player with a valid phone; auto-fail invalid phones."""
+def _next_in_wave(country, only_checkedin, include_no_optin, exclude_ids=None):
+    """Find the next un-invited player with a valid phone; auto-fail invalid phones.
+
+    exclude_ids are skipped without modifying the DB ("skip for now" - they stay in
+    the queue and reappear when the wave is restarted).
+    """
+    exclude_ids = exclude_ids or set()
     q = _invitable_query(country, only_checkedin, include_no_optin) \
         .filter(WPCPlayer.pool_invite_sent_at.is_(None)) \
         .order_by(WPCPlayer.country, WPCPlayer.last_name)
     next_player = None
     dirty = False
     for p in q.all():
+        if p.id in exclude_ids:
+            continue  # skipped for now - leave untouched in the queue
         if normalize_phone(p.phone):
             next_player = p
             break
@@ -610,4 +621,28 @@ def pool_invite_mark_sent():
 @wpc.route('/admin/pool-invite/mark-failed', methods=['POST'])
 def pool_invite_mark_failed():
     return _mark_and_next('failed')
+
+
+@wpc.route('/admin/pool-invite/next')
+def pool_invite_next():
+    """Return the next player, excluding the given ids - WITHOUT marking anyone.
+
+    Used by "Skip for now": excluded ids are kept only in the browser, so the
+    skipped players stay uninvited and reappear when the wave is restarted.
+    """
+    country = request.args.get('country') or ''
+    only_checkedin = request.args.get('only_checkedin') == '1'
+    include_no_optin = request.args.get('include_no_optin') == '1'
+    exclude_ids = set()
+    for part in (request.args.get('exclude') or '').split(','):
+        part = part.strip()
+        if part.isdigit():
+            exclude_ids.add(int(part))
+
+    next_player = _next_in_wave(country, only_checkedin, include_no_optin, exclude_ids=exclude_ids)
+    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_optin)
+    if next_player is None:
+        return jsonify({'ok': True, 'complete': True, 'sent': sent, 'skipped': skipped})
+    return jsonify({'ok': True, 'complete': False, 'player': _player_payload(next_player),
+                    'done': done, 'total': total, 'sent': sent, 'skipped': skipped})
 

@@ -42,6 +42,7 @@
             <div class="col-6"><button id="btnWrong" type="button" class="btn btn-outline-secondary w-100"><i class="bi bi-telephone-x"></i> {{ t.pool_invite_skip_wrong }}</button></div>
             <div class="col-6"><button id="btnOptout" type="button" class="btn btn-outline-secondary w-100"><i class="bi bi-bell-slash"></i> {{ t.pool_invite_skip_optout }}</button></div>
         </div>
+        <button id="btnLater" type="button" class="btn btn-sm btn-outline-secondary"><i class="bi bi-clock-history"></i> {{ t.pool_invite_skip_later }}</button>
     </div>
 </div>
 
@@ -60,11 +61,14 @@
     };
     var URLS = {
         markSent: {{ url_for('wpc.pool_invite_mark_sent')|tojson }},
-        markFailed: {{ url_for('wpc.pool_invite_mark_failed')|tojson }}
+        markFailed: {{ url_for('wpc.pool_invite_mark_failed')|tojson }},
+        next: {{ url_for('wpc.pool_invite_next')|tojson }}
     };
     var initial = {{ player|tojson }};
     var progress = { done: {{ done }}, total: {{ total }}, sent: {{ sent }}, skipped: {{ skipped }} };
     var current = initial;
+    // "Skip for now" ids - kept in memory only; reset on reload so they reappear later.
+    var excludedLater = [];
 
     var cardArea = document.getElementById('cardArea');
     var completeArea = document.getElementById('completeArea');
@@ -135,9 +139,29 @@
             .catch(function(e) { alert('Network error: ' + e); });
     }
 
+    function skipLater() {
+        if (!current) return;
+        excludedLater.push(current.id);  // keep in memory only; DB untouched
+        var params = new URLSearchParams();
+        params.set('country', CTX.country);
+        params.set('exclude', excludedLater.join(','));
+        if (CTX.only_checkedin) params.set('only_checkedin', '1');
+        if (CTX.include_no_optin) params.set('include_no_optin', '1');
+        fetch(URLS.next + '?' + params.toString())
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.ok) { alert('Error: ' + (d.error || 'unknown')); return; }
+                progress.sent = d.sent; progress.skipped = d.skipped;
+                if (d.complete) { current = null; showComplete(); }
+                else { current = d.player; progress.done = d.done; progress.total = d.total; renderCard(current); }
+            })
+            .catch(function(e) { alert('Network error: ' + e); });
+    }
+
     document.getElementById('btnSent').addEventListener('click', function() { post(URLS.markSent, 'sent'); });
     document.getElementById('btnWrong').addEventListener('click', function() { post(URLS.markFailed, 'failed'); });
     document.getElementById('btnOptout').addEventListener('click', function() { post(URLS.markFailed, 'opted_out'); });
+    document.getElementById('btnLater').addEventListener('click', skipLater);
 
     if (current) { renderCard(current); } else { showComplete(); }
 })();
