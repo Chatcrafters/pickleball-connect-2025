@@ -1317,9 +1317,13 @@ class WPCPlayer(db.Model):
     welcome_pack_received_at = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+
+    # Player Pool invitation tracking
+    pool_invite_sent_at = db.Column(db.DateTime(timezone=True), nullable=True)
+    pool_invite_status = db.Column(db.String(20), nullable=True)  # sent / failed / skipped / opted_out
+
     registrations = db.relationship('WPCRegistration', back_populates='player', lazy='dynamic')
-    
+
     def generate_checkin_token(self):
         self.checkin_token = secrets.token_urlsafe(32)
         return self.checkin_token

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block title %}{{ t.pool_invite_overview_title }}{% endblock %}
+
+{% block content %}
+<style>
+    .pi-wrap { max-width: 900px; margin: 0 auto; }
+    .pi-stat { border: 1px solid #e6e6e6; border-radius: 12px; padding: 14px; text-align: center; }
+    .pi-stat .n { font-size: 1.8rem; font-weight: 800; }
+    .pi-table td, .pi-table th { vertical-align: middle; }
+</style>
+
+<div class="container pi-wrap">
+    <div class="py-3">
+        <h1 class="h4 mb-0"><i class="bi bi-send"></i> {{ t.pool_invite_overview_title }}</h1>
+        <p class="text-muted small mb-0">Invite WPC players to the permanent Player Pool, one country at a time.</p>
+    </div>
+
+    <!-- Filters -->
+    <form method="GET" class="card mb-3"><div class="card-body py-2">
+        <div class="row align-items-center g-2">
+            <div class="col-12 col-sm-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="only_checkedin" value="1" id="onlyCheckedin"
+                           {% if only_checkedin %}checked{% endif %} onchange="this.form.submit()">
+                    <label class="form-check-label" for="onlyCheckedin">Only checked-in players</label>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="include_no_marketing" value="1" id="incNoMkt"
+                           {% if include_no_marketing %}checked{% endif %} onchange="this.form.submit()">
+                    <label class="form-check-label" for="incNoMkt">Include players without marketing opt-in</label>
+                </div>
+            </div>
+        </div>
+        {% if include_no_marketing %}
+        <div class="alert alert-warning py-1 px-2 small mt-2 mb-0">
+            <i class="bi bi-exclamation-triangle"></i> Including players without an explicit marketing opt-in may be non-compliant. Use with care.
+        </div>
+        {% endif %}
+        <div class="small text-muted mt-1">
+            <i class="bi bi-funnel"></i> Default filter: WhatsApp opt-in = true AND marketing opt-in = true AND a valid phone number.
+        </div>
+    </div></form>
+
+    <!-- Global stats -->
+    <div class="row g-2 mb-3">
+        <div class="col-4"><div class="pi-stat"><div class="n">{{ totals.total }}</div><small class="text-muted">Total invitable</small></div></div>
+        <div class="col-4"><div class="pi-stat"><div class="n text-success">{{ totals.sent }}</div><small class="text-muted">Already sent</small></div></div>
+        <div class="col-4"><div class="pi-stat"><div class="n text-primary">{{ totals.remaining }}</div><small class="text-muted">Remaining</small></div></div>
+    </div>
+
+    <!-- Per-country table -->
+    {% if not rows %}
+    <div class="alert alert-light border text-center text-muted py-4">
+        <i class="bi bi-people" style="font-size:1.6rem;"></i>
+        <div class="mt-2">No invitable players match the current filters.</div>
+    </div>
+    {% else %}
+    <div class="table-responsive">
+        <table class="table table-sm pi-table align-middle">
+            <thead><tr class="small text-muted">
+                <th>Country</th>
+                <th class="text-end d-none d-sm-table-cell">Total</th>
+                <th class="text-end d-none d-sm-table-cell">Invited</th>
+                <th class="text-end">Remaining</th>
+                <th></th>
+            </tr></thead>
+            <tbody>
+                {% for r in rows %}
+                <tr>
+                    <td class="fw-bold"><i class="bi bi-flag"></i> {{ r.country }}</td>
+                    <td class="text-end d-none d-sm-table-cell">{{ r.total }}</td>
+                    <td class="text-end d-none d-sm-table-cell text-success">{{ r.sent }}</td>
+                    <td class="text-end fw-bold">{{ r.remaining }}</td>
+                    <td class="text-end">
+                        {% if r.remaining > 0 %}
+                        <a class="btn btn-sm btn-success"
+                           href="{{ url_for('wpc.pool_invite_wave', country=r.country, only_checkedin='1' if only_checkedin else None, include_no_marketing='1' if include_no_marketing else None) }}">
+                            <i class="bi bi-play-fill"></i> Start Wave
+                        </a>
+                        {% else %}
+                        <span class="badge bg-success"><i class="bi bi-check-all"></i> Done</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

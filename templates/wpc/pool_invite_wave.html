@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ t.pool_invite_wave_title.format(country=country) }}{% endblock %}
+
+{% block content %}
+<style>
+    .wv-wrap { max-width: 560px; margin: 0 auto; padding-bottom: 200px; }
+    .wv-avatar { width: 72px; height: 72px; border-radius: 50%; background: #e9ecef; display: flex;
+        align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; color: #6c757d; }
+    .wv-phone { font-size: 1.4rem; font-weight: 800; letter-spacing: .5px; }
+    .wv-msg { width: 100%; min-height: 150px; font-size: .85rem; white-space: pre-wrap; border-radius: 10px; }
+    .wv-actions { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030; max-width: 560px; margin: 0 auto;
+        background: linear-gradient(to top, #fff 80%, rgba(255,255,255,0)); padding: 12px; }
+    .wv-actions .btn { min-height: 48px; font-weight: 700; }
+    .wv-progress { font-weight: 700; }
+</style>
+
+<div class="container wv-wrap">
+    <div class="py-3 d-flex justify-content-between align-items-center">
+        <a href="{{ url_for('wpc.pool_invite_overview', only_checkedin='1' if only_checkedin else None, include_no_marketing='1' if include_no_marketing else None) }}"
+           class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> Country overview</a>
+        <span class="wv-progress small" id="progress"></span>
+    </div>
+
+    <h1 class="h5 mb-3"><i class="bi bi-send"></i> {{ t.pool_invite_wave_title.format(country=country) }}</h1>
+
+    <div id="cardArea"></div>
+    <div id="completeArea" style="display:none;"></div>
+</div>
+
+<div class="wv-actions" id="actions" style="display:none;">
+    <div class="d-grid gap-2">
+        <a id="btnWa" href="#" target="_blank" rel="noopener" class="btn btn-success"><i class="bi bi-whatsapp"></i> <span id="btnWaLabel"></span></a>
+        <button id="btnSent" type="button" class="btn btn-primary"><i class="bi bi-check2-circle"></i> {{ t.pool_invite_mark_sent }}</button>
+        <div class="row g-2">
+            <div class="col-6"><button id="btnWrong" type="button" class="btn btn-outline-secondary w-100"><i class="bi bi-telephone-x"></i> {{ t.pool_invite_skip_wrong }}</button></div>
+            <div class="col-6"><button id="btnOptout" type="button" class="btn btn-outline-secondary w-100"><i class="bi bi-bell-slash"></i> {{ t.pool_invite_skip_optout }}</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    var CTX = {
+        country: {{ country|tojson }},
+        only_checkedin: {{ ('1' if only_checkedin else '')|tojson }},
+        include_no_marketing: {{ ('1' if include_no_marketing else '')|tojson }}
+    };
+    var T = {
+        progress: {{ t.pool_invite_progress|tojson }},
+        openWa: {{ t.pool_invite_open_whatsapp|tojson }},
+        complete: {{ t.pool_invite_wave_complete|tojson }},
+        noMkt: {{ t.pool_invite_no_marketing_warning|tojson }}
+    };
+    var URLS = {
+        markSent: {{ url_for('wpc.pool_invite_mark_sent')|tojson }},
+        markFailed: {{ url_for('wpc.pool_invite_mark_failed')|tojson }}
+    };
+    var initial = {{ player|tojson }};
+    var progress = { done: {{ done }}, total: {{ total }}, sent: {{ sent }}, skipped: {{ skipped }} };
+    var current = initial;
+
+    var cardArea = document.getElementById('cardArea');
+    var completeArea = document.getElementById('completeArea');
+    var actions = document.getElementById('actions');
+    var progressEl = document.getElementById('progress');
+
+    function fmt(s, obj) { return s.replace(/\{(\w+)\}/g, function(_, k) { return obj[k] !== undefined ? obj[k] : ''; }); }
+    function esc(s) { var d = document.createElement('div'); d.textContent = (s == null ? '' : s); return d.innerHTML; }
+
+    function renderProgress() {
+        if (current) {
+            progressEl.textContent = fmt(T.progress, { x: progress.done + 1, y: progress.total });
+        } else {
+            progressEl.textContent = '';
+        }
+    }
+
+    function renderCard(p) {
+        if (!p) { showComplete(); return; }
+        var checkedBadge = p.checked_in ? '<span class="badge bg-success ms-1"><i class="bi bi-check-circle"></i> checked in</span>' : '';
+        var mktWarn = !p.marketing_optin ? '<div class="alert alert-warning py-1 px-2 small mb-2"><i class="bi bi-exclamation-triangle"></i> ' + esc(T.noMkt) + '</div>' : '';
+        cardArea.innerHTML =
+            '<div class="card mb-3"><div class="card-body">' +
+            mktWarn +
+            '<div class="d-flex align-items-center gap-3 mb-3">' +
+              '<div class="wv-avatar">' + esc(p.initials) + '</div>' +
+              '<div><div class="h5 mb-0">' + esc(p.name) + checkedBadge + '</div>' +
+              '<div class="small text-muted">DUPR: ' + esc(p.dupr) + '</div></div>' +
+            '</div>' +
+            '<div class="mb-2"><div class="text-muted small">Phone</div><div class="wv-phone"><i class="bi bi-telephone"></i> ' + esc(p.phone) + '</div></div>' +
+            '<div class="mb-1"><div class="text-muted small">Message preview</div>' +
+            '<textarea class="form-control wv-msg" readonly>' + esc(p.message) + '</textarea></div>' +
+            '</div></div>';
+        // wire WhatsApp button
+        var btnWa = document.getElementById('btnWa');
+        btnWa.href = p.wa_url || '#';
+        document.getElementById('btnWaLabel').textContent = fmt(T.openWa, { name: p.first_name });
+        actions.style.display = '';
+        completeArea.style.display = 'none';
+        renderProgress();
+    }
+
+    function showComplete() {
+        actions.style.display = 'none';
+        cardArea.innerHTML = '';
+        completeArea.style.display = '';
+        completeArea.innerHTML =
+            '<div class="alert alert-success text-center py-4">' +
+            '<i class="bi bi-check-all" style="font-size:2rem;"></i>' +
+            '<div class="mt-2 fw-bold">' + esc(fmt(T.complete, { sent: progress.sent, skipped: progress.skipped })) + '</div>' +
+            '<div class="mt-1">All players in ' + esc(CTX.country) + ' have been contacted.</div>' +
+            '</div>';
+        progressEl.textContent = '';
+    }
+
+    function post(url, status) {
+        if (!current) return;
+        var body = { player_id: current.id, country: CTX.country, status: status,
+                     only_checkedin: CTX.only_checkedin, include_no_marketing: CTX.include_no_marketing };
+        fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                if (!d.ok) { alert('Error: ' + (d.error || 'unknown')); return; }
+                progress.sent = d.sent; progress.skipped = d.skipped;
+                if (d.complete) { current = null; showComplete(); }
+                else { current = d.player; progress.done = d.done; progress.total = d.total; renderCard(current); }
+            })
+            .catch(function(e) { alert('Network error: ' + e); });
+    }
+
+    document.getElementById('btnSent').addEventListener('click', function() { post(URLS.markSent, 'sent'); });
+    document.getElementById('btnWrong').addEventListener('click', function() { post(URLS.markFailed, 'failed'); });
+    document.getElementById('btnOptout').addEventListener('click', function() { post(URLS.markFailed, 'opted_out'); });
+
+    if (current) { renderCard(current); } else { showComplete(); }
+})();
+</script>
+{% endblock %}

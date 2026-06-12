@@ -2,7 +2,9 @@
 WPC Routes - Check-in, Dashboard, Welcome Pack
 """
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
-from datetime import datetime
+from datetime import datetime, timezone
+from urllib.parse import quote
+import re
 from models import db, WPCPlayer, WPCRegistration, Sponsor
 
 wpc = Blueprint('wpc', __name__, url_prefix='/wpc')
@@ -341,4 +343,259 @@ def api_stats():
 def terms():
     """Privacy Policy and Terms"""
     return render_template('wpc/terms.html')
+
+
+# ============================================================================
+# POOL INVITATION TOOL (admin: invite WPC players to the Player Pool)
+# ============================================================================
+
+POOL_INVITE_TRANSLATIONS = {
+    'EN': {
+        'pool_invite_overview_title': 'Pool Invitation Tool',
+        'pool_invite_wave_title': 'Sending wave: {country}',
+        'pool_invite_open_whatsapp': 'Open WhatsApp for {name}',
+        'pool_invite_mark_sent': 'Mark sent and next',
+        'pool_invite_skip_wrong': 'Skip - wrong number',
+        'pool_invite_skip_optout': 'Skip - opted out',
+        'pool_invite_progress': 'Player {x} of {y}',
+        'pool_invite_wave_complete': 'Wave complete - {sent} sent, {skipped} skipped',
+        'pool_invite_no_marketing_warning': 'Player did not opt-in to marketing - consider skipping',
+    },
+    'DE': {
+        'pool_invite_overview_title': 'Pool-Einladungs-Tool',
+        'pool_invite_wave_title': 'Welle senden: {country}',
+        'pool_invite_open_whatsapp': 'WhatsApp oeffnen fuer {name}',
+        'pool_invite_mark_sent': 'Gesendet markieren und weiter',
+        'pool_invite_skip_wrong': 'Ueberspringen - falsche Nummer',
+        'pool_invite_skip_optout': 'Ueberspringen - abgemeldet',
+        'pool_invite_progress': 'Spieler {x} von {y}',
+        'pool_invite_wave_complete': 'Welle fertig - {sent} gesendet, {skipped} uebersprungen',
+        'pool_invite_no_marketing_warning': 'Spieler hat kein Marketing-Opt-in - ggf. ueberspringen',
+    },
+    'ES': {
+        'pool_invite_overview_title': 'Herramienta de Invitacion al Pool',
+        'pool_invite_wave_title': 'Enviando ola: {country}',
+        'pool_invite_open_whatsapp': 'Abrir WhatsApp para {name}',
+        'pool_invite_mark_sent': 'Marcar enviado y siguiente',
+        'pool_invite_skip_wrong': 'Omitir - numero incorrecto',
+        'pool_invite_skip_optout': 'Omitir - se dio de baja',
+        'pool_invite_progress': 'Jugador {x} de {y}',
+        'pool_invite_wave_complete': 'Ola completa - {sent} enviados, {skipped} omitidos',
+        'pool_invite_no_marketing_warning': 'El jugador no acepto marketing - considera omitir',
+    },
+    'FR': {
+        'pool_invite_overview_title': 'Outil d Invitation au Pool',
+        'pool_invite_wave_title': 'Envoi de la vague: {country}',
+        'pool_invite_open_whatsapp': 'Ouvrir WhatsApp pour {name}',
+        'pool_invite_mark_sent': 'Marquer envoye et suivant',
+        'pool_invite_skip_wrong': 'Passer - mauvais numero',
+        'pool_invite_skip_optout': 'Passer - desabonne',
+        'pool_invite_progress': 'Joueur {x} sur {y}',
+        'pool_invite_wave_complete': 'Vague terminee - {sent} envoyes, {skipped} passes',
+        'pool_invite_no_marketing_warning': 'Le joueur n a pas accepte le marketing - envisagez de passer',
+    },
+}
+
+
+def _pool_invite_t(lang):
+    return POOL_INVITE_TRANSLATIONS.get((lang or 'EN').upper(), POOL_INVITE_TRANSLATIONS['EN'])
+
+
+def _invite_lang():
+    lang = (request.args.get('lang') or 'EN').upper()
+    return lang if lang in POOL_INVITE_TRANSLATIONS else 'EN'
+
+
+def normalize_phone(phone):
+    """Return digits-only phone for wa.me, or None if unparseable.
+
+    Strips spaces, hyphens, parentheses; keeps digits (wa.me adds + itself).
+    """
+    if not phone:
+        return None
+    digits = re.sub(r'\D', '', phone)
+    digits = digits.lstrip('0') if digits.startswith('00') else digits  # 0044 -> 44
+    if len(digits) < 8:
+        return None
+    return digits
+
+
+def _invitable_query(country=None, only_checkedin=False, include_no_marketing=False):
+    """Players eligible for a pool invite (default: whatsapp + marketing opt-in, has phone)."""
+    q = WPCPlayer.query.filter(
+        WPCPlayer.whatsapp_optin.is_(True),
+        WPCPlayer.phone.isnot(None),
+        WPCPlayer.phone != '',
+    )
+    if not include_no_marketing:
+        q = q.filter(WPCPlayer.marketing_optin.is_(True))
+    if only_checkedin:
+        q = q.filter(WPCPlayer.checked_in.is_(True))
+    if country:
+        q = q.filter(WPCPlayer.country == country)
+    return q
+
+
+def _pool_url():
+    return request.host_url.rstrip('/') + '/pool'
+
+
+def _invite_message(player):
+    """Hardcoded English invitation message with first_name + pool URL interpolated."""
+    first = player.first_name or 'there'
+    return (
+        f"Hi {first}! This is Sergio from the WPC / PCL team - great to have met you at "
+        f"WPC European Open in Malaga.\n\n"
+        f"We are building a permanent Player Pool so captains and organizers can reach you "
+        f"for upcoming tournaments (WPC Bali, WPC China, WPC Turkey and PCL events).\n\n"
+        f"Join the pool here (2 minutes): {_pool_url()}\n\n"
+        f"You will get tournament updates and early-bird access. Thank you!\n"
+        f"Sergio Ruiz Caro"
+    )
+
+
+def _player_payload(player):
+    """Card data + wa.me link for one player (used by wave page and JSON endpoints)."""
+    digits = normalize_phone(player.phone)
+    message = _invite_message(player)
+    return {
+        'id': player.id,
+        'name': player.get_full_name(),
+        'first_name': player.first_name,
+        'initials': ((player.first_name or ' ')[0] + (player.last_name or ' ')[0]).upper().strip() or '?',
+        'dupr': player.dupr_rating or '-',
+        'checked_in': bool(player.checked_in),
+        'marketing_optin': bool(player.marketing_optin),
+        'phone': player.phone,
+        'phone_digits': digits,
+        'message': message,
+        'wa_url': (f"https://wa.me/{digits}?text={quote(message)}") if digits else None,
+    }
+
+
+def _next_in_wave(country, only_checkedin, include_no_marketing):
+    """Find the next un-invited player with a valid phone; auto-fail invalid phones."""
+    q = _invitable_query(country, only_checkedin, include_no_marketing) \
+        .filter(WPCPlayer.pool_invite_sent_at.is_(None)) \
+        .order_by(WPCPlayer.country, WPCPlayer.last_name)
+    next_player = None
+    dirty = False
+    for p in q.all():
+        if normalize_phone(p.phone):
+            next_player = p
+            break
+        # Unparseable phone -> mark failed so the queue advances past it
+        p.pool_invite_sent_at = datetime.now(timezone.utc)
+        p.pool_invite_status = 'failed'
+        dirty = True
+    if dirty:
+        db.session.commit()
+    return next_player
+
+
+def _wave_progress(country, only_checkedin, include_no_marketing):
+    """(done, total, sent, skipped) for valid-phone invitable players in this country."""
+    players = _invitable_query(country, only_checkedin, include_no_marketing).all()
+    total = done = sent = skipped = 0
+    for p in players:
+        if not normalize_phone(p.phone):
+            continue
+        total += 1
+        if p.pool_invite_sent_at is not None:
+            done += 1
+            if p.pool_invite_status == 'sent':
+                sent += 1
+            else:
+                skipped += 1
+    return done, total, sent, skipped
+
+
+@wpc.route('/admin/pool-invite')
+def pool_invite_overview():
+    """Per-country overview with invite stats and filters."""
+    lang = _invite_lang()
+    t = _pool_invite_t(lang)
+    only_checkedin = request.args.get('only_checkedin') == '1'
+    include_no_marketing = request.args.get('include_no_marketing') == '1'
+
+    players = _invitable_query(only_checkedin=only_checkedin,
+                               include_no_marketing=include_no_marketing).all()
+    countries = {}
+    for p in players:
+        if not normalize_phone(p.phone):
+            continue
+        d = countries.setdefault(p.country or 'Unknown', {'total': 0, 'sent': 0})
+        d['total'] += 1
+        if p.pool_invite_sent_at is not None:
+            d['sent'] += 1
+
+    rows = [{'country': c, 'total': d['total'], 'sent': d['sent'],
+             'remaining': d['total'] - d['sent']} for c, d in countries.items()]
+    rows.sort(key=lambda r: r['country'])
+    totals = {
+        'total': sum(r['total'] for r in rows),
+        'sent': sum(r['sent'] for r in rows),
+        'remaining': sum(r['remaining'] for r in rows),
+    }
+    return render_template('wpc/pool_invite_overview.html',
+                           rows=rows, totals=totals, t=t, current_lang=lang,
+                           only_checkedin=only_checkedin, include_no_marketing=include_no_marketing)
+
+
+@wpc.route('/admin/pool-invite/wave')
+def pool_invite_wave():
+    """Sequential single-player sender for one country."""
+    lang = _invite_lang()
+    t = _pool_invite_t(lang)
+    country = request.args.get('country') or ''
+    only_checkedin = request.args.get('only_checkedin') == '1'
+    include_no_marketing = request.args.get('include_no_marketing') == '1'
+
+    next_player = _next_in_wave(country, only_checkedin, include_no_marketing)
+    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_marketing)
+    payload = _player_payload(next_player) if next_player else None
+
+    return render_template('wpc/pool_invite_wave.html',
+                           t=t, current_lang=lang, country=country,
+                           player=payload, done=done, total=total, sent=sent, skipped=skipped,
+                           only_checkedin=only_checkedin, include_no_marketing=include_no_marketing)
+
+
+def _mark_and_next(default_status):
+    """Shared body for mark-sent / mark-failed JSON endpoints."""
+    data = request.get_json(silent=True) or request.form
+    player_id = data.get('player_id')
+    status = data.get('status') or default_status
+    if status not in ('sent', 'failed', 'skipped', 'opted_out'):
+        status = default_status
+    country = data.get('country') or ''
+    only_checkedin = str(data.get('only_checkedin')) in ('1', 'true', 'True')
+    include_no_marketing = str(data.get('include_no_marketing')) in ('1', 'true', 'True')
+
+    player = WPCPlayer.query.get(player_id) if player_id else None
+    if player is not None:
+        player.pool_invite_sent_at = datetime.now(timezone.utc)
+        player.pool_invite_status = status
+        try:
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'ok': False, 'error': str(e)}), 500
+
+    next_player = _next_in_wave(country, only_checkedin, include_no_marketing)
+    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_marketing)
+    if next_player is None:
+        return jsonify({'ok': True, 'complete': True, 'sent': sent, 'skipped': skipped})
+    return jsonify({'ok': True, 'complete': False, 'player': _player_payload(next_player),
+                    'done': done, 'total': total, 'sent': sent, 'skipped': skipped})
+
+
+@wpc.route('/admin/pool-invite/mark-sent', methods=['POST'])
+def pool_invite_mark_sent():
+    return _mark_and_next('sent')
+
+
+@wpc.route('/admin/pool-invite/mark-failed', methods=['POST'])
+def pool_invite_mark_failed():
+    return _mark_and_next('failed')
 
