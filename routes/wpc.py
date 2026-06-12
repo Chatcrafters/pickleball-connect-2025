@@ -460,7 +460,8 @@ def _invite_message(player):
         f"We are building a permanent Player Pool so captains and organizers can reach you "
         f"for upcoming tournaments (WPC Bali, WPC China, WPC Turkey and PCL events).\n\n"
         f"Join the pool here (2 minutes): {_pool_url()}\n\n"
-        f"You will get tournament updates and early-bird access. Thank you!\n"
+        f"You will get tournament updates and early-bird access. Thank you!\n\n"
+        f"Not interested? Just reply STOP and I won't message you again.\n\n"
         f"Sergio Ruiz Caro"
     )
 
