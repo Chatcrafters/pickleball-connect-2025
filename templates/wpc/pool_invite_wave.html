@@ -16,12 +16,19 @@
 
 <div class="container wv-wrap">
     <div class="py-3 d-flex justify-content-between align-items-center">
-        <a href="{{ url_for('wpc.pool_invite_overview', only_checkedin='1' if only_checkedin else None, include_no_marketing='1' if include_no_marketing else None) }}"
+        <a href="{{ url_for('wpc.pool_invite_overview', only_checkedin='1' if only_checkedin else None, include_no_optin='1' if include_no_optin else None) }}"
            class="text-decoration-none text-muted small"><i class="bi bi-arrow-left"></i> Country overview</a>
         <span class="wv-progress small" id="progress"></span>
     </div>
 
     <h1 class="h5 mb-3"><i class="bi bi-send"></i> {{ t.pool_invite_wave_title.format(country=country) }}</h1>
+
+    {% if include_no_optin %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Compliance:</strong> This player did not opt in to WhatsApp or marketing. Use the STOP-opt-out version of the message.
+    </div>
+    {% endif %}
 
     <div id="cardArea"></div>
     <div id="completeArea" style="display:none;"></div>
@@ -43,7 +50,7 @@
     var CTX = {
         country: {{ country|tojson }},
         only_checkedin: {{ ('1' if only_checkedin else '')|tojson }},
-        include_no_marketing: {{ ('1' if include_no_marketing else '')|tojson }}
+        include_no_optin: {{ ('1' if include_no_optin else '')|tojson }}
     };
     var T = {
         progress: {{ t.pool_invite_progress|tojson }},
@@ -116,7 +123,7 @@
     function post(url, status) {
         if (!current) return;
         var body = { player_id: current.id, country: CTX.country, status: status,
-                     only_checkedin: CTX.only_checkedin, include_no_marketing: CTX.include_no_marketing };
+                     only_checkedin: CTX.only_checkedin, include_no_optin: CTX.include_no_optin };
         fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
             .then(function(r) { return r.json(); })
             .then(function(d) {

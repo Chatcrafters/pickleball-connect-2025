@@ -27,21 +27,25 @@
             </div>
             <div class="col-12 col-sm-6">
                 <div class="form-check">
-                    <input class="form-check-input" type="checkbox" name="include_no_marketing" value="1" id="incNoMkt"
-                           {% if include_no_marketing %}checked{% endif %} onchange="this.form.submit()">
-                    <label class="form-check-label" for="incNoMkt">Include players without marketing opt-in</label>
+                    <input class="form-check-input" type="checkbox" name="include_no_optin" value="1" id="incNoOptin"
+                           {% if include_no_optin %}checked{% endif %} onchange="this.form.submit()">
+                    <label class="form-check-label" for="incNoOptin">{{ t.pool_invite_include_no_optin }}</label>
                 </div>
             </div>
         </div>
-        {% if include_no_marketing %}
-        <div class="alert alert-warning py-1 px-2 small mt-2 mb-0">
-            <i class="bi bi-exclamation-triangle"></i> Including players without an explicit marketing opt-in may be non-compliant. Use with care.
-        </div>
-        {% endif %}
         <div class="small text-muted mt-1">
-            <i class="bi bi-funnel"></i> Default filter: WhatsApp opt-in = true AND marketing opt-in = true AND a valid phone number.
+            <i class="bi bi-funnel"></i> Default: WhatsApp opt-in AND marketing opt-in AND valid phone
         </div>
     </div></form>
+
+    {% if include_no_optin %}
+    <div class="alert alert-warning">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <strong>Warning:</strong> You are about to contact players who have not explicitly opted in.
+        Make sure you have a legitimate interest basis (e.g. existing customer relationship from Malaga 2026)
+        and include opt-out instructions in your message.
+    </div>
+    {% endif %}
 
     <!-- Global stats -->
     <div class="row g-2 mb-3">
@@ -76,7 +80,7 @@
                     <td class="text-end">
                         {% if r.remaining > 0 %}
                         <a class="btn btn-sm btn-success"
-                           href="{{ url_for('wpc.pool_invite_wave', country=r.country, only_checkedin='1' if only_checkedin else None, include_no_marketing='1' if include_no_marketing else None) }}">
+                           href="{{ url_for('wpc.pool_invite_wave', country=r.country, only_checkedin='1' if only_checkedin else None, include_no_optin='1' if include_no_optin else None) }}">
                             <i class="bi bi-play-fill"></i> Start Wave
                         </a>
                         {% else %}

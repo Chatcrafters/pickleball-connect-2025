@@ -359,7 +359,8 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_skip_optout': 'Skip - opted out',
         'pool_invite_progress': 'Player {x} of {y}',
         'pool_invite_wave_complete': 'Wave complete - {sent} sent, {skipped} skipped',
-        'pool_invite_no_marketing_warning': 'Player did not opt-in to marketing - consider skipping',
+        'pool_invite_no_marketing_warning': 'Player did not opt-in to marketing or WhatsApp. Compliance risk.',
+        'pool_invite_include_no_optin': 'Include players without explicit opt-in (compliance risk)',
     },
     'DE': {
         'pool_invite_overview_title': 'Pool-Einladungs-Tool',
@@ -370,7 +371,8 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_skip_optout': 'Ueberspringen - abgemeldet',
         'pool_invite_progress': 'Spieler {x} von {y}',
         'pool_invite_wave_complete': 'Welle fertig - {sent} gesendet, {skipped} uebersprungen',
-        'pool_invite_no_marketing_warning': 'Spieler hat kein Marketing-Opt-in - ggf. ueberspringen',
+        'pool_invite_no_marketing_warning': 'Spieler hat kein Marketing- oder WhatsApp-Opt-in. Compliance-Risiko.',
+        'pool_invite_include_no_optin': 'Spieler ohne ausdrueckliches Opt-in einbeziehen (Compliance-Risiko)',
     },
     'ES': {
         'pool_invite_overview_title': 'Herramienta de Invitacion al Pool',
@@ -381,7 +383,8 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_skip_optout': 'Omitir - se dio de baja',
         'pool_invite_progress': 'Jugador {x} de {y}',
         'pool_invite_wave_complete': 'Ola completa - {sent} enviados, {skipped} omitidos',
-        'pool_invite_no_marketing_warning': 'El jugador no acepto marketing - considera omitir',
+        'pool_invite_no_marketing_warning': 'El jugador no acepto marketing ni WhatsApp. Riesgo de cumplimiento.',
+        'pool_invite_include_no_optin': 'Incluir jugadores sin opt-in explicito (riesgo de cumplimiento)',
     },
     'FR': {
         'pool_invite_overview_title': 'Outil d Invitation au Pool',
@@ -392,7 +395,8 @@ POOL_INVITE_TRANSLATIONS = {
         'pool_invite_skip_optout': 'Passer - desabonne',
         'pool_invite_progress': 'Joueur {x} sur {y}',
         'pool_invite_wave_complete': 'Vague terminee - {sent} envoyes, {skipped} passes',
-        'pool_invite_no_marketing_warning': 'Le joueur n a pas accepte le marketing - envisagez de passer',
+        'pool_invite_no_marketing_warning': 'Le joueur n a pas accepte le marketing ni WhatsApp. Risque de conformite.',
+        'pool_invite_include_no_optin': 'Inclure les joueurs sans opt-in explicite (risque de conformite)',
     },
 }
 
@@ -420,15 +424,22 @@ def normalize_phone(phone):
     return digits
 
 
-def _invitable_query(country=None, only_checkedin=False, include_no_marketing=False):
-    """Players eligible for a pool invite (default: whatsapp + marketing opt-in, has phone)."""
+def _invitable_query(country=None, only_checkedin=False, include_no_optin=False):
+    """Players eligible for a pool invite.
+
+    Default: whatsapp_optin = true AND marketing_optin = true AND a valid phone.
+    With include_no_optin, BOTH opt-in requirements are relaxed (phone only) -
+    a compliance risk surfaced in the UI.
+    """
     q = WPCPlayer.query.filter(
-        WPCPlayer.whatsapp_optin.is_(True),
         WPCPlayer.phone.isnot(None),
         WPCPlayer.phone != '',
     )
-    if not include_no_marketing:
-        q = q.filter(WPCPlayer.marketing_optin.is_(True))
+    if not include_no_optin:
+        q = q.filter(
+            WPCPlayer.whatsapp_optin.is_(True),
+            WPCPlayer.marketing_optin.is_(True),
+        )
     if only_checkedin:
         q = q.filter(WPCPlayer.checked_in.is_(True))
     if country:
@@ -473,9 +484,9 @@ def _player_payload(player):
     }
 
 
-def _next_in_wave(country, only_checkedin, include_no_marketing):
+def _next_in_wave(country, only_checkedin, include_no_optin):
     """Find the next un-invited player with a valid phone; auto-fail invalid phones."""
-    q = _invitable_query(country, only_checkedin, include_no_marketing) \
+    q = _invitable_query(country, only_checkedin, include_no_optin) \
         .filter(WPCPlayer.pool_invite_sent_at.is_(None)) \
         .order_by(WPCPlayer.country, WPCPlayer.last_name)
     next_player = None
@@ -493,9 +504,9 @@ def _next_in_wave(country, only_checkedin, include_no_marketing):
     return next_player
 
 
-def _wave_progress(country, only_checkedin, include_no_marketing):
+def _wave_progress(country, only_checkedin, include_no_optin):
     """(done, total, sent, skipped) for valid-phone invitable players in this country."""
-    players = _invitable_query(country, only_checkedin, include_no_marketing).all()
+    players = _invitable_query(country, only_checkedin, include_no_optin).all()
     total = done = sent = skipped = 0
     for p in players:
         if not normalize_phone(p.phone):
@@ -516,10 +527,10 @@ def pool_invite_overview():
     lang = _invite_lang()
     t = _pool_invite_t(lang)
     only_checkedin = request.args.get('only_checkedin') == '1'
-    include_no_marketing = request.args.get('include_no_marketing') == '1'
+    include_no_optin = request.args.get('include_no_optin') == '1'
 
     players = _invitable_query(only_checkedin=only_checkedin,
-                               include_no_marketing=include_no_marketing).all()
+                               include_no_optin=include_no_optin).all()
     countries = {}
     for p in players:
         if not normalize_phone(p.phone):
@@ -539,7 +550,7 @@ def pool_invite_overview():
     }
     return render_template('wpc/pool_invite_overview.html',
                            rows=rows, totals=totals, t=t, current_lang=lang,
-                           only_checkedin=only_checkedin, include_no_marketing=include_no_marketing)
+                           only_checkedin=only_checkedin, include_no_optin=include_no_optin)
 
 
 @wpc.route('/admin/pool-invite/wave')
@@ -549,16 +560,16 @@ def pool_invite_wave():
     t = _pool_invite_t(lang)
     country = request.args.get('country') or ''
     only_checkedin = request.args.get('only_checkedin') == '1'
-    include_no_marketing = request.args.get('include_no_marketing') == '1'
+    include_no_optin = request.args.get('include_no_optin') == '1'
 
-    next_player = _next_in_wave(country, only_checkedin, include_no_marketing)
-    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_marketing)
+    next_player = _next_in_wave(country, only_checkedin, include_no_optin)
+    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_optin)
     payload = _player_payload(next_player) if next_player else None
 
     return render_template('wpc/pool_invite_wave.html',
                            t=t, current_lang=lang, country=country,
                            player=payload, done=done, total=total, sent=sent, skipped=skipped,
-                           only_checkedin=only_checkedin, include_no_marketing=include_no_marketing)
+                           only_checkedin=only_checkedin, include_no_optin=include_no_optin)
 
 
 def _mark_and_next(default_status):
@@ -570,7 +581,7 @@ def _mark_and_next(default_status):
         status = default_status
     country = data.get('country') or ''
     only_checkedin = str(data.get('only_checkedin')) in ('1', 'true', 'True')
-    include_no_marketing = str(data.get('include_no_marketing')) in ('1', 'true', 'True')
+    include_no_optin = str(data.get('include_no_optin')) in ('1', 'true', 'True')
 
     player = WPCPlayer.query.get(player_id) if player_id else None
     if player is not None:
@@ -582,8 +593,8 @@ def _mark_and_next(default_status):
             db.session.rollback()
             return jsonify({'ok': False, 'error': str(e)}), 500
 
-    next_player = _next_in_wave(country, only_checkedin, include_no_marketing)
-    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_marketing)
+    next_player = _next_in_wave(country, only_checkedin, include_no_optin)
+    done, total, sent, skipped = _wave_progress(country, only_checkedin, include_no_optin)
     if next_player is None:
         return jsonify({'ok': True, 'complete': True, 'sent': sent, 'skipped': skipped})
     return jsonify({'ok': True, 'complete': False, 'player': _player_payload(next_player),
