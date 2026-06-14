@@ -1772,16 +1772,12 @@ def quick_add_player(token):
     t = get_translations(lang)
     stats = team.get_stats()
 
-    # Per-team registration lock (admin-controlled)
+    # Per-team registration lock (admin-controlled). Sole source of truth and
+    # OVERRIDES the global tournament deadline.
     locked = registration_locked_redirect(team, token, lang)
     if locked:
         return locked
 
-    # Check deadline
-    if datetime.now() > team.tournament.registration_deadline:
-        flash('Registration is closed.', 'danger')
-        return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
-    
     if request.method == 'POST':
         first_name = request.form.get('first_name', '').strip()
         last_name = request.form.get('last_name', '').strip()
@@ -2100,16 +2096,13 @@ def player_register(token):
     
     t = get_translations(lang)
 
-    # Per-team registration lock (admin-controlled)
+    # Per-team registration lock (admin-controlled). This is the single source of
+    # truth and OVERRIDES the global tournament deadline: a manually-unlocked team
+    # (or one with a future until-date) is open regardless of the tournament date.
     locked = registration_locked_redirect(team, token, lang)
     if locked:
         return locked
 
-    # Check if registration is still open
-    if datetime.now() > team.tournament.registration_deadline:
-        flash('Registration is closed.', 'danger')
-        return redirect(url_for('pcl.captain_dashboard', token=token))
-    
     if request.method == 'POST':
         # Handle profile photo upload to Supabase
         photo_url = None
