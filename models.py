@@ -259,7 +259,12 @@ class PCLTeam(db.Model):
 
     # Status
     status = db.Column(db.String(20), default='incomplete')
-    
+
+    # Per-team registration lock (default closed). Captain can add/edit/delete
+    # players only when manually unlocked OR an until-deadline is still in the future.
+    registration_open = db.Column(db.Boolean, nullable=False, default=False)
+    registration_open_until = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -286,6 +291,18 @@ class PCLTeam(db.Model):
         """Get the URL for player registration"""
         return f"/pcl/register/{self.captain_token}"
     
+    def is_registration_open(self):
+        """Return True if the captain may currently modify the roster.
+
+        Open when manually unlocked, OR when an until-deadline is set and still
+        in the future. Manual override takes precedence over an expired deadline.
+        """
+        if self.registration_open:
+            return True
+        if self.registration_open_until and self.registration_open_until > datetime.now():
+            return True
+        return False
+
     def get_stats(self):
         """Get team registration statistics"""
         # Use direct query to avoid lazy loading issues

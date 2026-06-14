@@ -62,6 +62,25 @@
     </div>
     {% endif %}
 
+    <!-- Registration Lock Banner -->
+    {% set reg_open = team.is_registration_open() %}
+    {% if not reg_open %}
+    <div class="alert alert-warning d-flex align-items-center" role="alert">
+        <i class="bi bi-lock-fill fs-4 me-2"></i>
+        <div>{{ t.lock_closed_banner }}</div>
+    </div>
+    {% elif team.registration_open %}
+    <div class="alert alert-success d-flex align-items-center" role="alert">
+        <i class="bi bi-unlock-fill fs-4 me-2"></i>
+        <div>{{ t.lock_open_manual_banner }}</div>
+    </div>
+    {% else %}
+    <div class="alert alert-success d-flex align-items-center" role="alert">
+        <i class="bi bi-unlock-fill fs-4 me-2"></i>
+        <div>{{ t.lock_open_until_banner.replace('{date}', team.registration_open_until.strftime('%d.%m.%Y %H:%M')) }}</div>
+    </div>
+    {% endif %}
+
     <!-- Quick Actions -->
     <div class="card mb-4 border-success">
         <div class="card-header bg-success text-white">
@@ -70,10 +89,17 @@
         <div class="card-body">
             <div class="row">
                 <div class="col-md-3 col-6 mb-2">
+                    {% if reg_open %}
                     <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
                         <i class="bi bi-person-plus-fill fs-4"></i>
                         <small class="mt-1">{{ t.quick_add_player if t.quick_add_player else 'Spieler hinzufügen' }}</small>
                     </a>
+                    {% else %}
+                    <button type="button" class="btn btn-outline-secondary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3" disabled>
+                        <i class="bi bi-lock-fill fs-4"></i>
+                        <small class="mt-1">{{ t.lock_disabled_button }}</small>
+                    </button>
+                    {% endif %}
                 </div>
                 <div class="col-md-3 col-6 mb-2">
                     <a href="https://wa.me/?text={{ share_message_encoded }}" 
@@ -372,7 +398,7 @@
             <div class="card h-100">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-gender-male"></i> {{ t.men }} ({{ stats.men }}/{{ team.min_men }}-{{ team.max_men }})</h5>
-                    {% if stats.men < team.max_men %}
+                    {% if reg_open and stats.men < team.max_men %}
                     <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-sm btn-light">
                         <i class="bi bi-plus"></i>
                     </a>
@@ -448,12 +474,13 @@
                                 </a>
                                 {% endif %}
                                 
+                                {% if reg_open %}
                                 <!-- Edit Button -->
-                                <a href="{{ url_for('pcl.edit_registration', registration_id=reg.id, lang=current_lang) }}" 
+                                <a href="{{ url_for('pcl.edit_registration', registration_id=reg.id, lang=current_lang) }}"
                                    class="btn btn-sm btn-outline-secondary" title="{{ t.edit if t.edit else 'Bearbeiten' }}">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                
+
                                 <!-- Delete Button (not for captain) -->
                                 {% if not reg.is_captain %}
                                 <form action="{{ url_for('pcl.delete_player', token=team.captain_token, registration_id=reg.id, lang=current_lang) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ reg.first_name }} {{ reg.last_name }} wirklich löschen?');">
@@ -461,6 +488,12 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                {% endif %}
+                                {% else %}
+                                <!-- Registration locked: edit/delete disabled -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                    <i class="bi bi-lock-fill"></i> {{ t.lock_disabled_button }}
+                                </button>
                                 {% endif %}
                             </div>
                         </div>
@@ -478,7 +511,7 @@
             <div class="card h-100">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0"><i class="bi bi-gender-female"></i> {{ t.women }} ({{ stats.women }}/{{ team.min_women }}-{{ team.max_women }})</h5>
-                    {% if stats.women < team.max_women %}
+                    {% if reg_open and stats.women < team.max_women %}
                     <a href="{{ quick_add_url }}?lang={{ current_lang }}" class="btn btn-sm btn-light">
                         <i class="bi bi-plus"></i>
                     </a>
@@ -554,12 +587,13 @@
                                 </a>
                                 {% endif %}
                                 
+                                {% if reg_open %}
                                 <!-- Edit Button -->
-                                <a href="{{ url_for('pcl.edit_registration', registration_id=reg.id, lang=current_lang) }}" 
+                                <a href="{{ url_for('pcl.edit_registration', registration_id=reg.id, lang=current_lang) }}"
                                    class="btn btn-sm btn-outline-secondary" title="{{ t.edit if t.edit else 'Bearbeiten' }}">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                
+
                                 <!-- Delete Button (not for captain) -->
                                 {% if not reg.is_captain %}
                                 <form action="{{ url_for('pcl.delete_player', token=team.captain_token, registration_id=reg.id, lang=current_lang) }}" method="POST" class="d-inline" onsubmit="return confirm('{{ reg.first_name }} {{ reg.last_name }} wirklich löschen?');">
@@ -567,6 +601,12 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                {% endif %}
+                                {% else %}
+                                <!-- Registration locked: edit/delete disabled -->
+                                <button type="button" class="btn btn-sm btn-outline-secondary" disabled>
+                                    <i class="bi bi-lock-fill"></i> {{ t.lock_disabled_button }}
+                                </button>
                                 {% endif %}
                             </div>
                         </div>

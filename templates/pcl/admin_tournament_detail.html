@@ -214,6 +214,7 @@
                             <th class="text-center">Women</th>
                             <th class="text-center">Photos</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Lock</th>
                             <th>Captain Link</th>
                             <th>Actions</th>
                         </tr>
@@ -245,8 +246,15 @@
                                 <span class="badge bg-warning">Incomplete</span>
                                 {% endif %}
                             </td>
+                            <td class="text-center">
+                                {% if team.is_registration_open() %}
+                                <span class="badge bg-success">open</span>
+                                {% else %}
+                                <span class="badge bg-danger">closed</span>
+                                {% endif %}
+                            </td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" 
+                                <input type="text" class="form-control form-control-sm"
                                        value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" 
                                        readonly onclick="this.select()">
                             </td>
@@ -290,6 +298,7 @@
                             <th class="text-center">Women</th>
                             <th class="text-center">Photos</th>
                             <th class="text-center">Status</th>
+                            <th class="text-center">Lock</th>
                             <th>Captain Link</th>
                             <th>Actions</th>
                         </tr>
@@ -321,8 +330,15 @@
                                 <span class="badge bg-warning">Incomplete</span>
                                 {% endif %}
                             </td>
+                            <td class="text-center">
+                                {% if team.is_registration_open() %}
+                                <span class="badge bg-success">open</span>
+                                {% else %}
+                                <span class="badge bg-danger">closed</span>
+                                {% endif %}
+                            </td>
                             <td>
-                                <input type="text" class="form-control form-control-sm" 
+                                <input type="text" class="form-control form-control-sm"
                                        value="{{ request.host_url }}pcl/team/{{ team.captain_token }}" 
                                        readonly onclick="this.select()">
                             </td>

@@ -1,6 +1,6 @@
 ﻿from urllib.parse import quote
 from flask import Blueprint, render_template, request, redirect, url_for, flash, send_file, jsonify
-from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS, get_whatsapp_sponsor_block, PCLMatch, PCLLineup, PCLMatchResult
+from models import db, PCLTournament, PCLTeam, PCLRegistration, Player, SHIRT_SIZES, COUNTRY_FLAGS, get_whatsapp_sponsor_block, PCLMatch, PCLLineup, PCLMatchResult, PoolPlayer
 from datetime import datetime, date
 from werkzeug.utils import secure_filename
 from utils.supabase_storage import upload_photo_to_supabase, get_photo_url
@@ -113,6 +113,7 @@ TRANSLATIONS = {
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'No completed matches yet',
         'your_team_indicator': 'Your team',
+        'captain_pool_section': 'Pool players in',
         'profile': 'Profile',
         'photo': 'Profile Photo',
         'photo_help': 'Required. JPG, PNG, max 5MB. Square format recommended.',
@@ -185,6 +186,14 @@ TRANSLATIONS = {
         'leave_empty_to_keep': 'Leave empty to keep',
         'data_protection': 'Your data is securely stored',
         'contact': 'Contact',
+        'lock_closed_banner': 'Registration closed for this team. Contact Sergio to request changes.',
+        'lock_open_until_banner': 'Registration open until {date}',
+        'lock_open_manual_banner': 'Registration open (manually unlocked)',
+        'lock_disabled_button': 'Locked',
+        'lock_admin_section': 'Registration Lock',
+        'lock_admin_toggle': 'Registration Open (manual)',
+        'lock_admin_deadline': 'Registration Open Until',
+        'lock_admin_helper': 'When checked OR until-date is in future, captain can add/edit/delete players.',
     },
     'DE': {
         'page_title': 'PCL Spieler-Registrierung',
@@ -271,6 +280,7 @@ TRANSLATIONS = {
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'Noch keine beendeten Spiele',
         'your_team_indicator': 'Dein Team',
+        'captain_pool_section': 'Pool-Spieler in',
         'profile': 'Profil',
         'photo': 'Profilbild',
         'photo_help': 'Pflichtfeld. JPG, PNG, max 5MB. Quadratisches Format empfohlen.',
@@ -343,6 +353,14 @@ TRANSLATIONS = {
         'leave_empty_to_keep': 'Leer lassen um beizubehalten',
         'data_protection': 'Deine Daten werden sicher gespeichert',
         'contact': 'Kontakt',
+        'lock_closed_banner': 'Registrierung fuer dieses Team geschlossen. Kontaktiere Sergio fuer Aenderungen.',
+        'lock_open_until_banner': 'Registrierung offen bis {date}',
+        'lock_open_manual_banner': 'Registrierung offen (manuell freigeschaltet)',
+        'lock_disabled_button': 'Gesperrt',
+        'lock_admin_section': 'Registrierungssperre',
+        'lock_admin_toggle': 'Registrierung offen (manuell)',
+        'lock_admin_deadline': 'Registrierung offen bis',
+        'lock_admin_helper': 'Wenn aktiviert ODER Datum in der Zukunft, kann der Kapitaen Spieler hinzufuegen/bearbeiten/loeschen.',
     },
     'ES': {
         'page_title': 'Registro de Jugadores PCL',
@@ -429,6 +447,7 @@ TRANSLATIONS = {
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'Sin partidos completados',
         'your_team_indicator': 'Tu equipo',
+        'captain_pool_section': 'Jugadores del pool en',
         'profile': 'Perfil',
         'photo': 'Foto de perfil',
         'photo_help': 'Obligatorio. JPG, PNG, mÃƒÂ¡x 5MB. Formato cuadrado recomendado.',
@@ -501,6 +520,14 @@ TRANSLATIONS = {
         'leave_empty_to_keep': 'Dejar vacio para mantener',
         'data_protection': 'Tus datos estÃƒÂ¡n almacenados de forma segura',
         'contact': 'Contacto',
+        'lock_closed_banner': 'Registro cerrado para este equipo. Contacta a Sergio para solicitar cambios.',
+        'lock_open_until_banner': 'Registro abierto hasta {date}',
+        'lock_open_manual_banner': 'Registro abierto (desbloqueado manualmente)',
+        'lock_disabled_button': 'Bloqueado',
+        'lock_admin_section': 'Bloqueo de registro',
+        'lock_admin_toggle': 'Registro abierto (manual)',
+        'lock_admin_deadline': 'Registro abierto hasta',
+        'lock_admin_helper': 'Cuando esta marcado O la fecha es futura, el capitan puede anadir/editar/eliminar jugadores.',
     },
     'FR': {
         'page_title': 'Inscription Joueur PCL',
@@ -587,6 +614,7 @@ TRANSLATIONS = {
         'standings_diff': 'Diff',
         'standings_no_matches_yet': 'Aucun match termine',
         'your_team_indicator': 'Votre equipe',
+        'captain_pool_section': 'Joueurs du pool en',
         'profile': 'Profil',
         'photo': 'Photo de profil',
         'photo_help': 'Obligatoire. JPG, PNG, max 5Mo. Format carre recommande.',
@@ -659,12 +687,33 @@ TRANSLATIONS = {
         'leave_empty_to_keep': 'Laisser vide pour conserver',
         'data_protection': 'Vos donnees sont stockees en toute securite',
         'contact': 'Contact',
+        'lock_closed_banner': 'Inscriptions fermees pour cette equipe. Contactez Sergio pour demander des changements.',
+        'lock_open_until_banner': 'Inscriptions ouvertes jusqu au {date}',
+        'lock_open_manual_banner': 'Inscriptions ouvertes (debloque manuellement)',
+        'lock_disabled_button': 'Verrouille',
+        'lock_admin_section': 'Verrouillage des inscriptions',
+        'lock_admin_toggle': 'Inscriptions ouvertes (manuel)',
+        'lock_admin_deadline': 'Inscriptions ouvertes jusqu au',
+        'lock_admin_helper': 'Si coche OU si la date est dans le futur, le capitaine peut ajouter/modifier/supprimer des joueurs.',
     }
 }
 
 def get_translations(lang='EN'):
     """Get translations for a language, fallback to EN"""
     return TRANSLATIONS.get(lang, TRANSLATIONS['EN'])
+
+
+def registration_locked_redirect(team, token, lang='EN'):
+    """Server-side lock guard for captain-facing roster routes.
+
+    Returns a redirect response (with a flash) when the team's registration is
+    closed, otherwise None so the caller can proceed. Admin routes never call this.
+    """
+    if team.is_registration_open():
+        return None
+    t = get_translations(lang)
+    flash(t['lock_closed_banner'], 'warning')
+    return redirect(url_for('pcl.captain_dashboard', token=token, lang=lang))
 
 
 # ============================================================================
@@ -890,12 +939,74 @@ def admin_team_detail(team_id):
     captains = team.registrations.filter_by(is_captain=True).all()
     stats = team.get_stats()
     
-    return render_template('pcl/admin_team_detail.html', 
+    return render_template('pcl/admin_team_detail.html',
                          team=team,
                          men=men,
                          women=women,
                          captains=captains,
                          stats=stats)
+
+
+# ============================================================================
+# ADMIN: PER-TEAM REGISTRATION LOCK
+# ============================================================================
+
+@pcl.route('/admin/team/<int:team_id>/toggle-registration', methods=['POST'])
+def admin_toggle_registration(team_id):
+    """Admin flips the manual registration_open boolean for a team."""
+    team = PCLTeam.query.get_or_404(team_id)
+    team.registration_open = not team.registration_open
+    try:
+        db.session.commit()
+        state = 'OPEN' if team.registration_open else 'CLOSED'
+        flash(f'Registration manual override is now {state}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+
+
+@pcl.route('/admin/team/<int:team_id>/set-deadline', methods=['POST'])
+def admin_set_registration_deadline(team_id):
+    """Admin sets registration_open_until from a datetime-local form input."""
+    team = PCLTeam.query.get_or_404(team_id)
+    raw = (request.form.get('registration_open_until') or '').strip()
+    if not raw:
+        flash('Please pick a date and time.', 'warning')
+        return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+    parsed = None
+    # datetime-local sends "YYYY-MM-DDTHH:MM" (seconds optional)
+    for fmt in ('%Y-%m-%dT%H:%M', '%Y-%m-%dT%H:%M:%S'):
+        try:
+            parsed = datetime.strptime(raw, fmt)
+            break
+        except ValueError:
+            continue
+    if parsed is None:
+        flash('Invalid date format.', 'danger')
+        return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+    team.registration_open_until = parsed
+    try:
+        db.session.commit()
+        flash(f'Registration open until {parsed.strftime("%d.%m.%Y %H:%M")}.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
+
+
+@pcl.route('/admin/team/<int:team_id>/clear-deadline', methods=['POST'])
+def admin_clear_registration_deadline(team_id):
+    """Admin clears the registration_open_until deadline (sets it to NULL)."""
+    team = PCLTeam.query.get_or_404(team_id)
+    team.registration_open_until = None
+    try:
+        db.session.commit()
+        flash('Registration deadline cleared.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    return redirect(url_for('pcl.admin_team_detail', team_id=team_id))
 
 
 @pcl.route('/admin/team/<int:team_id>/add-captain', methods=['POST'])
@@ -1613,6 +1724,17 @@ Merci!"""
     # Live tournament standings (reuses the same helper as the admin match list)
     standings = get_tournament_standings(team.tournament_id)
 
+    # Pool players matching this team's country + age category (collapsible section)
+    from routes.pool import status_label as pool_status_label, STATUS_COLORS as POOL_STATUS_COLORS
+    pool_matches = PoolPlayer.query.filter_by(
+        country_name=team.country_name, age_category=team.age_category
+    ).order_by(PoolPlayer.created_at.desc()).all()
+    pool_players = [{
+        'p': pp,
+        'status_label': pool_status_label(pp.status, lang),
+        'status_color': POOL_STATUS_COLORS.get(pp.status, 'secondary'),
+    } for pp in pool_matches]
+
     return render_template('pcl/captain_dashboard.html',
                          team=team,
                          other_teams=other_teams,
@@ -1620,6 +1742,7 @@ Merci!"""
                          past_matches=past_matches,
                          deadline_soon=deadline_soon,
                          standings=standings,
+                         pool_players=pool_players,
                          stats=stats,
                          men=men,
                          women=women,
@@ -1648,7 +1771,12 @@ def quick_add_player(token):
     
     t = get_translations(lang)
     stats = team.get_stats()
-    
+
+    # Per-team registration lock (admin-controlled)
+    locked = registration_locked_redirect(team, token, lang)
+    if locked:
+        return locked
+
     # Check deadline
     if datetime.now() > team.tournament.registration_deadline:
         flash('Registration is closed.', 'danger')
@@ -1926,18 +2054,24 @@ def delete_player(token, registration_id):
     """Delete a player from the team (captain only)"""
     team = PCLTeam.query.filter_by(captain_token=token).first_or_404()
     registration = PCLRegistration.query.get_or_404(registration_id)
-    
+
+    lang = request.args.get('lang', 'EN')
+
+    # Per-team registration lock (admin-controlled)
+    locked = registration_locked_redirect(team, token, lang)
+    if locked:
+        return locked
+
     # Verify registration belongs to this team
     if registration.team_id != team.id:
         flash('Invalid request!', 'danger')
         return redirect(url_for('pcl.captain_dashboard', token=token))
-    
+
     # Don't allow deleting captain
     if registration.is_captain:
         flash('Cannot delete the captain!', 'danger')
         return redirect(url_for('pcl.captain_dashboard', token=token))
-    
-    lang = request.args.get('lang', 'EN')
+
     player_name = f"{registration.first_name} {registration.last_name}"
     
     try:
@@ -1965,7 +2099,12 @@ def player_register(token):
         lang = 'EN'
     
     t = get_translations(lang)
-    
+
+    # Per-team registration lock (admin-controlled)
+    locked = registration_locked_redirect(team, token, lang)
+    if locked:
+        return locked
+
     # Check if registration is still open
     if datetime.now() > team.tournament.registration_deadline:
         flash('Registration is closed.', 'danger')
@@ -2090,6 +2229,11 @@ def edit_registration(registration_id):
     if lang not in TRANSLATIONS:
         lang = 'EN'
     t = get_translations(lang)
+
+    # Per-team registration lock (admin-controlled)
+    locked = registration_locked_redirect(team, team.captain_token, lang)
+    if locked:
+        return locked
 
     # Parse existing additional photos so the template can render them as thumbnails
     additional_photos_list = []
