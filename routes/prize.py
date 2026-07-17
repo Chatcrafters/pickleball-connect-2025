@@ -2,22 +2,27 @@
 """Prize money payouts for WPC Italy - Alba 2026 (blueprint 'prize').
 
 Three surfaces:
-  * /prize/<token>                  player fills in bank + tax details (no amount shown)
-  * /prize/partner/<partner_token>  payout list for the accounting partner (env token, no login)
-  * /prize/admin                    internal status overview (app login)
+  * /prize/<token>    player fills in bank + tax details (no amount shown)
+  * /prize/partner    payout list for the accounting partner (own access code)
+  * /prize/admin      internal status overview (app login)
 
 Flat 20% withholding tax; net = gross - tax.
+The player form is translated (DE/EN/ES/FR/IT); the partner view is
+English-only, as the accounting partner works in English.
 Translations are ASCII-only, matching the convention in routes/pool.py.
 """
+import hmac
 import os
 import re
+import time
 from datetime import datetime
 from decimal import Decimal
+from functools import wraps
 from io import BytesIO
 from urllib.parse import quote
 
 from flask import (Blueprint, render_template, request, redirect, url_for,
-                   abort, flash, send_file, current_app)
+                   abort, session, send_file, current_app)
 
 from models import db, PrizePayment
 from routes.auth import login_required
@@ -324,10 +329,6 @@ def _normalize_phone(phone):
     return digits if len(digits) >= 8 else None
 
 
-def _partner_token():
-    return os.environ.get('PRIZE_PARTNER_TOKEN', '')
-
-
 def _form_url(payment):
     return url_for('prize.player_form', token=payment.token, _external=True)
 
@@ -431,33 +432,62 @@ def player_success(token):
 # 2. PARTNER VIEW
 # ============================================================================
 
-def _check_partner(partner_token):
-    expected = _partner_token()
-    if not expected:
-        current_app.logger.error('PRIZE_PARTNER_TOKEN is not set - partner view disabled')
-        abort(404)
-    # Constant-time-ish compare; tokens are short so just avoid early exit.
-    if not partner_token or len(partner_token) != len(expected):
-        abort(404)
-    if sum(a != b for a, b in zip(partner_token, expected)):
-        abort(404)
+def partner_required(f):
+    """Gate a partner route on the partner session, else send them to login."""
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not session.get('prize_partner'):
+            return redirect(url_for('prize.partner_login'))
+        return f(*args, **kwargs)
+    return wrapper
 
 
-@prize.route('/partner/<partner_token>')
-def partner_view(partner_token):
-    _check_partner(partner_token)
+@prize.route('/partner/login', methods=['GET', 'POST'])
+def partner_login():
+    expected = os.environ.get('PRIZE_PARTNER_PASSWORD', '')
+    error = None
+
+    if request.method == 'POST':
+        supplied = request.form.get('access_code') or ''
+        # An unset password must never mean "everyone gets in".
+        if not expected:
+            current_app.logger.error(
+                'PRIZE_PARTNER_PASSWORD is not set - partner view unavailable')
+            error = 'Invalid access code'
+        elif hmac.compare_digest(supplied, expected):
+            session['prize_partner'] = True
+            return redirect(url_for('prize.partner_view'))
+        else:
+            error = 'Invalid access code'
+
+        time.sleep(1)  # blunt the brute-force rate
+        return render_template('prize_partner_login.html', error=error), 401
+
+    if session.get('prize_partner'):
+        return redirect(url_for('prize.partner_view'))
+    return render_template('prize_partner_login.html', error=None)
+
+
+@prize.route('/partner/logout')
+def partner_logout():
+    session.pop('prize_partner', None)
+    return redirect(url_for('prize.partner_login'))
+
+
+@prize.route('/partner')
+@partner_required
+def partner_view():
     payments = PrizePayment.query.order_by(PrizePayment.gross_amount.desc()).all()
     return render_template('prize_partner.html', payments=payments,
-                           progress=_progress(), partner_token=partner_token,
-                           tournament=TOURNAMENT_NAME)
+                           progress=_progress(), tournament=TOURNAMENT_NAME)
 
 
-@prize.route('/partner/<partner_token>/paid/<int:payment_id>', methods=['POST'])
-def partner_mark_paid(partner_token, payment_id):
-    _check_partner(partner_token)
+@prize.route('/partner/paid/<int:payment_id>', methods=['POST'])
+@partner_required
+def partner_mark_paid(payment_id):
     payment = PrizePayment.query.get_or_404(payment_id)
     _toggle_paid(payment, request.form.get('paid') == '1', 'partner')
-    return redirect(url_for('prize.partner_view', partner_token=partner_token))
+    return redirect(url_for('prize.partner_view'))
 
 
 def _toggle_paid(payment, paid, actor):
@@ -471,35 +501,35 @@ def _toggle_paid(payment, paid, actor):
     db.session.commit()
 
 
-@prize.route('/partner/<partner_token>/export')
-def partner_export(partner_token):
-    _check_partner(partner_token)
+@prize.route('/partner/export')
+@partner_required
+def partner_export():
     return _build_export()
 
 
 # Excel layout: (header, width, value fn). SEPA and non-SEPA share one table,
 # so the columns that don't apply to a row are simply left empty.
 EXPORT_COLUMNS = [
-    ('Empfaenger',        26, lambda p: p.account_holder),
-    ('Kontotyp',          10, lambda p: 'SEPA' if p.is_sepa else 'Non-SEPA'),
-    ('IBAN',              34, lambda p: p.iban if p.is_sepa else None),
-    ('BIC / SWIFT',       14, lambda p: p.bic),
-    ('Kontonummer',       22, lambda p: None if p.is_sepa else p.account_number),
-    ('Routing / ABA',     16, lambda p: None if p.is_sepa else p.routing_number),
-    ('Bank',              24, lambda p: p.bank_name),
-    ('Bank-Adresse',      34, lambda p: None if p.is_sepa else p.bank_address),
-    ('Strasse',           26, lambda p: p.address_street),
-    ('PLZ / Ort',         24, lambda p: p.address_zip_city),
-    ('Land',              16, lambda p: p.address_country),
-    ('Brutto',            11, lambda p: float(p.gross)),
-    ('Quellensteuer 20%', 18, lambda p: float(p.withholding_tax)),
-    ('Netto',             11, lambda p: float(p.net_amount)),
-    ('Verwendungszweck',  36, lambda p: p.payment_reference),
-    ('Status',            10, lambda p: 'Bezahlt' if p.paid_at else 'Offen'),
+    ('Recipient',          26, lambda p: p.account_holder),
+    ('Account type',       12, lambda p: 'SEPA' if p.is_sepa else 'Non-SEPA'),
+    ('IBAN',               34, lambda p: p.iban if p.is_sepa else None),
+    ('BIC / SWIFT',        14, lambda p: p.bic),
+    ('Account number',     22, lambda p: None if p.is_sepa else p.account_number),
+    ('Routing / ABA',      16, lambda p: None if p.is_sepa else p.routing_number),
+    ('Bank',               24, lambda p: p.bank_name),
+    ('Bank address',       34, lambda p: None if p.is_sepa else p.bank_address),
+    ('Street',             26, lambda p: p.address_street),
+    ('ZIP / City',         24, lambda p: p.address_zip_city),
+    ('Country',            16, lambda p: p.address_country),
+    ('Gross',              11, lambda p: float(p.gross)),
+    ('Withholding tax 20%', 18, lambda p: float(p.withholding_tax)),
+    ('Net payout',         12, lambda p: float(p.net_amount)),
+    ('Payment reference',  36, lambda p: p.payment_reference),
+    ('Status',             10, lambda p: 'Paid' if p.paid_at else 'Open'),
 ]
-# 1-based column indices of the three money columns.
+# 1-based column indices of the three money columns, and their totals labels.
 _MONEY_COLS = [i for i, (h, _w, _f) in enumerate(EXPORT_COLUMNS, start=1)
-               if h in ('Brutto', 'Quellensteuer 20%', 'Netto')]
+               if h in ('Gross', 'Withholding tax 20%', 'Net payout')]
 
 
 def _build_export():
@@ -523,10 +553,10 @@ def _build_export():
     for p in payments:
         ws.append([fn(p) for _h, _w, fn in EXPORT_COLUMNS])
 
-    # Totals row, aligned under the money columns.
+    # Totals row: label sits left of Gross, sums line up under their columns.
     total_row = ws.max_row + 1
     label_col = _MONEY_COLS[0] - 1
-    ws.cell(row=total_row, column=label_col, value='Summe').font = Font(bold=True)
+    ws.cell(row=total_row, column=label_col, value='Total').font = Font(bold=True)
     for col, attr in zip(_MONEY_COLS, ('gross', 'withholding_tax', 'net_amount')):
         cell = ws.cell(row=total_row, column=col,
                        value=float(sum((getattr(p, attr) for p in payments), Decimal('0'))))
@@ -575,8 +605,7 @@ def admin_view():
         })
 
     return render_template('prize_admin.html', rows=rows, progress=_progress(),
-                           tournament=TOURNAMENT_NAME,
-                           partner_token=_partner_token())
+                           tournament=TOURNAMENT_NAME)
 
 
 @prize.route('/admin/contacted/<int:payment_id>', methods=['POST'])

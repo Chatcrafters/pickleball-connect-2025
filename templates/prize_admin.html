@@ -19,22 +19,12 @@
             <a href="{{ url_for('prize.admin_export') }}" class="btn btn-success btn-sm">
                 <i class="bi bi-file-earmark-excel"></i> Excel-Export
             </a>
-            {% if partner_token %}
-            <a href="{{ url_for('prize.partner_view', partner_token=partner_token) }}"
+            <a href="{{ url_for('prize.partner_view') }}"
                class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener">
                 <i class="bi bi-box-arrow-up-right"></i> Partner-Sicht
             </a>
-            {% endif %}
         </div>
     </div>
-
-    {% if not partner_token %}
-    <div class="alert alert-warning py-2 small">
-        <i class="bi bi-exclamation-triangle"></i>
-        <strong>PRIZE_PARTNER_TOKEN</strong> ist nicht gesetzt - die Partner-Sicht ist deaktiviert.
-        Env-Variable in Vercel setzen und neu deployen.
-    </div>
-    {% endif %}
 
     {# Progress across the three workflow steps. #}
     <div class="card mb-3">
