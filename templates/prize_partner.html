@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ tournament }} - Preisgeld Auszahlung</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f6f8; }
+        .wrap { max-width: 1600px; margin: 0 auto; padding: 20px 14px 60px; }
+        .head-card { background: #fff; border-radius: 12px; padding: 18px 20px; margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .table-card { background: #fff; border-radius: 12px; padding: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); overflow-x: auto; }
+        table { margin-bottom: 0; }
+        th { font-size: .74rem; text-transform: uppercase; letter-spacing: .03em;
+            color: #6c757d; white-space: nowrap; }
+        td { vertical-align: middle; font-size: .86rem; }
+        .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
+        .num { text-align: right; white-space: nowrap; }
+        tr.pending td { color: #adb5bd; background: #fafafa; }
+        tr.non-sepa td { background: #fffdf5; }
+        tfoot td { font-weight: 700; border-top: 2px solid #dee2e6; }
+        .addr { font-size: .8rem; line-height: 1.3; min-width: 170px; }
+        .bankinfo { min-width: 200px; line-height: 1.35; }
+    </style>
+</head>
+<body>
+<div class="wrap">
+
+    <div class="head-card d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h1 class="h5 mb-1"><i class="bi bi-bank"></i> {{ tournament }} - Preisgeld</h1>
+            <div class="text-muted small">
+                <i class="bi bi-people"></i>
+                {{ progress.submitted }} von {{ progress.total }} Daten erhalten
+                &middot; {{ progress.paid }} bezahlt
+            </div>
+        </div>
+        <a href="{{ url_for('prize.partner_export', partner_token=partner_token) }}"
+           class="btn btn-success">
+            <i class="bi bi-file-earmark-excel"></i> Excel-Export
+        </a>
+    </div>
+
+    {% if progress.non_sepa %}
+    {# Non-SEPA accounts cannot go into a SEPA batch - flag them up front. #}
+    <div class="alert alert-warning py-2">
+        <i class="bi bi-globe-americas"></i>
+        <strong>Manuell zu ueberweisen: {{ progress.non_sepa }}
+        {% if progress.non_sepa == 1 %}Spieler{% else %}Spieler{% endif %}</strong>
+        - Konten ausserhalb des SEPA-Raums, als separate Auslandsueberweisung auszufuehren
+        (in der Tabelle mit <span class="badge bg-warning text-dark">Non-SEPA</span> markiert).
+    </div>
+    {% endif %}
+
+    <div class="table-card">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Empfaenger</th>
+                    <th>Typ</th>
+                    <th>Kontodaten</th>
+                    <th>Bank</th>
+                    <th>Wohnadresse</th>
+                    <th class="num">Brutto</th>
+                    <th class="num">Quellensteuer 20%</th>
+                    <th class="num">Netto</th>
+                    <th>Verwendungszweck</th>
+                    <th>Status</th>
+                    <th class="text-center">Bezahlt</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for p in payments %}
+                {# Rows without submitted data are greyed out - nothing to transfer yet. #}
+                <tr class="{% if not p.has_bank_data %}pending{% elif not p.is_sepa %}non-sepa{% endif %}">
+                {% if p.has_bank_data %}
+                    <td>{{ p.account_holder }}</td>
+                    <td>
+                        {% if p.is_sepa %}
+                        <span class="badge bg-light text-dark border">SEPA</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Non-SEPA</span>
+                        {% endif %}
+                    </td>
+
+                    {# SEPA needs IBAN+BIC; a wire needs account no., routing and SWIFT. #}
+                    <td class="bankinfo">
+                        {% if p.is_sepa %}
+                        <div class="mono">{{ p.iban }}</div>
+                        <div class="text-muted small">BIC {{ p.bic }}</div>
+                        {% else %}
+                        <div class="mono">Acct {{ p.account_number }}</div>
+                        {% if p.routing_number %}
+                        <div class="text-muted small mono">Routing {{ p.routing_number }}</div>
+                        {% endif %}
+                        <div class="text-muted small">SWIFT {{ p.bic }}</div>
+                        {% endif %}
+                    </td>
+
+                    <td class="addr">
+                        <div>{{ p.bank_name }}</div>
+                        {% if not p.is_sepa and p.bank_address %}
+                        <div class="text-muted small">{{ p.bank_address }}</div>
+                        {% endif %}
+                    </td>
+
+                    {# Required for international transfers. #}
+                    <td class="addr">
+                        <div>{{ p.address_street }}</div>
+                        <div class="text-muted">{{ p.address_zip_city }}</div>
+                        <div class="text-muted">{{ p.address_country }}</div>
+                    </td>
+
+                    <td class="num">{{ '%.2f'|format(p.gross) }}</td>
+                    <td class="num">{{ '%.2f'|format(p.withholding_tax) }}</td>
+                    <td class="num fw-bold">{{ '%.2f'|format(p.net_amount) }}</td>
+                    <td class="small">{{ p.payment_reference }}</td>
+                    <td>
+                        {% if p.paid_at %}
+                        <span class="badge bg-success">Bezahlt</span>
+                        {% else %}
+                        <span class="badge bg-warning text-dark">Offen</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        <form method="POST"
+                              action="{{ url_for('prize.partner_mark_paid', partner_token=partner_token, payment_id=p.id) }}">
+                            <input type="hidden" name="paid" value="{% if p.paid_at %}0{% else %}1{% endif %}">
+                            <input class="form-check-input" type="checkbox"
+                                   {% if p.paid_at %}checked{% endif %}
+                                   onchange="this.form.submit()"
+                                   aria-label="Bezahlt {{ p.account_holder }}">
+                        </form>
+                    </td>
+                {% else %}
+                    <td>{{ p.first_name }} {{ p.last_name }}</td>
+                    <td colspan="8" class="fst-italic">
+                        <i class="bi bi-hourglass-split"></i> Daten ausstehend
+                    </td>
+                    <td class="text-center">
+                        <input class="form-check-input" type="checkbox" disabled
+                               aria-label="Daten ausstehend">
+                    </td>
+                {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+            <tfoot>
+                {% set done = payments | selectattr('has_bank_data') | list %}
+                <tr>
+                    <td colspan="5" class="text-end">Summe ({{ done|length }})</td>
+                    <td class="num">{{ '%.2f'|format(done | sum(attribute='gross')) }}</td>
+                    <td class="num">{{ '%.2f'|format(done | sum(attribute='withholding_tax')) }}</td>
+                    <td class="num">{{ '%.2f'|format(done | sum(attribute='net_amount')) }}</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <p class="text-muted small mt-3 mb-0">
+        <i class="bi bi-shield-lock"></i>
+        Vertraulich - enthaelt Bankdaten. Bitte nicht weiterleiten.
+    </p>
+</div>
+</body>
+</html>

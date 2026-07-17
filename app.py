@@ -20,6 +20,7 @@ from checkin import checkin
 from sponsors import sponsors
 from routes.scoring import scoring
 from routes.pool import pool_bp
+from routes.prize import prize
 
 # Load environment variables from .env
 load_dotenv()
@@ -80,6 +81,7 @@ app.register_blueprint(wpc_matches)
 app.register_blueprint(sponsors)
 app.register_blueprint(scoring)
 app.register_blueprint(pool_bp)
+app.register_blueprint(prize)  # url_prefix declared on the blueprint
 
 # Create tables on first run
 with app.app_context():

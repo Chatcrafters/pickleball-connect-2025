@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}Preisgeld - {{ tournament }}{% endblock %}
+
+{% block content %}
+<style>
+    .prize-admin .table td { vertical-align: middle; }
+    .prize-admin .badge-status { font-weight: 600; }
+    .prize-admin tr.open-row { background: #fff5f5; }
+    .prize-admin tr.open-row td:first-child { border-left: 3px solid #dc3545; }
+    .prize-admin .amount { font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .prize-admin .stat { font-size: 1.6rem; font-weight: 800; line-height: 1; }
+</style>
+
+<div class="container prize-admin py-3">
+
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <h1 class="h4 mb-0"><i class="bi bi-trophy"></i> Preisgeld - {{ tournament }}</h1>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('prize.admin_export') }}" class="btn btn-success btn-sm">
+                <i class="bi bi-file-earmark-excel"></i> Excel-Export
+            </a>
+            {% if partner_token %}
+            <a href="{{ url_for('prize.partner_view', partner_token=partner_token) }}"
+               class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener">
+                <i class="bi bi-box-arrow-up-right"></i> Partner-Sicht
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not partner_token %}
+    <div class="alert alert-warning py-2 small">
+        <i class="bi bi-exclamation-triangle"></i>
+        <strong>PRIZE_PARTNER_TOKEN</strong> ist nicht gesetzt - die Partner-Sicht ist deaktiviert.
+        Env-Variable in Vercel setzen und neu deployen.
+    </div>
+    {% endif %}
+
+    {# Progress across the three workflow steps. #}
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="row text-center g-3 mb-3">
+                <div class="col-4">
+                    <div class="stat text-info">{{ progress.contacted }}</div>
+                    <div class="text-muted small">Angeschrieben</div>
+                </div>
+                <div class="col-4">
+                    <div class="stat text-primary">{{ progress.submitted }}</div>
+                    <div class="text-muted small">Daten erhalten</div>
+                </div>
+                <div class="col-4">
+                    <div class="stat text-success">{{ progress.paid }}</div>
+                    <div class="text-muted small">Bezahlt</div>
+                </div>
+            </div>
+
+            <div class="progress" style="height: 22px;" role="progressbar"
+                 aria-valuenow="{{ progress.paid }}" aria-valuemin="0" aria-valuemax="{{ progress.total }}">
+                {% set pct_paid = (progress.paid / progress.total * 100) if progress.total else 0 %}
+                {% set pct_sub = ((progress.submitted - progress.paid) / progress.total * 100) if progress.total else 0 %}
+                <div class="progress-bar bg-success" style="width: {{ pct_paid }}%">
+                    {% if progress.paid %}{{ progress.paid }} bezahlt{% endif %}
+                </div>
+                <div class="progress-bar bg-primary" style="width: {{ pct_sub }}%">
+                    {% if progress.submitted - progress.paid %}{{ progress.submitted - progress.paid }}{% endif %}
+                </div>
+            </div>
+            <div class="text-muted small mt-2 text-center">
+                {{ progress.submitted }} von {{ progress.total }} Daten erhalten
+                &middot; {{ progress.paid }} bezahlt
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Spieler</th>
+                        <th>Ergebnisse</th>
+                        <th class="text-end">Brutto</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center">Bezahlt</th>
+                        <th class="text-end">Aktionen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    {% set p = row.p %}
+                    {# Highlight players who still owe us their data. #}
+                    <tr class="{% if not p.submitted_at %}open-row{% endif %}">
+                        <td>
+                            <div class="fw-semibold">{{ p.first_name }} {{ p.last_name }}</div>
+                            <div class="text-muted small">
+                                <span class="badge bg-light text-dark border">{{ p.preferred_language }}</span>
+                                {% if p.phone %}{{ p.phone }}{% else %}<em>keine Nummer</em>{% endif %}
+                            </div>
+                        </td>
+                        <td class="small">{{ p.results or '-' }}</td>
+                        <td class="text-end amount fw-semibold">{{ '%.2f'|format(p.gross) }} EUR</td>
+                        <td class="text-center">
+                            <span class="badge badge-status {% if p.contacted_at %}bg-info{% else %}bg-light text-muted border{% endif %}"
+                                  title="Angeschrieben{% if p.contacted_at %}: {{ p.contacted_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}">
+                                <i class="bi bi-whatsapp"></i> Angeschrieben
+                            </span>
+                            <span class="badge badge-status {% if p.submitted_at %}bg-primary{% else %}bg-light text-muted border{% endif %}"
+                                  title="Daten erhalten{% if p.submitted_at %}: {{ p.submitted_at.strftime('%d.%m.%Y %H:%M') }}{% endif %}">
+                                <i class="bi bi-file-earmark-text"></i> Daten erhalten
+                            </span>
+                            <span class="badge badge-status {% if p.paid_at %}bg-success{% else %}bg-light text-muted border{% endif %}"
+                                  title="Bezahlt{% if p.paid_at %}: {{ p.paid_at.strftime('%d.%m.%Y %H:%M') }} ({{ p.paid_by }}){% endif %}">
+                                <i class="bi bi-cash-coin"></i> Bezahlt
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <form method="POST" action="{{ url_for('prize.admin_mark_paid', payment_id=p.id) }}">
+                                <input type="hidden" name="paid" value="{% if p.paid_at %}0{% else %}1{% endif %}">
+                                <input class="form-check-input" type="checkbox"
+                                       {% if p.paid_at %}checked{% endif %}
+                                       {% if not p.has_bank_data and not p.paid_at %}disabled
+                                       title="Bankdaten fehlen noch"{% endif %}
+                                       onchange="this.form.submit()"
+                                       aria-label="Bezahlt {{ p.first_name }} {{ p.last_name }}">
+                            </form>
+                        </td>
+                        <td class="text-end">
+                            <div class="btn-group btn-group-sm">
+                                <button type="button" class="btn btn-outline-secondary"
+                                        data-copy="{{ row.form_url }}" onclick="copyLink(this)">
+                                    <i class="bi bi-clipboard"></i> Link kopieren
+                                </button>
+                                {% if row.wa_url %}
+                                <a href="{{ row.wa_url }}" target="_blank" rel="noopener"
+                                   class="btn btn-success"
+                                   onclick="markContacted({{ p.id }}, this)">
+                                    <i class="bi bi-whatsapp"></i> WhatsApp
+                                </a>
+                                {% else %}
+                                <button type="button" class="btn btn-outline-secondary" disabled
+                                        title="Keine gueltige Telefonnummer">
+                                    <i class="bi bi-whatsapp"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyLink(btn) {
+    const url = btn.dataset.copy;
+    const done = () => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2"></i> Kopiert';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-outline-secondary');
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 1500);
+    };
+    // navigator.clipboard needs a secure context; fall back for plain http.
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(done);
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        done();
+    }
+}
+
+// Opening WhatsApp counts as "contacted"; the badge updates on the next load.
+function markContacted(id, link) {
+    fetch('/prize/admin/contacted/' + id, { method: 'POST' });
+    const badge = link.closest('tr').querySelector('.badge-status');
+    badge.classList.remove('bg-light', 'text-muted', 'border');
+    badge.classList.add('bg-info');
+}
+</script>
+{% endblock %}

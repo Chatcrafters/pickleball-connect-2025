@@ -1,5 +1,6 @@
 ﻿from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from decimal import Decimal, ROUND_HALF_UP
 import secrets
 
 db = SQLAlchemy()
@@ -1423,3 +1424,101 @@ class User(db.Model):
         if not self.password_hash:
             return False
         return check_password_hash(self.password_hash, password)
+
+# ============================================================================
+# PRIZE PAYMENT (WPC Italy - Alba 2026)
+# ============================================================================
+
+class PrizePayment(db.Model):
+    """Prize money payout for one podium finisher of WPC Alba 2026.
+
+    Rows are seeded from the tournament results; players fill in their own
+    bank/tax details via a tokenised form. Mirrors the existing Supabase
+    table exactly - db.create_all() must not try to alter it.
+    """
+    __tablename__ = 'prize_payment'
+
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(100), nullable=False)
+    last_name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(30), nullable=True)
+    email = db.Column(db.String(200), nullable=True)
+    preferred_language = db.Column(db.String(2), default='EN')
+    results = db.Column(db.String(200), nullable=True)
+    gross_amount = db.Column(db.Numeric(8, 2), nullable=False)
+    token = db.Column(db.String(32), unique=True, nullable=False, index=True)
+
+    # Filled in by the player
+    birth_date = db.Column(db.Date, nullable=True)
+    address_street = db.Column(db.String(200), nullable=True)
+    address_zip_city = db.Column(db.String(200), nullable=True)
+    address_country = db.Column(db.String(100), nullable=True)
+    tax_country = db.Column(db.String(100), nullable=True)
+    tax_id = db.Column(db.String(50), nullable=True)
+
+    # 'SEPA' -> iban + bic; 'OTHER' -> account_number + bic (+ routing for US).
+    account_type = db.Column(db.String(10), default='SEPA')
+    account_holder = db.Column(db.String(200), nullable=True)
+    iban = db.Column(db.String(40), nullable=True)
+    bic = db.Column(db.String(15), nullable=True)
+    bank_name = db.Column(db.String(200), nullable=True)
+    account_number = db.Column(db.String(40), nullable=True)
+    routing_number = db.Column(db.String(20), nullable=True)
+    bank_address = db.Column(db.String(300), nullable=True)
+
+    # Workflow timestamps
+    contacted_at = db.Column(db.DateTime, nullable=True)
+    submitted_at = db.Column(db.DateTime, nullable=True)
+    paid_at = db.Column(db.DateTime, nullable=True)
+    paid_by = db.Column(db.String(20), nullable=True)  # 'admin' | 'partner'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    WITHHOLDING_RATE = Decimal('0.20')
+
+    def __repr__(self):
+        return f'<PrizePayment {self.first_name} {self.last_name} {self.gross_amount}>'
+
+    @property
+    def full_name(self):
+        return f'{self.first_name} {self.last_name}'
+
+    @property
+    def gross(self):
+        return Decimal(self.gross_amount or 0).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    @property
+    def withholding_tax(self):
+        """20% withholding, rounded half-up to cents."""
+        return (self.gross * self.WITHHOLDING_RATE).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+
+    @property
+    def net_amount(self):
+        """Net payout. Derived as gross - tax so the three columns always add up."""
+        return self.gross - self.withholding_tax
+
+    @property
+    def payment_reference(self):
+        return f'WPC Alba 2026 Prize Money - {self.last_name}'
+
+    @property
+    def is_sepa(self):
+        # Legacy rows predate account_type and are all IBAN accounts.
+        return (self.account_type or 'SEPA').upper() != 'OTHER'
+
+    @property
+    def has_bank_data(self):
+        """True once the player submitted the fields needed to actually transfer.
+
+        A SEPA transfer needs an IBAN; an international wire needs an account
+        number plus a SWIFT/BIC to route it.
+        """
+        if not (self.submitted_at and self.account_holder):
+            return False
+        if self.is_sepa:
+            return bool(self.iban)
+        return bool(self.account_number and self.bic)
+
+    @property
+    def is_locked(self):
+        """Once paid, the player may no longer edit their details."""
+        return self.paid_at is not None

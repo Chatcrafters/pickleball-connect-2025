@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="{{ lang|lower }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ t.form_title }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f6f8; }
+        .prize-wrap { max-width: 560px; margin: 0 auto; padding: 0 12px 96px; }
+        .prize-hero { background: linear-gradient(135deg, #198754 0%, #0d6efd 100%); color: #fff;
+            border-radius: 14px; padding: 22px; margin-bottom: 18px; }
+        .prize-hero h1 { font-size: 1.4rem; font-weight: 800; margin: 0; }
+        .prize-card { background: #fff; border-radius: 12px; padding: 18px; margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+        .prize-wrap .form-control, .prize-wrap .form-select { min-height: 46px; }
+        .prize-wrap label.form-label { font-weight: 600; margin-bottom: .25rem; }
+        .readonly-val { font-weight: 700; font-size: 1.05rem; }
+        .sec-title { font-weight: 700; font-size: .95rem; text-transform: uppercase;
+            letter-spacing: .04em; color: #6c757d; margin-bottom: 12px; }
+        .prize-sticky { position: sticky; bottom: 0;
+            background: linear-gradient(to top, #f5f6f8 75%, rgba(245,246,248,0)); padding: 12px 0; }
+        .prize-sticky .btn { min-height: 50px; font-weight: 700; }
+        #iban { text-transform: uppercase; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .req { color: #dc3545; }
+    </style>
+</head>
+<body>
+<div class="prize-wrap">
+
+    <div class="text-end my-2">
+        <div class="btn-group btn-group-sm">
+            {% for lg in languages %}
+            <a href="?lang={{ lg }}" class="btn {% if lang == lg %}btn-primary{% else %}btn-outline-primary{% endif %}">{{ lg }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="prize-hero">
+        <h1><i class="bi bi-trophy"></i> {{ t.form_title }}</h1>
+    </div>
+
+    {# Name + results are shown for confirmation only, never the amount. #}
+    <div class="prize-card">
+        <div class="row g-3">
+            <div class="col-12">
+                <div class="text-muted small">{{ t.player }}</div>
+                <div class="readonly-val">{{ p.first_name }} {{ p.last_name }}</div>
+            </div>
+            {% if p.results %}
+            <div class="col-12">
+                <div class="text-muted small">{{ t.results }}</div>
+                <div class="readonly-val"><i class="bi bi-award text-warning"></i> {{ p.results }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if locked %}
+    <div class="prize-card border-start border-4 border-success">
+        <h2 class="h5"><i class="bi bi-check-circle-fill text-success"></i> {{ t.locked_title }}</h2>
+        <p class="mb-0 text-muted">{{ t.locked_msg }}</p>
+    </div>
+    {% else %}
+
+    <p class="text-muted px-1">{{ t.form_intro }}</p>
+
+    {% if error %}
+    <div class="alert alert-danger py-2"><i class="bi bi-exclamation-triangle"></i> {{ error }}</div>
+    {% elif p.submitted_at %}
+    <div class="alert alert-info py-2"><i class="bi bi-info-circle"></i> {{ t.edit_hint }}</div>
+    {% endif %}
+
+    {#- form_data (a rejected POST) wins over the stored value, so nothing typed is lost. -#}
+    {% macro val(field) -%}
+    {%- if form_data.get(field) is not none and form_data.get(field) != '' -%}
+    {{- form_data.get(field) -}}
+    {%- elif p[field] is not none -%}
+    {{- p[field] -}}
+    {%- endif -%}
+    {%- endmacro %}
+
+    <form method="POST" id="prizeForm" novalidate>
+        <div class="prize-card">
+            <div class="sec-title">{{ t.sec_personal }}</div>
+
+            <div class="mb-3">
+                <label class="form-label" for="birth_date">{{ t.birth_date }} <span class="req">*</span></label>
+                <input type="date" class="form-control" id="birth_date" name="birth_date"
+                       value="{{ val('birth_date') }}" max="{{ today }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="address_street">{{ t.address_street }} <span class="req">*</span></label>
+                <input type="text" class="form-control" id="address_street" name="address_street"
+                       value="{{ val('address_street') }}" autocomplete="address-line1" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="address_zip_city">{{ t.address_zip_city }} <span class="req">*</span></label>
+                <input type="text" class="form-control" id="address_zip_city" name="address_zip_city"
+                       value="{{ val('address_zip_city') }}" autocomplete="address-level2" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="address_country">{{ t.address_country }} <span class="req">*</span></label>
+                <select class="form-select" id="address_country" name="address_country" required>
+                    <option value="">{{ t.select }}</option>
+                    {% for c in countries %}
+                    <option value="{{ c }}" {% if val('address_country') == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="tax_country">{{ t.tax_country }} <span class="req">*</span></label>
+                <select class="form-select" id="tax_country" name="tax_country" required>
+                    <option value="">{{ t.select }}</option>
+                    {% for c in countries %}
+                    <option value="{{ c }}" {% if val('tax_country') == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-0">
+                <label class="form-label" for="tax_id">{{ t.tax_id }} <span class="req">*</span></label>
+                <input type="text" class="form-control" id="tax_id" name="tax_id"
+                       value="{{ val('tax_id') }}" required>
+            </div>
+        </div>
+
+        {#- Rejected POST keeps its choice; otherwise fall back to the stored type. -#}
+        {% set acct = form_data.get('account_type') or p.account_type or 'SEPA' %}
+
+        <div class="prize-card">
+            <div class="sec-title">{{ t.sec_bank }}</div>
+
+            <div class="mb-3">
+                <label class="form-label d-block">{{ t.acct_type }}</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="account_type" id="acct_sepa"
+                           value="SEPA" {% if acct != 'OTHER' %}checked{% endif %}>
+                    <label class="form-check-label" for="acct_sepa">
+                        <i class="bi bi-globe-europe-africa"></i> {{ t.acct_sepa }}
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="account_type" id="acct_other"
+                           value="OTHER" {% if acct == 'OTHER' %}checked{% endif %}>
+                    <label class="form-check-label" for="acct_other">
+                        <i class="bi bi-globe-americas"></i> {{ t.acct_other }}
+                    </label>
+                </div>
+            </div>
+
+            <hr>
+
+            <div class="mb-3">
+                <label class="form-label" for="account_holder">{{ t.account_holder }} <span class="req">*</span></label>
+                <input type="text" class="form-control" id="account_holder" name="account_holder"
+                       value="{{ val('account_holder') }}" required>
+                <div class="form-text">{{ t.account_holder_help }}</div>
+            </div>
+
+            {# SEPA branch: IBAN + BIC. #}
+            <div data-acct="SEPA">
+                <div class="mb-3">
+                    <label class="form-label" for="iban">{{ t.iban }} <span class="req">*</span></label>
+                    <input type="text" class="form-control" id="iban" name="iban" value="{{ val('iban') }}"
+                           autocomplete="off" autocapitalize="characters" spellcheck="false">
+                    <div class="form-text" id="ibanHelp">{{ t.iban_help }}</div>
+                    <div class="valid-feedback" id="ibanOk">{{ t.iban_valid }}</div>
+                    <div class="invalid-feedback" id="ibanBad">{{ t.iban_invalid }}</div>
+                </div>
+            </div>
+
+            {# Non-SEPA branch: account number, routing, bank address. #}
+            <div data-acct="OTHER">
+                <div class="alert alert-light border py-2 small">
+                    <i class="bi bi-info-circle"></i> {{ t.other_note }}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="account_number">{{ t.account_number }} <span class="req">*</span></label>
+                    <input type="text" class="form-control" id="account_number" name="account_number"
+                           value="{{ val('account_number') }}" autocomplete="off" spellcheck="false">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="routing_number">{{ t.routing_number }}</label>
+                    <input type="text" class="form-control" id="routing_number" name="routing_number"
+                           value="{{ val('routing_number') }}" autocomplete="off" spellcheck="false">
+                    <div class="form-text">{{ t.routing_help }}</div>
+                </div>
+            </div>
+
+            {# BIC/SWIFT is required for both, so it sits outside the branches. #}
+            <div class="mb-3">
+                <label class="form-label" for="bic">
+                    <span data-acct="SEPA">{{ t.bic }}</span>
+                    <span data-acct="OTHER">{{ t.swift }}</span>
+                    <span class="req">*</span>
+                </label>
+                <input type="text" class="form-control text-uppercase" id="bic" name="bic"
+                       value="{{ val('bic') }}" autocomplete="off" spellcheck="false" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label" for="bank_name">{{ t.bank_name }} <span class="req">*</span></label>
+                <input type="text" class="form-control" id="bank_name" name="bank_name"
+                       value="{{ val('bank_name') }}" required>
+            </div>
+
+            <div data-acct="OTHER" class="mb-0">
+                <label class="form-label" for="bank_address">{{ t.bank_address }} <span class="req">*</span></label>
+                <textarea class="form-control" id="bank_address" name="bank_address" rows="2">{{ val('bank_address') }}</textarea>
+                <div class="form-text">{{ t.bank_address_help }}</div>
+            </div>
+        </div>
+
+        <div class="prize-sticky">
+            <button type="submit" class="btn btn-success w-100">
+                <i class="bi bi-send"></i>
+                {% if p.submitted_at %}{{ t.save_changes }}{% else %}{{ t.submit }}{% endif %}
+            </button>
+        </div>
+    </form>
+
+    <p class="text-muted small text-center mt-3 mb-0">
+        <i class="bi bi-shield-lock"></i> {{ t.privacy_note }}
+    </p>
+    {% endif %}
+</div>
+
+<script>
+// mod-97 checksum (ISO 13616). The server re-runs this exact check on submit.
+function ibanIsValid(raw) {
+    const iban = (raw || '').replace(/\s+/g, '').toUpperCase();
+    if (!/^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$/.test(iban)) return false;
+    const rearranged = iban.slice(4) + iban.slice(0, 4);
+    const digits = rearranged.replace(/[A-Z]/g, c => (c.charCodeAt(0) - 55).toString());
+    // Chunked modulo - the number is far too long for a JS Number.
+    let remainder = 0;
+    for (let i = 0; i < digits.length; i += 7) {
+        remainder = parseInt(String(remainder) + digits.substr(i, 7), 10) % 97;
+    }
+    return remainder === 1;
+}
+
+const ibanField = document.getElementById('iban');
+
+function refreshIban() {
+    const stripped = ibanField.value.replace(/\s+/g, '').toUpperCase();
+    if (ibanField.value !== stripped) {
+        const atEnd = ibanField.selectionStart === ibanField.value.length;
+        ibanField.value = stripped;
+        if (atEnd) ibanField.setSelectionRange(stripped.length, stripped.length);
+    }
+    ibanField.classList.remove('is-valid', 'is-invalid');
+    if (stripped.length === 0) return;
+    ibanField.classList.add(ibanIsValid(stripped) ? 'is-valid' : 'is-invalid');
+}
+
+ibanField.addEventListener('input', refreshIban);
+ibanField.addEventListener('blur', refreshIban);
+
+// Fields that are required only while their account-type branch is visible.
+const CONDITIONAL_REQUIRED = { SEPA: ['iban'], OTHER: ['account_number', 'bank_address'] };
+
+function selectedAcct() {
+    return document.querySelector('input[name="account_type"]:checked').value;
+}
+
+// Show one branch, hide the other, and keep `required` in sync with visibility
+// so the browser never blocks submit on a field the user cannot see.
+function applyAcct() {
+    const acct = selectedAcct();
+    document.querySelectorAll('[data-acct]').forEach(el => {
+        el.hidden = el.dataset.acct !== acct;
+    });
+    for (const [type, fields] of Object.entries(CONDITIONAL_REQUIRED)) {
+        for (const name of fields) {
+            const field = document.getElementById(name);
+            field.required = (type === acct);
+            if (type !== acct) field.classList.remove('is-valid', 'is-invalid');
+        }
+    }
+    if (acct === 'SEPA' && ibanField.value) refreshIban();
+}
+
+document.querySelectorAll('input[name="account_type"]').forEach(radio => {
+    radio.addEventListener('change', applyAcct);
+});
+applyAcct();
+
+document.getElementById('prizeForm').addEventListener('submit', function (e) {
+    // Only SEPA accounts carry a checksum; other accounts have no such standard.
+    if (selectedAcct() !== 'SEPA') return;
+    refreshIban();
+    if (!ibanIsValid(ibanField.value)) {
+        e.preventDefault();
+        ibanField.focus();
+        ibanField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
+</body>
+</html>
