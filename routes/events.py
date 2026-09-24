@@ -145,8 +145,13 @@ def send_event_invitations(event_id):
     print(f"👥 Invited players: {len(event.invited_players)}")
     print(f"🧪 Test mode: {test_mode}")
     
+    # Only players who agreed to WhatsApp messages (see webhook opt-in flow)
+    recipients = [p for p in event.invited_players if p.whatsapp_optin]
+    skipped_no_optin = len(event.invited_players) - len(recipients)
+    print(f"🚫 Skipped (no WhatsApp opt-in): {skipped_no_optin}")
+
     sent_count = 0
-    for player in event.invited_players:
+    for player in recipients:
         # Format dates
         start_date_formatted = event.start_date.strftime('%d.%m.%Y')
         end_date_formatted = event.end_date.strftime('%d.%m.%Y') if event.end_date else None
@@ -191,6 +196,8 @@ def send_event_invitations(event_id):
         db.session.commit()
         mode_text = " (TEST MODE)" if test_mode else ""
         flash(f'{sent_count} invitation(s) sent{mode_text}!', 'success')
+        if skipped_no_optin:
+            flash(f'{skipped_no_optin} player(s) skipped: no WhatsApp opt-in.', 'warning')
         print(f"\n✅ Successfully sent {sent_count} messages{mode_text}!")
     except Exception as e:
         db.session.rollback()

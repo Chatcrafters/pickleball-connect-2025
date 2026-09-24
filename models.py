@@ -1,6 +1,7 @@
 ﻿from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from decimal import Decimal, ROUND_HALF_UP
+from sqlalchemy.orm import validates
 import secrets
 
 db = SQLAlchemy()
@@ -24,6 +25,8 @@ class Player(db.Model):
     first_name = db.Column(db.String(100), nullable=False)
     last_name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(20), unique=True, nullable=False, index=True)  # Indexed for WhatsApp lookups
+    # Legacy column: NOT NULL in the production table, keep it in sync with `phone`
+    phone_number = db.Column(db.String(20), nullable=True)
     email = db.Column(db.String(120), unique=True, nullable=True)
     skill_level = db.Column(db.String(10), nullable=True)
     city = db.Column(db.String(100), nullable=True)
@@ -41,13 +44,24 @@ class Player(db.Model):
 
     # Profile update token
     update_token = db.Column(db.String(64), unique=True, nullable=True, index=True)  # Indexed for token lookups
-    
+
+    # WhatsApp consent (opt-in requested via template, answered via webhook)
+    whatsapp_optin = db.Column(db.Boolean, nullable=False, default=False, server_default=db.false())
+    whatsapp_optin_at = db.Column(db.DateTime, nullable=True)  # time of the last yes/no answer
+    optin_requested_at = db.Column(db.DateTime, nullable=True)
+
     # Relationships
     invited_events = db.relationship('Event', secondary=event_players, back_populates='invited_players')
     pcl_registrations = db.relationship('PCLRegistration', back_populates='player', lazy='dynamic')
     
     def __repr__(self):
         return f'<Player {self.first_name} {self.last_name}>'
+
+    @validates('phone')
+    def _sync_phone_number(self, key, value):
+        """Every insert/update of phone also writes the legacy NOT NULL phone_number."""
+        self.phone_number = value
+        return value
     
     def generate_update_token(self):
         """Generate a unique token for profile updates"""

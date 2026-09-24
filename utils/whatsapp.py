@@ -31,7 +31,14 @@ TEMPLATE_SIDS = {
         'EN': os.environ.get('TEMPLATE_CAPTAIN_INVITE_EN'),
         'ES': os.environ.get('TEMPLATE_CAPTAIN_INVITE_ES'),
         'FR': os.environ.get('TEMPLATE_CAPTAIN_INVITE_FR'),
-    }
+    },
+    # Opt-in request with quick replies OPTIN_YES / OPTIN_NO, {{1}} = first name
+    'optin_request': {
+        'DE': os.environ.get('TEMPLATE_OPTIN_REQUEST_DE'),
+        'EN': os.environ.get('TEMPLATE_OPTIN_REQUEST_EN'),
+        'ES': os.environ.get('TEMPLATE_OPTIN_REQUEST_ES'),
+        'FR': os.environ.get('TEMPLATE_OPTIN_REQUEST_FR'),
+    },
 }
 
 
@@ -679,5 +686,69 @@ WPC Series Europe"""
     
     message = messages.get(player.preferred_language, messages['EN'])
     message = message.format(profile_url=profile_url)
-    
+
     return send_whatsapp_message(player.phone, message, test_mode=test_mode)
+
+
+def send_optin_request_template(player, test_mode=False):
+    """
+    Ask a player for WhatsApp consent using the approved opt-in template.
+
+    Template Variables:
+    - {{1}} = First name
+    Quick replies carry the payloads OPTIN_YES / OPTIN_NO (see routes/webhook.py).
+
+    Returns:
+        dict: Status of the send operation
+    """
+    formatted_phone = format_phone_number(player.phone)
+    if not formatted_phone:
+        return {'status': 'error', 'error': f'Invalid phone number: {player.phone}'}
+
+    language = (player.preferred_language or 'EN').upper()
+    templates = TEMPLATE_SIDS['optin_request']
+    template_sid = templates.get(language) or templates.get('EN')
+    if not template_sid:
+        return {'status': 'error',
+                'error': 'Set TEMPLATE_OPTIN_REQUEST_DE/EN/ES/FR in environment variables'}
+
+    content_variables = {'1': player.first_name}
+
+    if test_mode:
+        print(f"🧪 Test mode - opt-in template {template_sid} to {formatted_phone} not sent")
+        return {'status': 'test_mode', 'template_sid': template_sid}
+
+    try:
+        client = get_twilio_client()
+        if not client:
+            return {'status': 'error', 'error': 'Twilio client not configured'}
+
+        msg = client.messages.create(
+            content_sid=template_sid,
+            content_variables=json.dumps(content_variables),
+            from_=TWILIO_WHATSAPP_NUMBER,
+            to=formatted_phone
+        )
+        return {'status': 'sent', 'sid': msg.sid, 'template_sid': template_sid}
+
+    except Exception as e:
+        return {'status': 'error', 'error': str(e)}
+
+
+def get_optin_confirmation_message(language, accepted):
+    """Reply to an opt-in answer (sent inside the 24h window opened by the player)."""
+    messages = {
+        True: {
+            'EN': "✅ Thank you! You will receive information and your invitation to WPC Hannover (26–29 Nov 2026) here on WhatsApp. Reply STOP at any time to unsubscribe.",
+            'DE': "✅ Danke! Du erhältst Infos und deine Einladung zur WPC Hannover (26.–29.11.2026) hier per WhatsApp. Antworte jederzeit mit STOP, um dich abzumelden.",
+            'ES': "✅ ¡Gracias! Recibirás información y tu invitación a la WPC Hannover (26–29/11/2026) aquí por WhatsApp. Responde STOP en cualquier momento para darte de baja.",
+            'FR': "✅ Merci ! Tu recevras les infos et ton invitation pour la WPC Hannover (26–29/11/2026) ici sur WhatsApp. Réponds STOP à tout moment pour te désinscrire.",
+        },
+        False: {
+            'EN': "👍 No problem - we won't send you any more messages.",
+            'DE': "👍 Kein Problem - wir schicken dir keine weiteren Nachrichten.",
+            'ES': "👍 Sin problema, no te enviaremos más mensajes.",
+            'FR': "👍 Pas de souci, nous ne t'enverrons plus de messages.",
+        },
+    }
+    return messages[accepted].get((language or 'EN').upper(), messages[accepted]['EN'])

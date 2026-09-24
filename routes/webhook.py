@@ -1,9 +1,56 @@
+import re
+import unicodedata
 from flask import Blueprint, request
-from models import db, Player, Event, PlayerResponse, event_players, get_whatsapp_sponsor_block
+from models import db, Player, Event, Message, PlayerResponse, event_players, get_whatsapp_sponsor_block
 from datetime import datetime
-from utils.whatsapp import send_whatsapp_message
+from utils.whatsapp import send_whatsapp_message, get_optin_confirmation_message
 
 webhook = Blueprint('webhook', __name__)
+
+OPTIN_YES_WORDS = {'JA', 'YES', 'SI', 'OUI', 'Y', 'S'}
+OPTIN_NO_WORDS = {'NEIN', 'NO', 'NON', 'STOP', 'N'}
+
+
+def first_word(text):
+    """'Sí, claro' -> 'SI', 'Nein danke' -> 'NEIN'"""
+    text = unicodedata.normalize('NFKD', text or '')
+    text = ''.join(c for c in text if not unicodedata.combining(c)).upper()
+    words = re.findall(r'[A-Z]+', text)
+    return words[0] if words else ''
+
+
+def classify_optin_answer(payload, body):
+    """Quick-reply payload first, free text as fallback. Returns True/False/None."""
+    payload = (payload or '').strip().upper()
+    if payload in ('OPTIN_YES', 'OPTIN_NO'):
+        return payload == 'OPTIN_YES'
+    word = first_word(body)
+    if word in OPTIN_YES_WORDS:
+        return True
+    if word in OPTIN_NO_WORDS:
+        return False
+    return None
+
+
+def record_optin_answer(player, accepted, answer_text):
+    """Store the consent decision, log it and confirm to the player."""
+    player.whatsapp_optin = accepted
+    player.whatsapp_optin_at = datetime.utcnow()
+    # player_response.event_id is NOT NULL in production, so consent is logged as a message
+    db.session.add(Message(
+        player_id=player.id,
+        message_type='optin_yes' if accepted else 'optin_no',
+        content=answer_text or '-',
+        status='received'
+    ))
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Error saving opt-in answer for player {player.id}: {e}")
+        return
+    print(f"Opt-in {'accepted' if accepted else 'declined'} by player {player.id}")
+    send_whatsapp_message(player.phone, get_optin_confirmation_message(player.preferred_language, accepted))
 
 def send_confirmation_message(player, event, response_type):
     """Send automatic confirmation based on player response"""
@@ -132,6 +179,17 @@ def whatsapp_webhook():
     
     print(f"ðŸ‘¤ Found player: {player.first_name} {player.last_name}")
     
+    # WhatsApp consent - handled before any event response.
+    # A quick-reply payload or STOP counts at any time; free-text yes/no only
+    # while an opt-in request is pending.
+    payload = request.form.get('ButtonPayload', '')
+    optin_pending = player.optin_requested_at is not None and not player.whatsapp_optin
+    optin_answer = classify_optin_answer(payload, body)
+    has_optin_payload = payload.strip().upper() in ('OPTIN_YES', 'OPTIN_NO')
+    if optin_answer is not None and (optin_pending or has_optin_payload or first_word(body) == 'STOP'):
+        record_optin_answer(player, optin_answer, request.form.get('Body', '') or payload)
+        return '', 200
+
     # Determine response type - using startswith for flexibility
     response_type = None
     body_clean = body.strip().upper()
