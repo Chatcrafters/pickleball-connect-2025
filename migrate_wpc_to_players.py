@@ -10,7 +10,8 @@ show up under /players/ and in the event invite screen.
 Idempotent: every WPC player is matched against `player` by phone (fallback:
 email). A match is updated, otherwise a new player is created.
 
-On update, only name, email, country and skill_level are synced from WPC.
+On update, only name, email, country, date_of_birth and skill_level are
+synced from WPC; the report lists how many values would actually change.
 preferred_language is set on create only, so a language edited later in
 /players/ is not overwritten by a re-run.
 
@@ -161,6 +162,7 @@ def run(execute):
         'empty_last_name': [],
     }
     languages = Counter()
+    field_changes = Counter()  # field -> number of updated players where the value changes
 
     existing = Player.query.all()
     by_phone = {p.phone: p for p in existing}
@@ -223,6 +225,7 @@ def run(execute):
                 skill_level=skill_level,
                 city=None,
                 country=wpc.country,
+                date_of_birth=wpc.date_of_birth,
                 preferred_language=language,
             )
             player.generate_update_token()
@@ -240,15 +243,21 @@ def run(execute):
                     player.phone = phone
                     player.phone_number = phone
             language = player.preferred_language or map_language(wpc)
-            if execute:
-                player.first_name = wpc.first_name.strip()
-                player.last_name = (wpc.last_name or '').strip()
-                player.email = email
-                player.phone_number = player.phone_number or phone
-                player.country = wpc.country or player.country
-                player.skill_level = skill_level or player.skill_level
-                if not player.preferred_language:
-                    player.preferred_language = language
+            target = {
+                'first_name': wpc.first_name.strip(),
+                'last_name': (wpc.last_name or '').strip(),
+                'email': email,
+                'phone_number': player.phone_number or phone,
+                'country': wpc.country or player.country,
+                'date_of_birth': wpc.date_of_birth or player.date_of_birth,
+                'skill_level': skill_level or player.skill_level,
+                'preferred_language': language,
+            }
+            for field, value in target.items():
+                if getattr(player, field) != value:
+                    field_changes[field] += 1
+                    if execute:
+                        setattr(player, field, value)
             report['update'].append((wpc, player))
 
         languages[language] += 1
@@ -264,7 +273,7 @@ def run(execute):
     else:
         db.session.rollback()
 
-    print_report(report, languages, len(wpc_players), execute)
+    print_report(report, languages, field_changes, len(wpc_players), execute)
 
 
 def print_list(title, rows, fmt):
@@ -275,7 +284,7 @@ def print_list(title, rows, fmt):
         print('  none')
 
 
-def print_report(r, languages, total, execute):
+def print_report(r, languages, field_changes, total, execute):
     line = '=' * 70
     print(line)
     print('EXECUTE - changes committed' if execute else 'DRY RUN - nothing was written')
@@ -287,6 +296,13 @@ def print_report(r, languages, total, execute):
     print(f'  skipped (invalid phone):     {len(r["skip_invalid_phone"])}')
     print(f'  skipped (duplicate phone):   {len(r["skip_duplicate"])}')
     print(f'  skipped (error):             {len(r["errors"])}')
+
+    if r['update']:
+        print('\nValues changed on update (field: players):')
+        for field, count in sorted(field_changes.items()):
+            print(f'  {field}: {count}')
+        if not field_changes:
+            print('  none - all updated players are already in sync')
 
     print('\nLanguage distribution (created + updated):')
     for lang, count in languages.most_common():

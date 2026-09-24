@@ -31,6 +31,7 @@ class Player(db.Model):
     skill_level = db.Column(db.String(10), nullable=True)
     city = db.Column(db.String(100), nullable=True)
     country = db.Column(db.String(100), nullable=True)
+    date_of_birth = db.Column(db.Date, nullable=True)
     preferred_language = db.Column(db.String(10), default='EN')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

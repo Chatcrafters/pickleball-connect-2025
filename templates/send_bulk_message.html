@@ -15,30 +15,93 @@
                     <form method="POST">
                         <div class="mb-3">
                             <label class="form-label">Empfänger auswählen</label>
+
+                            <!-- Filters -->
+                            <div class="row g-2 mb-2">
+                                <div class="col-6 col-md-3">
+                                    <select class="form-select form-select-sm" id="filterLanguage" onchange="filterRecipients()">
+                                        <option value="">Alle Sprachen</option>
+                                        <option value="EN">English</option>
+                                        <option value="DE">Deutsch</option>
+                                        <option value="ES">Español</option>
+                                        <option value="FR">Français</option>
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select class="form-select form-select-sm" id="filterCountry" onchange="filterRecipients()">
+                                        <option value="">Alle Länder</option>
+                                        {% for country in countries %}
+                                        <option value="{{ country }}">{{ country }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">Level</span>
+                                        <select class="form-select" id="filterLevelFrom" onchange="filterRecipients()" aria-label="Level von">
+                                            <option value="">von</option>
+                                            {% for level in ['2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'] %}
+                                            <option value="{{ level }}">{{ level }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <select class="form-select" id="filterLevelTo" onchange="filterRecipients()" aria-label="Level bis">
+                                            <option value="">bis</option>
+                                            {% for level in ['2.0', '2.5', '3.0', '3.5', '4.0', '4.5', '5.0'] %}
+                                            <option value="{{ level }}">{{ level }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-6 col-md-3">
+                                    <select class="form-select form-select-sm" id="filterAge" onchange="filterRecipients()">
+                                        <option value="">Alle Altersklassen</option>
+                                        <option value="19">19+</option>
+                                        <option value="50">50+</option>
+                                        <option value="60">60+</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <small class="text-muted d-block mb-2">
+                                Altersklasse = Alter, das im Jahr {{ age_year }} erreicht wird.
+                                Spieler ohne Level bzw. Geburtsdatum fallen raus, sobald der jeweilige Filter gesetzt ist.
+                                <a href="#" onclick="resetRecipientFilters(); return false;">Filter zurücksetzen</a>
+                            </small>
+
                             <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" id="selectAll" onchange="selectAll(this)">
-                                <label class="form-check-label" for="selectAll">
-                                    <strong>Alle auswählen</strong>
+                                <input class="form-check-input" type="checkbox" id="bulkSelectAll" onchange="selectAllVisible(this)">
+                                <label class="form-check-label" for="bulkSelectAll">
+                                    <strong>Alle gefilterten auswählen</strong>
+                                    (<span id="visibleCount">{{ players|length }}</span> angezeigt)
                                 </label>
                             </div>
                             <hr>
                             <div style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; padding: 10px; border-radius: 5px;">
                                 {% for player in players %}
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="player_ids" value="{{ player.id }}" id="player{{ player.id }}" onchange="updateSelectedCount()">
+                                <div class="form-check recipient-item"
+                                     data-language="{{ player.preferred_language or '' }}"
+                                     data-country="{{ player.country or '' }}"
+                                     data-level="{{ player.skill_level or '' }}"
+                                     data-age="{{ (age_year - player.date_of_birth.year) if player.date_of_birth else '' }}"
+                                     data-optin="{{ '1' if player.whatsapp_optin else '0' }}">
+                                    <input class="form-check-input" type="checkbox" name="player_ids" value="{{ player.id }}" id="player{{ player.id }}" onchange="updateRecipientCount()">
                                     <label class="form-check-label" for="player{{ player.id }}">
                                         {{ player.first_name }} {{ player.last_name }}
                                         <small class="text-muted">
-                                            ({{ player.phone }}, 
+                                            ({{ player.phone }},
                                             {% if player.skill_level %}{{ player.skill_level }}, {% endif %}
-                                            {{ player.preferred_language }})
+                                            {{ player.preferred_language }}{% if player.country %}, {{ player.country }}{% endif %})
                                         </small>
+                                        {% if not player.whatsapp_optin %}
+                                        <span class="badge bg-secondary">kein Opt-in</span>
+                                        {% endif %}
                                     </label>
                                 </div>
                                 {% endfor %}
                             </div>
                             <small class="form-text text-muted mt-2 d-block">
-                                <span id="selectedCount">0</span> Spieler ausgewählt
+                                <span id="selectedCount">0</span> Spieler ausgewählt,
+                                davon <span id="selectedOptinCount">0</span> mit WhatsApp-Opt-in.
+                                Gesendet wird nur an Spieler mit Opt-in.
                             </small>
                         </div>
 
@@ -71,4 +134,69 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function filterRecipients() {
+    const language = document.getElementById('filterLanguage').value;
+    const country = document.getElementById('filterCountry').value;
+    const levelFrom = parseFloat(document.getElementById('filterLevelFrom').value);
+    const levelTo = parseFloat(document.getElementById('filterLevelTo').value);
+    const minAge = parseInt(document.getElementById('filterAge').value, 10);
+
+    let visible = 0;
+    document.querySelectorAll('.recipient-item').forEach(item => {
+        const level = parseFloat(item.dataset.level);
+        const age = parseInt(item.dataset.age, 10);
+
+        const matchLanguage = !language || item.dataset.language === language;
+        const matchCountry = !country || item.dataset.country === country;
+        const levelFiltered = !isNaN(levelFrom) || !isNaN(levelTo);
+        const matchLevel = !levelFiltered || (!isNaN(level)
+            && (isNaN(levelFrom) || level >= levelFrom)
+            && (isNaN(levelTo) || level <= levelTo));
+        const matchAge = isNaN(minAge) || (!isNaN(age) && age >= minAge);
+
+        const show = matchLanguage && matchCountry && matchLevel && matchAge;
+        item.style.display = show ? '' : 'none';
+        if (show) {
+            visible++;
+        } else {
+            // Hidden players are never sent to: what you see is what gets sent
+            item.querySelector('input[name="player_ids"]').checked = false;
+        }
+    });
+    document.getElementById('visibleCount').textContent = visible;
+    updateRecipientCount();
+}
+
+function visibleRecipientBoxes() {
+    return Array.from(document.querySelectorAll('.recipient-item'))
+        .filter(item => item.style.display !== 'none')
+        .map(item => item.querySelector('input[name="player_ids"]'));
+}
+
+function selectAllVisible(source) {
+    visibleRecipientBoxes().forEach(box => { box.checked = source.checked; });
+    updateRecipientCount();
+}
+
+function updateRecipientCount() {
+    const checked = document.querySelectorAll('input[name="player_ids"]:checked');
+    const optin = Array.from(checked).filter(box => box.closest('.recipient-item').dataset.optin === '1');
+    document.getElementById('selectedCount').textContent = checked.length;
+    document.getElementById('selectedOptinCount').textContent = optin.length;
+
+    const visible = visibleRecipientBoxes();
+    const selectAll = document.getElementById('bulkSelectAll');
+    selectAll.checked = visible.length > 0 && visible.every(box => box.checked);
+}
+
+function resetRecipientFilters() {
+    ['filterLanguage', 'filterCountry', 'filterLevelFrom', 'filterLevelTo', 'filterAge']
+        .forEach(id => { document.getElementById(id).value = ''; });
+    filterRecipients();
+}
+</script>
 {% endblock %}

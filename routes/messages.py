@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db, Message, Player
 from utils.whatsapp import send_whatsapp_message
+from datetime import date
 from utils.auth import admin_required
 
 messages = Blueprint('messages', __name__)
@@ -38,8 +39,13 @@ def send_bulk_message():
             return redirect(request.url)
         
         sent_count = 0
+        skipped_no_optin = 0
         for player_id in player_ids:
             player = Player.query.get(int(player_id))
+            # Only players who agreed to WhatsApp messages, whatever was selected
+            if player and not player.whatsapp_optin:
+                skipped_no_optin += 1
+                continue
             if player:
                 result = send_whatsapp_message(player.phone, message_content, test_mode=test_mode)
                 
@@ -58,6 +64,8 @@ def send_bulk_message():
             db.session.commit()
             mode_text = " (TEST MODE)" if test_mode else ""
             flash(f'{sent_count} message(s) sent{mode_text}!', 'success')
+            if skipped_no_optin:
+                flash(f'{skipped_no_optin} player(s) skipped: no WhatsApp opt-in.', 'warning')
         except Exception as e:
             db.session.rollback()
             flash(f'Error sending messages: {str(e)}', 'danger')
@@ -66,4 +74,7 @@ def send_bulk_message():
     
     # GET request - show form
     players = Player.query.order_by(Player.last_name).all()
-    return render_template('send_bulk_message.html', players=players)
+    countries = sorted({p.country for p in players if p.country})
+    # Age classes use the age reached in the current calendar year
+    return render_template('send_bulk_message.html', players=players,
+                           countries=countries, age_year=date.today().year)
