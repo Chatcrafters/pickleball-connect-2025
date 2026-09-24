@@ -36,10 +36,10 @@
                     <div class="card-body">
                         <div class="row">
                             <div class="col-md-3 mb-2">
-                                <input type="text" class="form-control" id="filterName" placeholder="Name suchen..." onkeyup="filterPlayers()">
+                                <input type="search" class="form-control" id="filterName" placeholder="Name oder E-Mail suchen…" oninput="filterInvitePlayers()">
                             </div>
                             <div class="col-md-2 mb-2">
-                                <select class="form-select" id="filterLevel" onchange="filterPlayers()">
+                                <select class="form-select" id="filterLevel" onchange="filterInvitePlayers()">
                                     <option value="">Alle Levels</option>
                                     <option value="2.0">2.0</option>
                                     <option value="2.5">2.5</option>
@@ -51,10 +51,10 @@
                                 </select>
                             </div>
                             <div class="col-md-2 mb-2">
-                                <input type="text" class="form-control" id="filterCity" placeholder="Stadt..." onkeyup="filterPlayers()">
+                                <input type="text" class="form-control" id="filterCity" placeholder="Stadt..." oninput="filterInvitePlayers()">
                             </div>
                             <div class="col-md-2 mb-2">
-                                <select class="form-select" id="filterLanguage" onchange="filterPlayers()">
+                                <select class="form-select" id="filterLanguage" onchange="filterInvitePlayers()">
                                     <option value="">Alle Sprachen</option>
                                     <option value="EN">English</option>
                                     <option value="DE">Deutsch</option>
@@ -63,7 +63,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3 mb-2">
-                                <button type="button" class="btn btn-outline-secondary w-100" onclick="resetFilters()">
+                                <button type="button" class="btn btn-outline-secondary w-100" onclick="resetInviteFilters()">
                                     <i class="bi bi-x-circle"></i> Filter zurücksetzen
                                 </button>
                             </div>
@@ -87,9 +87,9 @@
                 {% if available_players %}
                 <div class="mb-3">
                     <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="selectAll" onchange="selectAll(this)">
-                        <label class="form-check-label fw-bold" for="selectAll">
-                            Alle auswählen
+                        <input class="form-check-input" type="checkbox" id="inviteSelectAll" data-select-all onchange="selectAll(this)">
+                        <label class="form-check-label fw-bold" for="inviteSelectAll">
+                            Alle gefilterten auswählen
                         </label>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
                 <div class="row" id="playersList">
                     {% for player in available_players %}
                     <div class="col-md-6 mb-2 player-item" 
-                         data-name="{{ player.first_name }} {{ player.last_name }}" 
+                         data-search="{{ player.first_name }} {{ player.last_name }} {{ player.email or '' }}"
                          data-level="{{ player.skill_level or '' }}"
                          data-city="{{ player.city or '' }}"
                          data-language="{{ player.preferred_language }}">
@@ -146,40 +146,45 @@
     </form>
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-function filterPlayers() {
-    const nameFilter = document.getElementById('filterName').value.toLowerCase();
+function filterInvitePlayers() {
+    const search = normalizeSearchText(document.getElementById('filterName').value.trim());
     const levelFilter = document.getElementById('filterLevel').value;
-    const cityFilter = document.getElementById('filterCity').value.toLowerCase();
+    const cityFilter = normalizeSearchText(document.getElementById('filterCity').value.trim());
     const languageFilter = document.getElementById('filterLanguage').value;
-    
+
     const players = document.querySelectorAll('.player-item');
-    
+
     players.forEach(player => {
-        const name = player.dataset.name.toLowerCase();
         const level = player.dataset.level;
-        const city = player.dataset.city.toLowerCase();
+        const city = normalizeSearchText(player.dataset.city);
         const language = player.dataset.language;
-        
-        const matchName = !nameFilter || name.includes(nameFilter);
+
+        const matchSearch = !search || normalizeSearchText(player.dataset.search).includes(search);
         const matchLevel = !levelFilter || level === levelFilter;
         const matchCity = !cityFilter || city.includes(cityFilter);
         const matchLanguage = !languageFilter || language === languageFilter;
-        
-        if (matchName && matchLevel && matchCity && matchLanguage) {
+
+        if (matchSearch && matchLevel && matchCity && matchLanguage) {
             player.style.display = '';
         } else {
             player.style.display = 'none';
+            // Hidden players are never invited: what you see is what gets submitted
+            player.querySelector('input[name="player_ids"]').checked = false;
         }
     });
+    updateSelectedCount();
 }
 
-function resetFilters() {
+function resetInviteFilters() {
     document.getElementById('filterName').value = '';
     document.getElementById('filterLevel').value = '';
     document.getElementById('filterCity').value = '';
     document.getElementById('filterLanguage').value = '';
-    filterPlayers();
+    filterInvitePlayers();
 }
 </script>
 {% endblock %}

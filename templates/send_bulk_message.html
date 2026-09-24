@@ -16,6 +16,9 @@
                         <div class="mb-3">
                             <label class="form-label">Empfänger auswählen</label>
 
+                            <input type="search" class="form-control form-control-sm mb-2" id="filterSearch"
+                                   placeholder="Name oder E-Mail suchen…" oninput="filterRecipients()">
+
                             <!-- Filters -->
                             <div class="row g-2 mb-2">
                                 <div class="col-6 col-md-3">
@@ -78,6 +81,7 @@
                             <div style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; padding: 10px; border-radius: 5px;">
                                 {% for player in players %}
                                 <div class="form-check recipient-item"
+                                     data-search="{{ player.first_name }} {{ player.last_name }} {{ player.email or '' }}"
                                      data-language="{{ player.preferred_language or '' }}"
                                      data-country="{{ player.country or '' }}"
                                      data-level="{{ player.skill_level or '' }}"
@@ -139,6 +143,7 @@
 {% block extra_scripts %}
 <script>
 function filterRecipients() {
+    const search = normalizeSearchText(document.getElementById('filterSearch').value.trim());
     const language = document.getElementById('filterLanguage').value;
     const country = document.getElementById('filterCountry').value;
     const levelFrom = parseFloat(document.getElementById('filterLevelFrom').value);
@@ -150,6 +155,7 @@ function filterRecipients() {
         const level = parseFloat(item.dataset.level);
         const age = parseInt(item.dataset.age, 10);
 
+        const matchSearch = !search || normalizeSearchText(item.dataset.search).includes(search);
         const matchLanguage = !language || item.dataset.language === language;
         const matchCountry = !country || item.dataset.country === country;
         const levelFiltered = !isNaN(levelFrom) || !isNaN(levelTo);
@@ -158,7 +164,7 @@ function filterRecipients() {
             && (isNaN(levelTo) || level <= levelTo));
         const matchAge = isNaN(minAge) || (!isNaN(age) && age >= minAge);
 
-        const show = matchLanguage && matchCountry && matchLevel && matchAge;
+        const show = matchSearch && matchLanguage && matchCountry && matchLevel && matchAge;
         item.style.display = show ? '' : 'none';
         if (show) {
             visible++;
@@ -194,7 +200,7 @@ function updateRecipientCount() {
 }
 
 function resetRecipientFilters() {
-    ['filterLanguage', 'filterCountry', 'filterLevelFrom', 'filterLevelTo', 'filterAge']
+    ['filterSearch', 'filterLanguage', 'filterCountry', 'filterLevelFrom', 'filterLevelTo', 'filterAge']
         .forEach(id => { document.getElementById(id).value = ''; });
     filterRecipients();
 }
