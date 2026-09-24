@@ -11,10 +11,18 @@ def check_admin_password(password):
     return password == admin_password
 
 def admin_required(f):
-    """Decorator to require admin login"""
+    """Decorator to require a logged-in, active user with role 'admin'.
+
+    Uses the user accounts from routes/auth.py (session['user_id']); the old
+    session['is_admin'] flag is no longer set anywhere since the switch to
+    user accounts.
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if not session.get('is_admin'):
+        from models import User
+
+        user = User.query.get(session['user_id']) if 'user_id' in session else None
+        if not user or not user.is_active or user.role != 'admin':
             session['next_url'] = request.url
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
