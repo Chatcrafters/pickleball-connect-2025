@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db, Player
 from utils.whatsapp import send_profile_completion_link
+from utils.auth import admin_required
 
 players = Blueprint('players', __name__)
 
 @players.route('/')
+@admin_required
 def player_list():
     """List all players with pagination"""
     page = request.args.get('page', 1, type=int)
@@ -19,12 +21,14 @@ def player_list():
                           pagination=pagination)
 
 @players.route('/<int:player_id>')
+@admin_required
 def player_detail(player_id):
     """Show player details"""
     player = Player.query.get_or_404(player_id)
     return render_template('player_detail.html', player=player)
 
 @players.route('/add', methods=['GET', 'POST'])
+@admin_required
 def add_player():
     """Add a new player"""
     if request.method == 'POST':
@@ -54,6 +58,7 @@ def add_player():
     return render_template('player_form.html', player=None)
 
 @players.route('/<int:player_id>/edit', methods=['GET', 'POST'])
+@admin_required
 def edit_player(player_id):
     """Edit a player"""
     player = Player.query.get_or_404(player_id)
@@ -79,6 +84,7 @@ def edit_player(player_id):
     return render_template('player_form.html', player=player)
 
 @players.route('/<int:player_id>/delete', methods=['POST'])
+@admin_required
 def delete_player(player_id):
     """Delete a player"""
     player = Player.query.get_or_404(player_id)
@@ -117,6 +123,7 @@ def update_profile(token):
     return render_template('player_update_public.html', player=player)
 
 @players.route('/<int:player_id>/send-profile-link', methods=['POST'])
+@admin_required
 def send_profile_link(player_id):
     """Send profile completion link to a single player via WhatsApp"""
     player = Player.query.get_or_404(player_id)
@@ -138,6 +145,7 @@ def send_profile_link(player_id):
     return redirect(request.referrer or url_for('players.player_detail', player_id=player_id))
 
 @players.route('/send-bulk-profile-links', methods=['POST'])
+@admin_required
 def send_bulk_profile_links():
     """Send profile completion links to multiple players via WhatsApp"""
     player_ids = request.form.getlist('player_ids')
@@ -183,6 +191,7 @@ def send_bulk_profile_links():
     return redirect(url_for('players.player_list'))
 
 @players.route('/<int:player_id>/generate-token', methods=['POST'])
+@admin_required
 def generate_token(player_id):
     """Generate update token for a player who doesn't have one"""
     player = Player.query.get_or_404(player_id)

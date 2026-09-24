@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db, Message, Player
 from utils.whatsapp import send_whatsapp_message
+from utils.auth import admin_required
 
 messages = Blueprint('messages', __name__)
 
 @messages.route('/')
+@admin_required
 def message_history():
     """Show message history with pagination"""
     page = request.args.get('page', 1, type=int)
@@ -19,6 +21,7 @@ def message_history():
                           pagination=pagination)
 
 @messages.route('/send-bulk', methods=['GET', 'POST'])
+@admin_required
 def send_bulk_message():
     """Send bulk message to selected players"""
     if request.method == 'POST':

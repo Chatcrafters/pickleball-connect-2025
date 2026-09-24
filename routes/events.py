@@ -2,10 +2,12 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash
 from models import db, Event, Player, Message, get_whatsapp_sponsor_block
 from datetime import datetime
 from utils.whatsapp import send_whatsapp_message, get_message_template
+from utils.auth import admin_required
 
 events = Blueprint('events', __name__)
 
 @events.route('/')
+@admin_required
 def event_list():
     """List all events with pagination"""
     page = request.args.get('page', 1, type=int)
@@ -20,6 +22,7 @@ def event_list():
                           pagination=pagination)
 
 @events.route('/<int:event_id>')
+@admin_required
 def event_detail(event_id):
     """Show event details"""
     event = Event.query.get_or_404(event_id)
@@ -31,6 +34,7 @@ def event_detail(event_id):
                          available_players=available_players)
 
 @events.route('/create', methods=['GET', 'POST'])
+@admin_required
 def create_event():
     """Create a new event"""
     if request.method == 'POST':
@@ -54,6 +58,7 @@ def create_event():
     return render_template('event_form.html', event=None)
 
 @events.route('/<int:event_id>/edit', methods=['GET', 'POST'])
+@admin_required
 def edit_event(event_id):
     """Edit an event"""
     event = Event.query.get_or_404(event_id)
@@ -76,6 +81,7 @@ def edit_event(event_id):
     return render_template('event_form.html', event=event)
 
 @events.route('/<int:event_id>/delete', methods=['POST'])
+@admin_required
 def delete_event(event_id):
     """Delete an event"""
     event = Event.query.get_or_404(event_id)
@@ -91,6 +97,7 @@ def delete_event(event_id):
     return redirect(url_for('events.event_list'))
 
 @events.route('/<int:event_id>/add-players', methods=['POST'])
+@admin_required
 def add_players_to_event(event_id):
     """Add players to an event"""
     event = Event.query.get_or_404(event_id)
@@ -117,6 +124,7 @@ def add_players_to_event(event_id):
     return redirect(url_for('events.event_detail', event_id=event_id))
 
 @events.route('/<int:event_id>/remove-player/<int:player_id>', methods=['POST'])
+@admin_required
 def remove_player_from_event(event_id, player_id):
     """Remove a player from an event"""
     event = Event.query.get_or_404(event_id)
@@ -134,6 +142,7 @@ def remove_player_from_event(event_id, player_id):
     return redirect(url_for('events.event_detail', event_id=event_id))
 
 @events.route('/<int:event_id>/send-invitations', methods=['POST'])
+@admin_required
 def send_event_invitations(event_id):
     """Send WhatsApp invitations to invited players"""
     event = Event.query.get_or_404(event_id)

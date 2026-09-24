@@ -1,10 +1,12 @@
 from flask import Blueprint, render_template
 from models import db, Player, Event, Message
 from datetime import date
+from utils.auth import admin_required
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
+@admin_required
 def index():
     """Dashboard/Home page"""
     # Get statistics
